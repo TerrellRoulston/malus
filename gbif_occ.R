@@ -6,7 +6,7 @@
 library(tidyverse) #data management, grammar
 library(rgbif) #access GBIF data
 
-# Download data from GBIF
+# Download occurence data from GBIF
 
 # GBIF use info
 user='terrell_roulston'
@@ -35,12 +35,11 @@ down_code = occ_download(
   user=user, pwd=pwd, email=email)
 
 setwd("./") 
-occ_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
+download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
 #extract and save as csv
 
 gbif_cor <- read.csv(file = "occ_coronaria.csv") # load csv data
 
-#do not push large datasets to github, add to ignore
 
 
 # Fusca download ----------------------------------------------------------
@@ -61,9 +60,8 @@ down_code = occ_download(
   user=user, pwd=pwd, email=email)
 
 
-occ_fusca <- occ_download_get(down_code[1], overwrite = TRUE)
+download_fusca <- occ_download_get(down_code[1], overwrite = TRUE)
 #extract and save as csv
 
-gbif_fusca <- read.csv(file = "occ_coronaria.csv") # load csv data
+gbif_fusca <- read.csv(file = "occ_fusca.csv") # load csv data
 
-#do not push large datasets to github, add to ignore
