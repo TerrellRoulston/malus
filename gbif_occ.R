@@ -36,4 +36,6 @@ down_code = occ_download(
 
 setwd("./") 
 occ_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
+#extract and save as csv
 
+gbif_cor <- read.csv(file = "occ_coronaria.csv") # load csv data
