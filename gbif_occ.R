@@ -35,6 +35,5 @@ down_code = occ_download(
   user=user, pwd=pwd, email=email)
 
 setwd("./") 
-occu_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
+occ_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
 
-View(occu_coronaria)
