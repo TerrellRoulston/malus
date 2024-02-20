@@ -6,7 +6,7 @@
 library(tidyverse) #data management, grammar
 library(rgbif) #access GBIF data
 
-# Download occurence data from GBIF
+# Download occurrence data from GBIF
 
 # GBIF use info
 user='REDACTED'
