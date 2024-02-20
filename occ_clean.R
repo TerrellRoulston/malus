@@ -1,16 +1,15 @@
 # Top ---------------------------------------------------------------------
-# cleaning occurence data of M. coronaria and M. fusca
+# cleaning occurrence data of M. coronaria and M. fusca
 # Terrell Roulston
 # Started Feb 16, 2024
 
 library(tidyverse) #grammar, data management
 library(CoordinateCleaner) #helpful functions to clean data
-library(terra)
-library(sf)
-library(geodata)
-library(scales)
+library(terra) #working with vector/raster data
+library(geodata) #download basemaps
+library(scales) #alpha adjust colours
 
-#set wd
+# set wd
 setwd("./occ_data/") 
 
 
@@ -34,7 +33,7 @@ occ_cor <- gbif_cor %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
-#filter M. fusca data in df
+# filter M. fusca data in df
 occ_fus <- gbif_fusca %>% 
   filter(countryCode %in% c('US', 'CA')) %>% #limit to CA and US
   filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
@@ -49,8 +48,7 @@ occ_fus <- gbif_fusca %>%
 
 # map occurrence points (take a peak) -------------------------------------
 
-#download/load 
-#NOTE add raster datafiles to .gitignore, files too large
+# download/load maps
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
                path = "../occ_data/base_maps") #USA basemap w. States
 
@@ -59,16 +57,46 @@ ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
 
 canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
 
-#plot basemap
+# plot basemap
 plot(canUS_map, xlim = c(-180, -50))
 
-#plot Malus coronia occurrences
+# plot Malus coronia occurrences
 points(occ_cor$decimalLongitude, occ_cor$decimalLatitude, pch = 16,
        col = alpha("red", 0.2))
 
-#plot Malus fusca occurrences
+# plot Malus fusca occurrences
 points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
        col = alpha('blue', 0.2))
 
-#clear graphics plot
+# add legend
+legend(x= -170,
+       y = 40,
+       legend = c('M. coronaria', 'M. fusca'),
+       fill = c('red', 'blue'))
+
+# clear graphics plot
 dev.off()
+
+
+# Zoom into each species --------------------------------------------------
+
+# M coronaria
+plot(canUS_map, xlim = c(-100, -70), ylim = c(30, 50))
+# plot Malus coronia occurrences
+points(occ_cor$decimalLongitude, occ_cor$decimalLatitude, pch = 16,
+       col = alpha("red", 0.2))
+
+dev.off()
+
+# M fusca
+plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 60))
+# plot Malus fusca occurrences
+points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
+       col = alpha("blue", 0.2))
+
+
+# save cleaned plot data --------------------------------------------------
+# if happy with filter save df as .rdata file
+# load in following analysis
+saveRDS(occ_cor, file = "occ_cor.Rdata")
+saveRDS(occ_fus, file = "occ_fus.Rdata")

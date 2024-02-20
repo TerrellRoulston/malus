@@ -3,8 +3,8 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
-library(tidyverse) #data management, grammar
-library(rgbif) #access GBIF data
+library(tidyverse) # data management, grammar
+library(rgbif) # access GBIF data
 
 # Download occurrence data from GBIF
 
@@ -36,13 +36,13 @@ down_code = occ_download(
 
 setwd("./") 
 download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
-#extract and save as csv
+# extract and save as csv
 
 gbif_cor <- read.csv(file = "occ_coronaria.csv") # load csv data
 
 
 
-# Fusca download ----------------------------------------------------------
+# fusca download ----------------------------------------------------------
 
 taxonKey <- 3001080
 basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE') # excluded living specimens and material samples (germplasm)
@@ -61,7 +61,7 @@ down_code = occ_download(
 
 
 download_fusca <- occ_download_get(down_code[1], overwrite = TRUE)
-#extract and save as csv
+# extract and save as csv
 
 gbif_fusca <- read.csv(file = "occ_fusca.csv") # load csv data
 
