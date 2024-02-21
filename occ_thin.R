@@ -36,7 +36,7 @@ occ_fusALL <- occ_fus # keep for later
 
 # Thin data using sampler -------------------------------------------------
 
-set.seed(1337) # set random generator seed to get consistent results
+set.seed(1337) # set random generator seed to get reproducable results
 
 # M. coronaria thinning
 occ_cor <- spatSample(occ_cor, size = 1, 
@@ -55,6 +55,13 @@ occ_fus <- spatSample(occ_fus, size = 1,
 # points(occ_cor, col = 'blue', pch = 1)
 
 # dev.off()
+
+
+# Save thinned occurence points for further analysis ----------------------
+setwd("../occ_data/")
+saveRDS(occ_fus, file = 'occThin_cor.Rdata')
+saveRDS(occ_fus, file = 'occThin_fus.Rdata')
+
 
 
 # Extract environmental data from wclim ------------------------------------

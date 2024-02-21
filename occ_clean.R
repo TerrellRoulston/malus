@@ -95,6 +95,12 @@ plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 60))
 points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
 
+# Zoom into PNW
+plot(canUS_map, xlim = c(-140, -110), ylim = c(43, 55))
+# plot Malus fusca occurrences
+points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
+       col = alpha("blue", 0.2))
+
 
 # save cleaned plot data --------------------------------------------------
 # if happy with filter save df as .rdata file
