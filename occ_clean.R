@@ -28,8 +28,9 @@ occ_cor <- gbif_cor %>%
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
   cc_sea() %>% 
-  distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
-  select(species, countryCode, decimalLatitude, 
+  distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
+  filter(decimalLongitude !=-123.10000) %>% #remove one record on west coast
+  dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
@@ -61,7 +62,7 @@ canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
 plot(canUS_map, xlim = c(-180, -50))
 
 # plot Malus coronia occurrences
-points(occ_cor$decimalLongitude, occ_cor$decimalLatitude, pch = 16,
+points(occ_cor, pch = 16,
        col = alpha("red", 0.2))
 
 # plot Malus fusca occurrences
