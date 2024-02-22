@@ -26,7 +26,7 @@ occ_cor <- gbif_cor %>%
   filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
-  cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
+  cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot gardens 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
   filter(decimalLongitude !=-123.10000) %>% #remove one record on west coast

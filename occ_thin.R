@@ -59,7 +59,7 @@ occ_fus <- spatSample(occ_fus, size = 1,
 
 # Save thinned occurence points for further analysis ----------------------
 setwd("../occ_data/")
-saveRDS(occ_fus, file = 'occThin_cor.Rdata')
+saveRDS(occ_cor, file = 'occThin_cor.Rdata')
 saveRDS(occ_fus, file = 'occThin_fus.Rdata')
 
 
