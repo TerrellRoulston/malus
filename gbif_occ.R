@@ -22,7 +22,10 @@ email='REDACTED'
 taxonKey <- 3001166
 basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE') # excluded living specimens and material samples (germplasm)
 hasCoordinates <- TRUE # limit to records with coordinates
-years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
+#years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
+#Tyler suggest not limiting records to 1970
+# Main reason for Malus not occurring in places it did pre-1970 is due to habitat destruction
+# Not due to unsuitable climatic niches
 
 # Download data
 # Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
@@ -30,11 +33,12 @@ down_code = occ_download(
   pred("taxonKey", taxonKey),
   pred_in("basisOfRecord", basisOfRecord),
   pred("hasCoordinate", hasCoordinates),
-  pred_in("year", years),
+  #pred_in("year", years),
   format = "SIMPLE_CSV",
   user=user, pwd=pwd, email=email)
 
-setwd("./") 
+getwd()
+setwd("./occ_data/") 
 download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
 # extract and save as csv
 
@@ -47,15 +51,16 @@ gbif_cor <- read.csv(file = "occ_coronaria.csv") # load csv data
 taxonKey <- 3001080
 basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE') # excluded living specimens and material samples (germplasm)
 hasCoordinates <- TRUE # limit to records with coordinates
-years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
+#years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
+#see comments above about years of occurrence
 
 # Download data
 # Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
 down_code = occ_download(
-  pred("taxonKey", taxonKey),
+  rgbif::pred("taxonKey", taxonKey),
   pred_in("basisOfRecord", basisOfRecord),
   pred("hasCoordinate", hasCoordinates),
-  pred_in("year", years),
+  #pred_in("year", years),
   format = "SIMPLE_CSV",
   user=user, pwd=pwd, email=email)
 

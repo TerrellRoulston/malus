@@ -10,6 +10,7 @@ library(geodata) #download basemaps
 library(scales) #alpha adjust colours
 
 # set wd
+getwd()
 setwd("./occ_data/") 
 
 
@@ -29,10 +30,21 @@ occ_cor <- gbif_cor %>%
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot gardens 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
-  filter(decimalLongitude !=-123.10000) %>% #remove one record on west coast
+  filter(decimalLongitude >= -100) %>% #remove some records on west coast, two from bot gardens
   dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
+
+
+# compare pre/post 1970 occurrence data
+# if no points between pre/post are drastically different then keep all data
+# consider removing if different from post-1970
+
+occ_cor_pre <- occ_cor %>% 
+  filter(year < 1970)
+
+occ_cor_post <- occ_cor %>% 
+  filter(year >= 1970)
 
 # filter M. fusca data in df
 occ_fus <- gbif_fusca %>% 
@@ -46,6 +58,14 @@ occ_fus <- gbif_fusca %>%
   select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
+
+# compare pre/post 1970 occurrences
+
+occ_fus_pre <- occ_fus %>% 
+  filter(year < 1970)
+
+occ_fus_post <- occ_fus %>% 
+  filter(year >= 1970)
 
 # map occurrence points (take a peak) -------------------------------------
 
@@ -62,7 +82,7 @@ canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
 plot(canUS_map, xlim = c(-180, -50))
 
 # plot Malus coronia occurrences
-points(occ_cor, pch = 16,
+points(occ_cor$decimalLongitude, occ_cor$decimalLatitude, pch = 16,
        col = alpha("red", 0.2))
 
 # plot Malus fusca occurrences
@@ -82,18 +102,43 @@ dev.off()
 # Zoom into each species --------------------------------------------------
 
 # M coronaria
-plot(canUS_map, xlim = c(-100, -70), ylim = c(30, 50))
+plot(canUS_map, xlim = c(-100, -60), ylim = c(25, 50))
 # plot Malus coronia occurrences
-points(occ_cor$decimalLongitude, occ_cor$decimalLatitude, pch = 16,
+# pre-1970
+points(occ_cor_pre$decimalLongitude, occ_cor_pre$decimalLatitude, pch = 16,
        col = alpha("red", 0.2))
+# post-1970
+points(occ_cor_post$decimalLongitude, occ_cor_post$decimalLatitude, pch = 16,
+       col = alpha("blue", 0.2))
+
+legend(x= -75,
+       y = 33,
+       title = 'M. coronaria',
+       legend = c('Pre-1970 (n=416)', 'Post-1970 (n=516)'),
+       fill = c('red', 'blue'))
 
 dev.off()
 
 # M fusca
 plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 60))
 # plot Malus fusca occurrences
-points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
+# post-1970
+points(occ_fus_post$decimalLongitude, occ_fus_post$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
+# pre-1970
+points(occ_fus_pre$decimalLongitude, occ_fus_pre$decimalLatitude, pch = 16,
+       col = alpha("red", 0.2))
+
+
+
+legend(x= -165,
+       y = 37,
+       title = 'M. fusca',
+       legend = c('Pre-1970 (n=179)', 'Post-1970 (n=984)'),
+       fill = c('red', 'blue'))
+
+
+dev.off()
 
 # Zoom into PNW
 plot(canUS_map, xlim = c(-140, -110), ylim = c(43, 55))
@@ -105,5 +150,6 @@ points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
 # save cleaned plot data --------------------------------------------------
 # if happy with filter save df as .rdata file
 # load in following analysis
+getwd()
 saveRDS(occ_cor, file = "occ_cor.Rdata")
 saveRDS(occ_fus, file = "occ_fus.Rdata")
