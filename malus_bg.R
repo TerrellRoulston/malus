@@ -87,19 +87,24 @@ wclim_fus <- crop(wclim, ecoNA_fus, mask = T)
 
 set.seed(1337) # set a seed to ensure consistent results
 
+# NOTE: Set arguments as.raster = T to return raster
+# OR as.points to return spatvector = T to return spatvector
+
 # M. coronaria background
-cor_bg <- spatSample(wclim_cor, 5000, 'random', na.rm = T, as.points = T) #ignore NA values and sample as points
+# SpatVector
+cor_bg_vec <- spatSample(wclim_cor, 5000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_cor[[1]])
-points(cor_bg, cex = 0.5)
+points(cor_bg_vec, cex = 0.5)
 
 expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
 # 5683684 km^2
 # 5000/5683684 = 0.000879 samples/km
 
 # M. fusca background
-fus_bg <- spatSample(wclim_fus, 5000, 'random', na.rm = T, as.points = T) #ignore NA values and sample as points
+# SpatVector
+fus_bg_vec <- spatSample(wclim_fus, 5000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_fus[[1]])
-points(fus_bg, cex = 0.5)
+points(fus_bg_vec, cex = 0.5)
 
 expanse(wclim_fus[[1]], unit = 'km') # total area of raster in km^2
 # 4659175 km^2
@@ -107,13 +112,15 @@ expanse(wclim_fus[[1]], unit = 'km') # total area of raster in km^2
 
 # Save background SpatVectors
 setwd("../occ_data/")
-saveRDS(cor_bg, file = 'cor_bg.Rdata')
-saveRDS(fus_bg, file = 'fus_bg.Rdata')
+saveRDS(cor_bg, file = 'cor_bg_vec.Rdata')
+saveRDS(fus_bg, file = 'fus_bg_vec.Rdata')
+
 
 # Load background SpatVectors
-setwd("./occ_data/")
-cor_bg <- readRDS(file = 'cor_bg.Rdata')
-fus_bg <- readRDS(file = 'fus_bg.Rdata')
+setwd("../occ_data/")
+cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
+fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
+
 
 
 # Extracting presence-background raster values ----------------------------
