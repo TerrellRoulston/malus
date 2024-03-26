@@ -3,6 +3,7 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
+
 library(tidyverse) # data management, grammar
 library(rgbif) # access GBIF data
 
