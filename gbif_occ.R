@@ -10,7 +10,7 @@ library(rgbif) # access GBIF data
 
 # GBIF use info
 user='REDACTED'
-pwd='MalusApples#123'
+pwd='REDACTED'
 email='REDACTED'
 
 # Taxon IDs
