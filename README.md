@@ -9,6 +9,8 @@ UBC Botanical Garden is advancing action for adaptation through the development 
 
 Species distribution models of both Malus CWR species (M. coronaria, M. fusca) under different climate change scenarios (as applicable), potentially a Gap analysis. What is the mismatch between protected areas areas of high density? Why do they exist (private land ownership, etc). This should explicitly address any conservation gaps based on 1a) that need to be addressed, ie: areas of high density but poor protections.
 
-'''
-mark up
-'''
+```R
+library(tidyverse) # data management, grammar
+library(rgbif) # access GBIF data
+```
+
