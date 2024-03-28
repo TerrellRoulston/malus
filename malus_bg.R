@@ -21,6 +21,7 @@ ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref a
 
 
 # download/load maps
+getwd()
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
                path = "../occ_data/base_maps") #USA basemap w. States
 
@@ -53,7 +54,7 @@ eco_cor <- extract(ecoNA, occThin_cor) # extract what polygons contained points
 
 # return vector of eco region codes of the polygons that contain occurrences
 eco_cor_code <- eco_cor$NA_L2CODE %>% unique() 
-eco_cor_code <- eco_cor_code[-5] #remove the 'water' '0.0' ecoregion
+eco_cor_code <- eco_cor_code[eco_cor_code != '0.0']  #remove the 'water' '0.0' ecoregion
 
 #CODES: "8.1" "8.2" "5.3" "8.4" "8.3" "9.4" "8.5" "5.2"
 
@@ -68,22 +69,30 @@ eco_fus <- extract(ecoNA, occThin_fus) # extract what polygons contained points
 
 # return vector of eco region codes of the polygons that contain occurrences
 eco_fus_code <- eco_fus$NA_L2CODE %>% unique() 
-eco_fus_code <- eco_fus_code[-3] # remove NA value
+eco_fus_code <- eco_fus_code[eco_fus_code != '0.0'] # remove NA value
 
 #CODES "7.1""6.2"  "10.1" "11.1" "10.2" "3.1" 
 
 ecoNA_fus <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_fus_code)
 
-plot(ecoNA_fus)
+plot(ecoNA_fus, col = 'red')
 points(occThin_fus, pch = 3, col = 'red') # plot M. coronaria points
 
+setwd('../occ_data/eco_regions')
+saveRDS(ecoNA_cor, file = 'ecoNA_cor.Rdata')
+saveRDS(ecoNA_fus, file = 'ecoNA_fus.Rdata')
 
 
 # Crop WorldClim to Ecoregions and Create Background ----------------------
 
 # crop+mask extent of WorldClim data to the Malus ecoregions
-wclim_cor <- crop(wclim, ecoNA_cor, mask = T)
-wclim_fus <- crop(wclim, ecoNA_fus, mask = T)
+wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
+wclim_fus <- terra::crop(wclim, ecoNA_fus, mask = T)
+
+# Save cropped wclim data for downsteam SDM workflow
+saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
+saveRDS(wclim_fus, file = 'wclim_fus.Rdata')
+
 
 set.seed(1337) # set a seed to ensure consistent results
 
@@ -92,9 +101,11 @@ set.seed(1337) # set a seed to ensure consistent results
 
 # M. coronaria background
 # SpatVector
-cor_bg_vec <- spatSample(wclim_cor, 5000, 'random', na.rm = T, as.points = T) #ignore NA values
+
+# Note upped bg points from 5000 to 20000 to be more suitable to better reflect a mean probability of presence 1 - a/2
+cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_cor[[1]])
-points(cor_bg_vec, cex = 0.5)
+points(cor_bg_vec, cex = 0.01)
 
 expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
 # 5683684 km^2
@@ -102,9 +113,9 @@ expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
 
 # M. fusca background
 # SpatVector
-fus_bg_vec <- spatSample(wclim_fus, 5000, 'random', na.rm = T, as.points = T) #ignore NA values
+fus_bg_vec <- spatSample(wclim_fus, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_fus[[1]])
-points(fus_bg_vec, cex = 0.5)
+points(fus_bg_vec, cex = 0.01)
 
 expanse(wclim_fus[[1]], unit = 'km') # total area of raster in km^2
 # 4659175 km^2
@@ -112,8 +123,8 @@ expanse(wclim_fus[[1]], unit = 'km') # total area of raster in km^2
 
 # Save background SpatVectors
 setwd("../occ_data/")
-saveRDS(cor_bg, file = 'cor_bg_vec.Rdata')
-saveRDS(fus_bg, file = 'fus_bg_vec.Rdata')
+saveRDS(cor_bg_vec, file = 'cor_bg_vec.Rdata')
+saveRDS(fus_bg_vec, file = 'fus_bg_vec.Rdata')
 
 
 # Load background SpatVectors
@@ -196,4 +207,61 @@ fus_groups <- cutree(fus_clust, h = 1 - threshold) #calculate groupings of varia
 
 plot(fus_clust, hang = -1, main = "M. fusca Predictors")
 rect.hclust(fus_clust, h = 1 - threshold)
+
+
+
+# Predictor Kernel Density Plots -------------------------------------------------
+# It is helpful to visualize two predictors pairs of
+# Presence points and background points
+
+
+cor_occ.temp <- cor_sdmData %>% filter(cor_pb == 1) %>% # Presence points
+  dplyr::select(wc2.1_2.5m_bio_1) %>% # Mean annual temp
+  drop_na() %>% 
+  unlist()
+cor_bg.temp <- cor_sdmData %>% filter(cor_pb == 0) %>% # Background points
+  dplyr::select(wc2.1_2.5m_bio_1) %>% # Mean annual temp
+  drop_na() %>% 
+  unlist()
+
+cor_occ.perc <- cor_sdmData %>% filter(cor_pb == 1) %>% # Presence points
+  dplyr::select(wc2.1_2.5m_bio_12) %>% # Annual precipitation
+  drop_na() %>% 
+  unlist()
+
+cor_bg.perc <- cor_sdmData %>% filter(cor_pb == 0) %>% # Background points
+  dplyr::select(wc2.1_2.5m_bio_12) %>% # Annual precipitation
+  drop_na() %>% 
+  unlist()
+
+
+library(plotly) # 3D surface Kernel bivariate plots
+library(MASS)
+
+cor_occ.3d <- kde2d(cor_occ.temp, cor_occ.perc)
+cor_bg.3d <- kde2d(cor_bg.temp, cor_bg.perc)
+
+#Plot 3D surface Kernel density estimation
+
+plot_cor.occ_3d <- plot_ly(x=cor_occ.3d$x, y=cor_occ.3d$y, z=cor_occ.3d$z) %>% 
+  add_surface() %>% 
+  layout(scene = list(xaxis = list(title = 'Mean Annual Temp (C)', autotick = F, nticks = 5, tickvals = list(0,5,10,15,20)), 
+                      yaxis = list(title = 'Mean Annual Percip. (mm)', tick0=0, tick1=2000, dtick=200), 
+                      zaxis = list(title = 'Kernel Density', tick0=0, tick1=0.001, dtick=0.0002)),
+         title = list(text = "<i>M. coronaria<i> Occurrence Points", 
+                      y = 0.95, x = 0.5, 
+                      xanchor = 'center', 
+                      yanchor = 'top'))
+
+plot_cor.bg_3d <- plot_ly(x=cor_bg.3d$x, y=cor_bg.3d$y, z=cor_bg.3d$z) %>% 
+  add_surface() %>% 
+  layout(scene = list(xaxis = list(title = 'Mean Annual Temp (C)', tick0=0, tick1=20, dtick=5), 
+                      yaxis = list(title = 'Mean Annual Percip. (mm)', tick0=0, tick1=2000, dtick=200), 
+                      zaxis = list(title = 'Kernel Density')),
+         title = list(text = "<i>M. coronaria<i> Background Points", 
+                      y = 0.95, x = 0.5, 
+                      xanchor = 'center', 
+                      yanchor = 'top'))
+
+
 
