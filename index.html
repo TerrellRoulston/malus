@@ -11,6 +11,7 @@
 
 <meta name="author" content="Terrell Roulston" />
 
+<meta name="date" content="2024-04-02" />
 
 <title>Canadian Malus CWR Species Distribution Modeling</title>
 
@@ -163,14 +164,80 @@ pre code {
 
 <h1 class="title toc-ignore">Canadian Malus CWR Species Distribution Modeling</h1>
 <h4 class="author">Terrell Roulston</h4>
+<h4 class="date">2024-04-02</h4>
 
 </div>
 
 
-<div id="r-markdown" class="section level2">
-<h2>R Markdown</h2>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>When you click the <strong>Knit</strong> button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>UBC Botanical Garden is advancing action for adaptation through the development of community-based adaptation plans with the Sustainable Communities Field School. Ensuring the long-term preservation and sustainable utilization of apple genetic diversity across Canada is of paramount importance. This collaborative initiative aims to inventory and understand existing apple genetic diversity within the country. Additionally, it seeks to investigate how the suitability of habitats for apples may be affected by changing climatic conditions and emerging challenges. In response to these potential impacts, the project aims to identify urgent and longer-term adaptation strategies necessary for the continued resilience of apple populations in Canada.</p>
+<p>This work is associated with a in-progress manuscript on <em>Malus</em> crop wild relatives (CWR) that are native to Canada, including <em>M. coronaria</em> (Sweet Crabapple) and <em>M. fusca</em> (Pacific Crabapple).</p>
+<p>The following analysis was written in R, a free programming language and software environment primarily used for statistical computing and graphics. Visit <a href="https://www.r-project.org/" class="uri">https://www.r-project.org/</a> to get started with using R. Also recommended is the use of RStudio, a integrated development environment (IDE) for R. It provides a user-friendly interface for writing code, viewing plots and data, managing files, and installing packages. Once R is installed, visit <a href="https://www.rstudio.com/products/rstudio/download/" class="uri">https://www.rstudio.com/products/rstudio/download/</a> to download RStudio.</p>
+<p>The species distribution modeling in the following analysis also requires that you have Java (another free programming language) installed. Visit <a href="https://www.oracle.com/ca-en/java/technologies/downloads/" class="uri">https://www.oracle.com/ca-en/java/technologies/downloads/</a> and install the Java Development Kit (JDK).</p>
+<p><strong>Please note:</strong> The following is a reproducible example, and is not intended to be a introductory tutorial of SDM. The markdown is written for someone with intermediate to advanced experience in R.</p>
+</div>
+<div id="analysis-overview" class="section level2">
+<h2>Analysis Overview</h2>
+<p>The following is a reproducible workflow for the development of species distribution models (SDMs), using presence/background occurrence data for <em>M. coronaria</em> and <em>M. fusca</em> crabapple tree species. This data will be explained in more detail bellow. Occurrence data will be downloaded from the open source Global Biodiversity Information Facility (GBIF). There are several types of SDMs, however in this workflow we use the widely adopted Maxent (Maximum Entropy), a machine learning algorithum which can handle presence/background data. The outputs of this analysis are models of predicted habitat suitability of <strong>fundamental niches</strong> from environmental (climate) data. These models predict suitable from historical (1970s-2000s), to future projected climate conditions due to climate change under two Shared Socioeconomic Pathways (SSP2-4.5 and SSP5-8.5). This is essential for understanding how these species may respond to changes in climate, so that they can be better managed, sampled, or conserved for the preservation of these species genetic diversity for future generations.</p>
+<p>See the following for a introduction and description of Maxent: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., &amp; Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <a href="https://doi.org/10.1111/j.1472-4642.2010.00725.x" class="uri">https://doi.org/10.1111/j.1472-4642.2010.00725.x</a>.</p>
+<p>Here is a brief overview of the steps and associated scripts for each part of the analysis.</p>
+<table>
+<colgroup>
+<col width="8%" />
+<col width="25%" />
+<col width="66%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Script</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><code>gbif_occ.R</code></td>
+<td>Prepare data request and download from GBIF</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>occ_clean.R</code></td>
+<td>Clean occurrence (presence) data points</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><code>occ_thin.R</code></td>
+<td>Thin occurrence points to a single observation per predictor (raster) cell</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><code>malus_bg.R</code></td>
+<td>Download eco-regions, sample background points, predictor cluster, 3D Kernel density plots</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><code>clim_crop.R</code></td>
+<td>Download SSP climate data, and crop to eco-regions</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><code>malus_MESS.R</code></td>
+<td>Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments</td>
+</tr>
+<tr class="odd">
+<td>6</td>
+<td><code>malus_sdm.R</code></td>
+<td>Split training/testing data, Maxent models, habitat predictions</td>
+</tr>
+<tr class="even">
+<td>7</td>
+<td><code>sdm_plot.R</code></td>
+<td>Produce publication quality plots of SDM predictions</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>summary(cars)</code></pre>
 <pre><code>##      speed           dist       
 ##  Min.   : 4.0   Min.   :  2.00  
