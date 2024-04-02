@@ -234,6 +234,7 @@ saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
 # Load
 setwd('../sdm_output')
 cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
+
 cor_pred_ssp245_30 <- readRDS(file = 'cor_pred_ssp245_30.Rdata')
 cor_pred_ssp245_50 <- readRDS(file = 'cor_pred_ssp245_50.Rdata')
 cor_pred_ssp245_70 <- readRDS(file = 'cor_pred_ssp245_70.Rdata')
@@ -247,9 +248,9 @@ cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
 # Example: SSP245
 cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
 plot(cor_pred_hist, main = 'Historical (1970-2000)')
-plot(cor_pred_ssp245_30, main = 'Early-Century (2021-2040)')
-plot(cor_pred_ssp245_50, main = 'Mid-Century (2041-2060)')
-plot(cor_pred_ssp245_70, main = 'Late-Century (2061-2080)')
+plot(cor_pred_ssp585_30, main = 'Early-Century (2021-2040)')
+plot(cor_pred_ssp585_50, main = 'Mid-Century (2041-2060)')
+plot(cor_pred_ssp585_70, main = 'Late-Century (2061-2080)')
 mtext("Malus coronaria Probability of Habitat Suitability", outer = T)
 
 
@@ -279,7 +280,8 @@ cor_ssp585_2050_habitat <- cor_pred_ssp585_50 > cor_threshold$max_spec_sens
 cor_ssp585_2070_habitat <- cor_pred_ssp585_70 > cor_threshold$max_spec_sens
 
 
-#   --------------------------------
+
+# Save/Load M. cor. Predicted Suitable Habitat ----------------------------
 setwd('../sdm_output')
 saveRDS(cor_hist_habitat, file ='cor_hist_habitat.Rdata')
 
@@ -288,10 +290,22 @@ saveRDS(cor_ssp245_2050_habitat, file = 'cor_ssp245_2050_habitat.Rdata')
 saveRDS(cor_ssp245_2070_habitat, file = 'cor_ssp245_2070_habitat.Rdata')
 
 saveRDS(cor_ssp585_2030_habitat, file = 'cor_ssp585_2030_habitat.Rdata')
-saveRDS(cor_ssp585_2030_habitat, file = 'cor_ssp585_2050_habitat.Rdata')
-saveRDS(cor_ssp585_2030_habitat, file = 'cor_ssp585_2070_habitat.Rdata')
+saveRDS(cor_ssp585_2050_habitat, file = 'cor_ssp585_2050_habitat.Rdata')
+saveRDS(cor_ssp585_2070_habitat, file = 'cor_ssp585_2070_habitat.Rdata')
 
-# Plot predicted Habitat suitability 
+# Load
+cor_hist_habitat <- readRDS(file ='cor_hist_habitat.Rdata')
+
+cor_ssp245_2030_habitat <- readRDS(file = 'cor_ssp245_2030_habitat.Rdata')
+cor_ssp245_2050_habitat <- readRDS(file = 'cor_ssp245_2050_habitat.Rdata')
+cor_ssp245_2070_habitat <- readRDS(file = 'cor_ssp245_2070_habitat.Rdata')
+
+cor_ssp585_2030_habitat <- readRDS(file = 'cor_ssp585_2030_habitat.Rdata')
+cor_ssp585_2050_habitat <- readRDS(file = 'cor_ssp585_2050_habitat.Rdata')
+cor_ssp585_2070_habitat <- readRDS(file = 'cor_ssp585_2070_habitat.Rdata')
+
+
+# Plot M. coronaria predicted habitat -------------------------------------
 # SSP245
 cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
 plot(cor_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
@@ -305,7 +319,6 @@ plot(canUSMex_map, add = T)
 mtext(text = expression(paste("SSP 2-4.5 ", italic("Malus coronaria "),"Predicted Suitable Habitat")), outer = T, cex = 2)
 
 #SSP585
-# Plot predicted Habitat suitability 
 cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
 plot(cor_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
 plot(canUSMex_map, add = T)
@@ -315,7 +328,7 @@ plot(cor_ssp585_2050_habitat, main = 'Mid-Century (2041-2060)', col = c('white',
 plot(canUSMex_map, add = T)
 plot(cor_ssp585_2070_habitat, main = 'Late-Century (2061-2080)', col = c('white', 'blue'))
 plot(canUSMex_map, add = T)
-mtext(text = expression(paste("SSP 5- 8.5 ", italic("Malus coronaria "),"Predicted Suitable Habitat")), outer = T, cex = 2)
+mtext(text = expression(paste("SSP 5-8.5 ", italic("Malus coronaria "),"Predicted Suitable Habitat")), outer = T, cex = 2)
 
 
 
@@ -339,6 +352,8 @@ fus_pred_ssp585_70 <- terra::predict(fus_ssp585_2070, fus_trainModel, cores = cn
 
 # Save/Load M fus. SDM predictions ----------------------------------------
 setwd('../sdm_output')
+saveRDS(fus_pred_hist, file = 'fus_pred_hist.Rdata')
+
 saveRDS(fus_pred_ssp245_30, file = 'fus_pred_ssp245_30.Rdata')
 saveRDS(fus_pred_ssp245_50, file = 'fus_pred_ssp245_50.Rdata')
 saveRDS(fus_pred_ssp245_70, file = 'fus_pred_ssp245_70.Rdata')
@@ -346,6 +361,19 @@ saveRDS(fus_pred_ssp245_70, file = 'fus_pred_ssp245_70.Rdata')
 saveRDS(fus_pred_ssp585_30, file = 'fus_pred_ssp585_30.Rdata')
 saveRDS(fus_pred_ssp585_50, file = 'fus_pred_ssp585_50.Rdata')
 saveRDS(fus_pred_ssp585_70, file = 'fus_pred_ssp585_70.Rdata')
+
+# Load
+setwd('../sdm_output')
+fus_pred_hist <- readRDS(file = 'fus_pred_hist.Rdata')
+
+fus_pred_ssp245_30 <- readRDS(file = 'fus_pred_ssp245_30.Rdata')
+fus_pred_ssp245_50 <- readRDS(file = 'fus_pred_ssp245_50.Rdata')
+fus_pred_ssp245_70 <- readRDS(file = 'fus_pred_ssp245_70.Rdata')
+
+
+fus_pred_ssp585_30 <- readRDS(file = 'fus_pred_ssp585_30.Rdata')
+fus_pred_ssp585_50 <- readRDS(file = 'fus_pred_ssp585_50.Rdata')
+fus_pred_ssp585_70 <- readRDS(file = 'fus_pred_ssp585_70.Rdata')
 
 # Plot M. fusca historical, early/mid/late century projections of habitat suitability
 # Example: SSP245
@@ -385,16 +413,29 @@ fus_ssp585_2070_habitat <- fus_pred_ssp585_70 > fus_threshold$max_spec_sens
 
 # Save M. fus. Predicted Suitable Habitat  --------------------------------
 setwd('../sdm_output')
+saveRDS(fus_hist_habitat, file = 'fus_hist_habitat.Rdata')
+
 saveRDS(fus_ssp245_2030_habitat, file = 'fus_ssp245_2030_habitat.Rdata')
 saveRDS(fus_ssp245_2050_habitat, file = 'fus_ssp245_2050_habitat.Rdata')
 saveRDS(fus_ssp245_2070_habitat, file = 'fus_ssp245_2070_habitat.Rdata')
 
 saveRDS(fus_ssp585_2030_habitat, file = 'fus_ssp585_2030_habitat.Rdata')
-saveRDS(fus_ssp585_2030_habitat, file = 'fus_ssp585_2050_habitat.Rdata')
-saveRDS(fus_ssp585_2030_habitat, file = 'fus_ssp585_2070_habitat.Rdata')
+saveRDS(fus_ssp585_2050_habitat, file = 'fus_ssp585_2050_habitat.Rdata')
+saveRDS(fus_ssp585_2070_habitat, file = 'fus_ssp585_2070_habitat.Rdata')
 
-# Plot predicted Habitat suitability
+# Load
+fus_hist_habitat <- readRDS(file ='fus_hist_habitat.Rdata')
 
+fus_ssp245_2030_habitat <- readRDS(file = 'fus_ssp245_2030_habitat.Rdata')
+fus_ssp245_2050_habitat <- readRDS(file = 'fus_ssp245_2050_habitat.Rdata')
+fus_ssp245_2070_habitat <- readRDS(file = 'fus_ssp245_2070_habitat.Rdata')
+
+fus_ssp585_2030_habitat <- readRDS(file = 'fus_ssp585_2030_habitat.Rdata')
+fus_ssp585_2050_habitat <- readRDS(file = 'fus_ssp585_2050_habitat.Rdata')
+fus_ssp585_2070_habitat <- readRDS(file = 'fus_ssp585_2070_habitat.Rdata')
+
+
+# Plot M. fusca predicted habitat -----------------------------------------
 # SSP 245
 fus_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
 plot(fus_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
