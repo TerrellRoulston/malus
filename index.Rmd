@@ -1,6 +1,7 @@
 ---
-title: "Canadian Malus CWR Species Distribution Modeling"
+title: "Canadian *Malus* CWR Species Distribution Modeling"
 author: "Terrell Roulston"
+date: "`r Sys.Date()`"
 output: html_document
 email_adress: "REDACTED"
 github_repo: "https://github.com/TerrellRoulston/malus"
@@ -9,12 +10,36 @@ github_repo: "https://github.com/TerrellRoulston/malus"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Introduction
 
-## R Markdown
+UBC Botanical Garden is advancing action for adaptation through the development of community-based adaptation plans with the Sustainable Communities Field School. Ensuring the long-term preservation and sustainable utilization of apple genetic diversity across Canada is of paramount importance. This collaborative initiative aims to inventory and understand existing apple genetic diversity within the country. Additionally, it seeks to investigate how the suitability of habitats for apples may be affected by changing climatic conditions and emerging challenges. In response to these potential impacts, the project aims to identify urgent and longer-term adaptation strategies necessary for the continued resilience of apple populations in Canada.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This work is associated with a in-progress manuscript on *Malus* crop wild relatives (CWR) that are native to Canada, including *M. coronaria* (Sweet Crabapple) and *M. fusca* (Pacific Crabapple).  
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+The following analysis was written in R, a free programming language and software environment primarily used for statistical computing and graphics. Visit <https://www.r-project.org/> to get started with using R. Also recommended is the use of RStudio, a integrated development environment (IDE) for R. It provides a user-friendly interface for writing code, viewing plots and data, managing files, and installing packages. Once R is installed, visit <https://www.rstudio.com/products/rstudio/download/> to download RStudio. 
+
+The species distribution modeling in the following analysis also requires that you have Java (another free programming language) installed. Visit <https://www.oracle.com/ca-en/java/technologies/downloads/> and install the Java Development Kit (JDK).
+
+**Please note:** The following is a reproducible example, and is not  intended to be a introductory tutorial of SDM. The markdown is written for someone with intermediate to advanced experience in R. 
+
+## Analysis Overview
+
+The following is a reproducible workflow for the development of species distribution models (SDMs), using presence/background occurrence data for *M. coronaria* and *M. fusca* crabapple tree species. This data will be explained in more detail bellow. Occurrence data will be downloaded from the open source Global Biodiversity Information Facility (GBIF). There are several types of SDMs, however in this workflow we use the widely adopted Maxent (Maximum Entropy), a machine learning algorithum which can handle presence/background data. The outputs of this analysis are models of predicted habitat suitability of **fundamental niches** from environmental (climate) data. These models predict suitable from historical (1970s-2000s), to future projected climate conditions due to climate change under two Shared Socioeconomic Pathways (SSP2-4.5 and SSP5-8.5). This is essential for understanding how these species may respond to changes in climate, so that they can be better managed, sampled, or conserved for the preservation of these species genetic diversity for future generations. 
+
+See the following for a introduction and description of Maxent: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
+
+Here is a brief overview of the steps and associated scripts for each part of the analysis. 
+
+Step| Script| Purpose
+-| ---| --------
+1| `gbif_occ.R` | Prepare data request and download from GBIF
+2| `occ_clean.R` | Clean occurrence (presence) data points
+3| `occ_thin.R` | Thin occurrence points to a single observation per predictor (raster) cell
+4| `malus_bg.R` | Download eco-regions, sample background points, predictor cluster, 3D Kernel density plots
+5| `clim_crop.R` | Download SSP climate data, and crop to eco-regions
+6| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
+6| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
+7| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 
 ```{r cars}
 summary(cars)
