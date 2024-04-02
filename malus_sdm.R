@@ -17,7 +17,7 @@ library(ecospat) # Useful spatial ecology tools
 getwd() # check you directory location
 
 # Background points in SpatVectors
-setwd("../occ_data/")
+setwd("..\/occ_data/")
 cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
 fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
 
@@ -179,7 +179,7 @@ fus_occ_test <- occThin_fus[fus_cbGroup == 1, ] # 1 group withheld for testing t
 
 # M. coronaria
 cor_trainModel <- MaxEnt(x = wclim_cor, p = cor_occ_train, a = cor_bg_vec) # build a training model
-cor_testModel <- MaxEnt(x = wclim_cor, p = cor_occ_test, a = cor_bg_vec) #build a testing model
+cor_testModel <- MaxEnt(x = wclim_cor, p = cor_occ_test, a = cor_bg_vec) # build a testing model
 # Compare AUC values between the training and test models to see how well they both perform.  Ideally have similar AUC values
 
 
@@ -221,6 +221,8 @@ cor_pred_ssp585_70 <- terra::predict(cor_ssp585_2070, cor_trainModel, cores = cn
 
 # Save/Load M cor. SDM predictions ----------------------------------------
 setwd('../sdm_output')
+saveRDS(cor_pred_hist, file = 'cor_pred_hist.Rdata')
+
 saveRDS(cor_pred_ssp245_30, file = 'cor_pred_ssp245_30.Rdata')
 saveRDS(cor_pred_ssp245_50, file = 'cor_pred_ssp245_50.Rdata')
 saveRDS(cor_pred_ssp245_70, file = 'cor_pred_ssp245_70.Rdata')
@@ -228,6 +230,18 @@ saveRDS(cor_pred_ssp245_70, file = 'cor_pred_ssp245_70.Rdata')
 saveRDS(cor_pred_ssp585_30, file = 'cor_pred_ssp585_30.Rdata')
 saveRDS(cor_pred_ssp585_50, file = 'cor_pred_ssp585_50.Rdata')
 saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
+
+# Load
+setwd('../sdm_output')
+cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
+cor_pred_ssp245_30 <- readRDS(file = 'cor_pred_ssp245_30.Rdata')
+cor_pred_ssp245_50 <- readRDS(file = 'cor_pred_ssp245_50.Rdata')
+cor_pred_ssp245_70 <- readRDS(file = 'cor_pred_ssp245_70.Rdata')
+
+
+cor_pred_ssp585_30 <- readRDS(file = 'cor_pred_ssp585_30.Rdata')
+cor_pred_ssp585_50 <- readRDS(file = 'cor_pred_ssp585_50.Rdata')
+cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
 
 # Plot M. coronaria historical, early/mid/late century projections of habitat suitability
 # Example: SSP245
@@ -265,8 +279,10 @@ cor_ssp585_2050_habitat <- cor_pred_ssp585_50 > cor_threshold$max_spec_sens
 cor_ssp585_2070_habitat <- cor_pred_ssp585_70 > cor_threshold$max_spec_sens
 
 
-# Save M. cor. Predicted Suitable Habitat  --------------------------------
+#   --------------------------------
 setwd('../sdm_output')
+saveRDS(cor_hist_habitat, file ='cor_hist_habitat.Rdata')
+
 saveRDS(cor_ssp245_2030_habitat, file = 'cor_ssp245_2030_habitat.Rdata')
 saveRDS(cor_ssp245_2050_habitat, file = 'cor_ssp245_2050_habitat.Rdata')
 saveRDS(cor_ssp245_2070_habitat, file = 'cor_ssp245_2070_habitat.Rdata')
