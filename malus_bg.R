@@ -161,6 +161,8 @@ setwd("../occ_data/")
 saveRDS(cor_sdmData, file = 'cor_sdmData.Rdata')
 saveRDS(fus_sdmData, file = 'fus_sdmData.Rdata')
 
+cor_sdmData <- readRDS(file = 'cor_sdmData.Rdata')
+
 # Check for colinearity of predictor varirables for presence-bg -----------
 # Want to select variables that are not colinear to avoid issues with model fitting
 # Dendograms useful for indentifying groupings of variables
