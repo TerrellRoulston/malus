@@ -27,7 +27,7 @@ occ_cor <- gbif_cor %>%
   filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
-  cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot gardens 
+  cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
   filter(decimalLongitude >= -100) %>% #remove some records on west coast, two from bot gardens
@@ -35,6 +35,9 @@ occ_cor <- gbif_cor %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
+
+# Save M. coronaria occurrence dataframe ----------------------------------
+saveRDS(occ_cor, file = "occ_cor.Rdata") 
 
 # compare pre/post 1970 occurrence data
 # if no points between pre/post are drastically different then keep all data
@@ -59,8 +62,11 @@ occ_fus <- gbif_fusca %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
-# compare pre/post 1970 occurrences
 
+# Save M. fusca occurrence dataframe --------------------------------------
+saveRDS(occ_fus, file = "occ_fus.Rdata")
+
+# compare pre/post 1970 occurrences
 occ_fus_pre <- occ_fus %>% 
   filter(year < 1970)
 
@@ -117,7 +123,7 @@ legend(x= -75,
        legend = c('Pre-1970 (n=416)', 'Post-1970 (n=516)'),
        fill = c('red', 'blue'))
 
-dev.off()
+dev.off() # close graphics plot window
 
 # M fusca
 plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 60))
@@ -147,9 +153,3 @@ points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
 
 
-# save cleaned plot data --------------------------------------------------
-# if happy with filter save df as .rdata file
-# load in following analysis
-getwd()
-saveRDS(occ_cor, file = "occ_cor.Rdata")
-saveRDS(occ_fus, file = "occ_fus.Rdata")
