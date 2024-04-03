@@ -9,7 +9,7 @@ library(rgbif) # access GBIF data
 
 # Download occurrence data from GBIF
 
-# GBIF use info
+# GBIF user info
 user='REDACTED'
 pwd='REDACTED'
 email='REDACTED'
@@ -38,12 +38,12 @@ down_code = occ_download(
   format = "SIMPLE_CSV",
   user=user, pwd=pwd, email=email)
 
-getwd()
-setwd("./occ_data/") 
+getwd() # check your working directory (wd)
+setwd("./occ_data/") # set wd to a location where you want to save the csv file.
 download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
-# extract and save as csv
+# extract csv from zipper folder and save as clearly named csv in excel or equivalent.
 
-gbif_cor <- read.csv(file = "occ_coronaria.csv") # load csv data
+gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
 
 
 
