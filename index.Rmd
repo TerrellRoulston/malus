@@ -2,13 +2,16 @@
 title: "Canadian *Malus* CWR Species Distribution Modeling"
 author: "Terrell Roulston"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
 email_adress: "terrellroulston@gmail.com"
 github_repo: "https://github.com/TerrellRoulston/malus"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 ## Introduction
 
@@ -41,16 +44,233 @@ Step| Script| Purpose
 6| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
 7| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 
-```{r cars}
-summary(cars)
+## GBIF Species Occurrences Download
+
+The Global Biodiversity Information Facility (GBIF) is a valuable resource for SDM due to its extensive collection of biodiversity data from around the world. There are several sources of occurrences, such as research and herbarium collections and community science observations. Note that this data is **presence-only** data, meaning there is no information about the **absence** of species. Also, all occurrences are **research grade** meaning they are expert verified identifications or several community members agree on identification.
+
+**NOTE:** You need to have a GBIF user profile, visit <https://www.gbif.org/> to sign up!
+
+Load libraries
+```{r eval=FALSE}
+library(tidyverse) # data management, grammar
+library(rgbif) # access GBIF data
+```
+Initiate user profile information. Note that I have redacted my own information.
+```{r eval=FALSE}
+# GBIF user info
+user='REDACTED'
+pwd='REDACTED'
+email='REDACTED'
+```
+Navigate to <https://www.gbif.org/> and search your taxon of interest to get the taxon key identifier. In this case the taxon keys are: *M. coronaria* = 3001166 and *M. fusca* = 3001080.
+
+For the purposes of this workflow I will only show the code for one of the species. Code is just replicated for the other species.
+
+```{r eval=FALSE}
+# M. coronaria download 
+taxonKey <- 3001166
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE') # excluded living specimens and material samples (germplasm)
+hasCoordinates <- TRUE # limit to records with coordinates
+```
+**NOTE:** We do not limit the year of observation in our data collection. There are reasons why you might. However, for the purposes of this analysis it is reasonable to include all observations. Because the main reason why more historical occurrences may be missing today (or say post 1970) is more likely to be due to habitat destruction, rather than changes in climate affecting realized niches. Furthermore, crabtrees are slow growing, and migrate even slower, thus their distribution are *likely* lagging behind changes in their fundamental niches. This highlights the importance of understanding the ecology of your species of interest.
+
+Prepare a download request for the GBIF occurrence data. There are several formats, I choose `.csv` because it is familiar and easy to work with.
+
+```{r}
+# Download data
+# Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
+down_code = rgbif::occ_download(
+  pred("taxonKey", taxonKey),
+  pred_in("basisOfRecord", basisOfRecord),
+  pred("hasCoordinate", hasCoordinates),
+  format = "SIMPLE_CSV",
+  user=user, pwd=pwd, email=email)
 ```
 
-## Including Plots
+Download and save the GBIF occurrence data as a `.csv`.
+```{r}
+getwd() # check your working directory (wd)
+setwd("./occ_data/") # set wd to a location where you want to save the csv file.
+download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
+# extract csv from zipper folder and save as clearly named csv in excel or equivalent.
 
-You can also embed plots, for example:
+gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
+```
+**NOTE:** It is good practice to keep this `.csv` as a 'raw' data file, and manipulate it within the R environment in following workflow rather than make changes to the raw file.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Clean Species Occurrence Data
+Now we have downloaded all observations from GBIF for *M. coronaria* and *M. fusca* that fit a set of defined criteria suitable for our research question. In this case the criteria are limited to species-level taxonomic resolution, that come from preserved herbarium specimens, human observation (i.e. iNaturalist) and research collections documenting species occurrences, all of which are geo-referenced (i.e. geographic coordinates). Also note that we do not limit the geographic location of occurrences, *yet*. At the time of downloading this data (02/14/2024) *M. coronaria* had 1373 records, and *M. fusca* had 2282 records.
+
+As eluded to above, we now need to make some more choices about what species occurrences are appropriate to include and from where. Thus, we must **clean the species occurrence** data. To do this we are going to visually inspect the species occurrences as well as take advantage of R packages such as `CoordinateCleaner` to assist in removing spurious occurrences replicates, those with poor referencing such located in the center of a country or in a body of water, etc.
+
+Load Libraries
+```{r}
+library(tidyverse) # grammar, data management
+library(CoordinateCleaner) # helpful functions to clean data
+library(terra) # working with vector/raster data
+library(geodata) # download basemaps
+library(scales) # alpha adjust colours
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+We begin with loading the saved `.csv` files of species occurrences from the last script.
+```{r}
+# set wd
+getwd()
+setwd("../occ_data/") # use relative path to open from folder where .csv is saved
+
+# load occurrence csv files
+gbif_cor <- read.csv(file = "occ_coronaria.csv") # load coronaria data
+gbif_fusca <- read.csv(file = "occ_fusca.csv") # load fusca data
+```
+Now we want to initiate a `data.frame` and select coluomns that are useful from the `.csv` files. At the same time as we build this `data.frame` we also are going to use several functions to filter occurrences out of the 'cleaned' data set. For more information on the functions used see the library documentation of `CoordinateCleaner`. Also see <https://data-blog.gbif.org/post/gbif-filtering-guide/> for a great blog post published by GBIF on post-processing GBIF downloads. 
+
+```{r}
+# filter M. corornia data
+occ_cor <- gbif_cor %>% 
+  filter(countryCode %in% c('US', 'CA')) %>% # limit to CA and US (their native range)
+  filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
+  filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% # remove records with high uncertainty in coordinates
+  cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
+  cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
+  cc_sea() %>% 
+  distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
+  filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens (visually verified)
+  dplyr::select(species, countryCode, decimalLatitude, 
+         decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
+         )
+```
+After filter the occurrences we are left with 932 occurrences for *M. coronaria* and 1205 occurrences for *M. fusca*.
+
+**NOTE:** I am using piper operators (`%>%`) from the tidyverse ecosystem to assist in the ease of data processing. It sequentially applies each argument or function to the `data.frame`, and so be careful in what order you specify functions.   
+
+Now we will save the `data.frame` object as a Rdata file. Rdata files are the best way to store/load data within the R enviroment. We will rutinely save intermediate data files to help speed up analysis of downstream workflow, so that results can be stored rather than having to be repeated every time.
+```{r}
+getwd() # check what directory you are in
+setwd('../occ_data/')
+
+saveRDS(occ_cor, file = "occ_cor.Rdata") # name the file with the .Rdata file extension
+```
+Now when revisiting an analysis you can reload the saved cleaned dataframe rather than re-running the cleaning functions which are slow computations.
+```{r eval=TRUE}
+setwd('./occ_data/')
+occ_cor <- readRDS(file = "occ_cor.Rdata") # read in the saved .Rdata object 
+head(occ_cor) # take a peak at your dateframe 
+```
+
+Early I mentioned that we are not limiting the years in which species occurrences are recorded, however it is still important to verify that this decision is not adding 'weird' bias to the data. To do this I am going to split the occurrences in to two dateframes pre and post 1970. This date is commonly associated with when changes in significant changes in global climate began. If occurrences from pre-1970 are vastly different in geography, then we may feel uncomfortable including them in the analysis. 
+
+```{r}
+# compare pre/post 1970 occurrences
+occ_fus_pre <- occ_fus %>% 
+  filter(year < 1970)
+
+occ_fus_post <- occ_fus %>% 
+  filter(year >= 1970)
+```
+The best way to compare these pre/post occurrences, is by visualizing them to detect any differences in spatial coordinates. To do this we need to utilize the `terra` and `geodate` packages. The `terra` package is useful for working with Raster data and will frequently be used throught this workflow. The `geodata` package will also be used frequently, and allows easy download of geographic boundaries from Global Administrative Areas (GADM).
+
+For now plotting will be done using base R `graphics` and `terra`, final publication quality plots will be done later using `ggplot2`. 
+
+```{r}
+# M coronaria
+plot(canUS_map, xlim = c(-100, -60), ylim = c(25, 50))
+# plot Malus coronia occurrences
+# pre-1970
+points(occ_cor_pre$decimalLongitude, occ_cor_pre$decimalLatitude, pch = 16,
+       col = alpha("red", 0.2))
+# post-1970
+points(occ_cor_post$decimalLongitude, occ_cor_post$decimalLatitude, pch = 16,
+       col = alpha("blue", 0.2))
+
+legend(x= -75,
+       y = 33,
+       title = 'M. coronaria',
+       legend = c('Pre-1970 (n=416)', 'Post-1970 (n=516)'), # use nrow() to check how many occurrences are in each data frame.
+       fill = c('red', 'blue'))
+
+dev.off() # close graphics plot window
+```
+
+**NOTE:** Plotting geographic coordinates can be tricky, and often you will have to play around with the plot limits and legend location to get it to something that is visually appealing.
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/occurences/m_coronaria_pre_post_1970.jpeg"))
+```
+
+Inspecting the plot of *M. coronria* occurrences there is a large amount of overlap between occurrences from pre and post 1970, thus we feel comfortable keeping all the data no matter the year in the analysis. It is important you evaluate this for your own species and ask if it fits your research question. 
+
+After visually inspecting the occurrence locations, verifying that there are no duplicates, and no occurrences from strange locations (such as records from the west coast, when dealing with an east coast species) you can save your occurrence `data.frame` (e.g. `occ_cor`) for downstream analysis.
+
+## Thinning Occurence Data
+So we have downloaded and cleaned the occurrence data for *M. coronaria* and *M. fusca* however we still need to do more processing before we can move producing the SDM. We mush now deal with sampling bias in the occurrences. Sampling bias is an issue because with presence-only data it is hard to distinguish if species are being detected because it is truly preferred habitat, or whether those are just the locations that have been sufficiently sampled. This issue can be (partially) addressed by **thinning** records, so that multiple records from the same are represented by only one (or sometimes a few) occurrence sample. This method is imperfect, but does start to deal with some biases in the spatial representation of the data. 
+
+There are several methods for thinning occurrence records; some more sophisticated then others. A simple approach, and the one used in this workflow is randomly sampling a **single occurrence** per grid cell in the predictor raster (in this case the climate variables).
+
+
+```{r}
+# Load libraries
+library(tidyverse) # Grammar and data management 
+library(terra) # Working with spatial data
+library(geodata) # Basemaps and climate data
+```
+
+Start by loading the cleaned species occurrence data saved in the `.Rdata` file we made in the `occ_clean` script.
+
+```{r}
+setwd("../occ_data/")
+occ_cor <- readRDS(file = "occ_cor.Rdata")
+```
+
+When working with spatial data it is important to make sure that different data sources share the same coordinate reference system (a.k.a. projection). We are going to be using climatic data from WorldClim as our predictor raster layers, which is projected using the common WGS84 projection. In order to make sure that the coordinates of occurrences line up accurately within the grid cells of the WorldClim data we are going to create a `SpatVector` object using `terra::vect` and specify the `crs` argument so that it knows to project as WGS84. 
+
+```{r}
+occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
+                crs = "+proj=longlat +datum=WGS84")
+```
+
+Now we are going to download the WorldClim predictor rasters. WorldClim is a global data set of bioclimatic variables commonly used in ecological research, particular in SDM workflows. Variables in this data set represent a comprehensive set of climatic conditions, including tempature seasonality, perciptication in wettest/driest months and temperature extremes. See <https://www.worldclim.org/data/bioclim.html> for a complete list of all 19 bioclimatic variables included.
+
+**IMPORTANT NOTE:** These downloads are large (several thousand Mb), so if you are working in a GitHub repository make sure to add these files to the `.gitignore` file to make sure copies are not sent to the repo.
+
+I like to create a seperate file for WorldClim data, it makes workflow easier and more reproducible. Create a folder within the head of the project.
+```{r}
+setwd("../wclim_data/")
+# Note DO NOT PUSH wclim data**
+wclim <- worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "../wclim_data/")
+
+```
+**NOTE:** Climate data is available at several resolutions (size of grid cells) ranging from 10 - 0.5 minutes of degree. In this workflow we opted to go with 2.5 arc-mins (approx. 5 km) as it provides a compromise in the fine-scale of the cell size and practical computation time. 
+
+```{r}
+# plot a raster layer to check it downloaded properly
+plot(wclim$wc2.1_2.5m_bio_1, main = 'Annual Mean Temperature')
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/wclim/wclim_bio1.jpeg"))
+```
+
+Now we have vectorized occurrence data and rasterised predictor variables, it is time to thin the occurrences data. We will use the `terra::spatSample()` function to take a random sample of a single occurrence per raster cell.
+
+```{r}
+set.seed(1337) # set random generator seed to get reproducible results
+
+# M. coronaria thinning
+occ_cor <- spatSample(occ_cor, size = 1, 
+                      strata = wclim) # sample one occurrence from each climatic cell
+```
+And like last time, we will save this thinned data as a `.Rdata` file for futher downsteam analysis. **NOTE:** that I call this file a slightly different name, so that I know it is the thinned points.
+
+```{r}
+setwd("../occ_data/")
+saveRDS(occ_cor, file = 'occThin_cor.Rdata')
+```
+
+## Backgroup Point Sampling
+
+
+
+
+
+
+
