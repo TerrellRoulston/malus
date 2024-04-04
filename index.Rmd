@@ -1,6 +1,6 @@
 ---
 title: "Canadian *Malus* CWR Species Distribution Modeling"
-author: "Terrell Roulston"
+author: "Terrell Roulston; Tyler Smith"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -38,8 +38,8 @@ Step| Script| Purpose
 1| `gbif_occ.R` | Prepare data request and download from GBIF
 2| `occ_clean.R` | Clean occurrence (presence) data points
 3| `occ_thin.R` | Thin occurrence points to a single observation per predictor (raster) cell
-4| `malus_bg.R` | Download eco-regions, sample background points, predictor cluster, 3D Kernel density plots
-5| `clim_crop.R` | Download SSP climate data, and crop to eco-regions
+4| `malus_bg.R` | Download ecoregions, sample background points, predictor cluster, 3D Kernel density plots
+5| `clim_crop.R` | Download SSP climate data, and crop to ecoregions
 6| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
 6| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
 7| `sdm_plot.R` | Produce publication quality plots of SDM predictions
@@ -127,7 +127,7 @@ Now we want to initiate a `data.frame` and select coluomns that are useful from 
 ```{r}
 # filter M. corornia data
 occ_cor <- gbif_cor %>% 
-  filter(countryCode %in% c('US', 'CA')) %>% # limit to CA and US (their native range)
+  filter(countryCode %in% c('US', 'CA')) %>% # limit to CA and US (their native)
   filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% # remove records with high uncertainty in coordinates
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
@@ -232,7 +232,7 @@ Now we are going to download the WorldClim predictor rasters. WorldClim is a glo
 
 **IMPORTANT NOTE:** These downloads are large (several thousand Mb), so if you are working in a GitHub repository make sure to add these files to the `.gitignore` file to make sure copies are not sent to the repo.
 
-I like to create a seperate file for WorldClim data, it makes workflow easier and more reproducible. Create a folder within the head of the project.
+I like to create a seperate file for WorldClim data, it makes workflow easier to follow and more reproducible. Create a folder within the head of the project.
 ```{r}
 setwd("../wclim_data/")
 # Note DO NOT PUSH wclim data**
@@ -266,11 +266,177 @@ setwd("../occ_data/")
 saveRDS(occ_cor, file = 'occThin_cor.Rdata')
 ```
 
-## Backgroup Point Sampling
+## Backgroud (bg) Point Sampling
+In the Analysis Overview I mentioned in passing that this is a presence/background SDM workflow. Presence/background data sets are cases in which occurrence data is presence-only (like on GBIF), meaning there is no information about the absence of species. This is an important distinction because if we are going to appropriately interpret results, we need to understand the model assumptions. In the presence/background workflow, background (bg) points are randomly sampled from the environment surrounding and overlapping known presence points (more discussion on bg sampling bellow). This effectively samples the distribution of the 'background' environment across your study extent. The Maxent modeling workflow uses this background data to make inferences about absence points, using Baye's Rule. Thus this workflow produces similar results to those as if you were modeling a presence/absence data set (but if presence/absence data is available, use it!). 
+
+See the following for more on background points: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
 
 
+So just exactly what is the background area and how can you define a study extent? Should it be simply the convex hull around occurrences? Or should it be all of North America? This depends entirely on the spatial distribution and scale of your data, model assumptions you are willing to live with, and ecological first principles depending on the life histories of your key species and research question. **NOTE:** Any decision you make will create assumptions and introduce spatial biases to the analysis, and therefore affect the interpretation and predictions of your SDMs. 
+
+See the following citation for in depth discussion on defining study extent: Barve, N., Barve, V., Jiménez-Valverde, A., Lira-Noriega, A., Maher, S. P., Peterson, A. T., ... & Villalobos, F. (2011). The crucial role of the accessible area in ecological niche modeling and species distribution modeling. Ecological modelling, 222(11), 1810-1819. <https://doi.org/10.1016/j.ecolmodel.2011.02.011>.
+
+One approach to defining study extent identified by Barve, et al. (2011), is by limiting the background to Biotic regions (hereafter, ecoregions). In short, this method allows for a compromise between real-world biology of species and model tractability. In this workflow I am using North American Ecoregions, as defined by an Internatial collaboration (between Canada, Mexico and the United States) known as the Commission for Environmental Cooperation. Ecoregions are defined at three  Levels (I, II and III) or sptail scales, and are available open source at <https://www.epa.gov/eco-research/ecoregions-north-america>. Choose an appropriate scale for your research question.   
+
+In this workflow I opted to go with the Level-II ecoregions, as this scale compromise the scale at which sets of environmental conditions and biogeography are grouped together while still covering relatively large spatial areas that span across NA.
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(terra) 
+library(predicts)
+library(geodata)
+library(ENMTools)
+```
+
+Due to the large size of the raster files, I have saved a local copy to my machine, and will not push these fills to the GitHub repo. 
+```{r}
+ecoNA <- vect(x = "C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
+ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref as basemap
+```
+**NOTE:** I project the ecoregion rasters the same CSR as the climate predictor rasters. 
+
+Let's take a look at the ecoregions (plotted in red), over top of North America.
+```{r}
+# download/load maps
+getwd()
+setwd('../occ_data/')
+us_map <- gadm(country = 'USA', level = 1, resolution = 2,
+               path = "../occ_data/base_maps") #USA basemap w. States
+
+ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
+               path = '../occ_data/base_maps') #Canada basemap w. Provinces
+
+canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
+
+# plot basemap
+plot(canUS_map, xlim = c(-180, -50))
+# plot ecoregions 
+lines(ecoNA, col = 'red')
+
+dev.off()
+```
 
 
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/eco_region_projection_NA.jpeg"))
+```
 
+Now lets load our thinned occurrences from the `occ_thin.R` script.
+
+```{r}
+# load occurrence data
+setwd("../occ_data/")
+occThin_cor <- readRDS(file = 'occThin_cor.Rdata')
+```
+
+Now that we have the eco regions and occurrence points loaded, lets load the WorldClim predictor rasters. We want to mask and crop these predictor layers to the ecoregions. This will defined the study extent, and subsquently allow us to sample the background. 
+
+First we need to know which of the level-II ecoregions are known to have species occurrences. To do this we will make use of the function `terra::extract`. **NOTE:** It could take a few mins for the extraction to complete 
+
+```{r}
+# M. coronaria ecoregions 
+# extract ecoregion polygon that contain M. coronaria occurrence points
+eco_cor <- extract(ecoNA, occThin_cor) # extract what polygons contained points 
+
+# return vector of eco region codes of the polygons that contain occurrences
+eco_cor_code <- eco_cor$NA_L2CODE %>% unique() 
+eco_cor_code <- eco_cor_code[eco_cor_code != '0.0']  #remove the 'water' '0.0' ecoregion
+
+# CODES: "8.1" "8.2" "5.3" "8.4" "8.3" "9.4" "8.5" "5.2"
+# View the legend on the epa website for the names of these ecoregions.
+```
+
+Now that we have extracted what ecoregion codes contain at least one species occurrence, we can mask the ecoregion raster to only contain those selected above.
+
+```{r}
+ecoNA_cor <- terra::subset(ecoNA, ecoNA$NA_L2CODE %in% eco_cor_code) # subset ecoregion spat vector by the codes
+
+plot(ecoNA_cor) # plot the subsetted M. coronaria ecoregions
+points(occThin_cor, pch = 3, col = 'red') # plot M. coronaria points
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/cor_eco.jpeg"))
+```
+
+And as always we want to save this intermidate object as a `.Rdata` file, so that we do not need to repeat the long computational step of extracting the ecoregions.
+
+```{r}
+setwd('../occ_data/eco_regions')
+saveRDS(ecoNA_cor, file = 'ecoNA_cor.Rdata')
+```
+
+Now we can use these ecoregion rasters to crop our predictor climatic rasters. Again we are doing this so that we can define the study extent and sample the enviromental background. Make sure to set the `mask` argument equal to `TRUE`.
+
+```{r}
+# crop+mask extent of WorldClim data to the Malus ecoregions
+wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
+
+# Save cropped wclim data for downsteam SDM workflow
+saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
+```
+
+Now we want to randomly sample background points, and store the associated predictor values as SpatVectors. Alternatively you could also use SpatRasters if you please, but I found SpatVectors easier to work with. 
+
+**IMPORTANT NOTE**: How many background points should be sampled? There is not a set default, althought it is common in some studies to see 5000 or 10000 background points. We made the decision to sample **20000 points** due to the very large spatial extent of this study. With this many points we can feel confident we the background enviroment is adequately sampled. Note that this is random, and has not yet adressed any spatial biases that may arise when modeling backgrounds (this is foreshadowing).
+
+```{r}
+set.seed(1337) # set a seed to ensure reproducible results
+
+# NOTE: Set arguments as.raster = T to return raster
+# OR as.points to return spatvector = T to return spatvector
+
+# M. coronaria background
+# SpatVector
+
+# Note upped bg points from 5000 to 20000 to be more suitable to better reflect a mean probability of presence 1 - a/2
+
+cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+plot(wclim_cor[[1]])
+points(cor_bg_vec, cex = 0.01)
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/cor_bg.jpeg"))
+```
+
+We can also measure how many km^2 these ecoregions comprise, to get an idea of how many samples are taken per km^2.
+
+```{r}
+expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
+# 5683684 km^2
+20000/5683684
+# 0.00035 samples/km
+```
+
+Annnnd you guessed it, we want to save these SpatVectors of background points for downsteam workflow.
+
+```{r}
+# Save background SpatVectors
+setwd("../occ_data/")
+saveRDS(cor_bg_vec, file = 'cor_bg_vec.Rdata')
+```
+
+You also may want to extract the actual predictor values and put them into a `data.frame` for both the occurrence points and background points. To do this you can again make use of the `terra::extract` function like above, and the `terra::values` function to get the values from the already bg SpatVectors. I show both as it can be useful, but I use mainly the SpatVectors downsteam.
+
+```{r}
+# Extracting presence-background raster values
+cor_predvals <- extract(wclim_cor, occThin_cor) # M. coronaria
+cor_predvals <- cor_predvals[-1] # drop ID column
+
+cor_bgvals <- values(cor_bg_vec) # Extract raster values for bg points
+```
+Now we can create and save a `data.frame` which may come in handy later.
+
+```{r}
+cor_pb <- c(rep(1, nrow(cor_predvals)), rep(0, nrow(cor_bgvals))) #binary (0,1) presence or background string
+
+# combine presence and background data frames for SDM
+cor_sdmData <- data.frame(cbind(cor_pb, rbind(cor_predvals, cor_bgvals)))
+
+setwd("../occ_data/")
+saveRDS(cor_sdmData, file = 'cor_sdmData.Rdata')
+```
 
 
