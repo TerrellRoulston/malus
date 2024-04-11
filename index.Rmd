@@ -39,10 +39,10 @@ Step| Script| Purpose
 2| `occ_clean.R` | Clean occurrence (presence) data points
 3| `occ_thin.R` | Thin occurrence points to a single observation per predictor (raster) cell
 4| `malus_bg.R` | Download ecoregions, sample background points, predictor cluster, 3D Kernel density plots
-5| `clim_crop.R` | Download SSP climate data, and crop to ecoregions
-6| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
-6| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
-7| `sdm_plot.R` | Produce publication quality plots of SDM predictions
+5| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
+6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
+7| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
+
 
 ## GBIF Species Occurrences Download
 
@@ -122,54 +122,84 @@ setwd("../occ_data/") # use relative path to open from folder where .csv is save
 gbif_cor <- read.csv(file = "occ_coronaria.csv") # load coronaria data
 gbif_fusca <- read.csv(file = "occ_fusca.csv") # load fusca data
 ```
-Now we want to initiate a `data.frame` and select coluomns that are useful from the `.csv` files. At the same time as we build this `data.frame` we also are going to use several functions to filter occurrences out of the 'cleaned' data set. For more information on the functions used see the library documentation of `CoordinateCleaner`. Also see <https://data-blog.gbif.org/post/gbif-filtering-guide/> for a great blog post published by GBIF on post-processing GBIF downloads. 
+Now we want to initiate a `data.frame` and select columns that are useful from the `.csv` files. At the same time as we build this `data.frame` we also are going to use several functions to filter occurrences out of the 'cleaned' data set. For more information on the functions used see the library documentation of `CoordinateCleaner`. Also see <https://data-blog.gbif.org/post/gbif-filtering-guide/> for a great blog post published by GBIF on post-processing GBIF downloads. 
 
 ```{r}
 # filter M. corornia data
 occ_cor <- gbif_cor %>% 
-  filter(countryCode %in% c('US', 'CA')) %>% # limit to CA and US (their native)
+  filter(countryCode %in% c('US', 'CA')) %>% #limit to CA and US
   filter(!is.na(decimalLongitude)) %>% # remove records w/o coords
-  filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% # remove records with high uncertainty in coordinates
+  filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
-  filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens (visually verified)
+  filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens
+  filter(!(decimalLatitude < 35 & decimalLongitude < -86)) %>% # remove records from Texas, Oklahoma, Louisiana
+  filter(!(decimalLatitude > 45)) %>% # remove record from New Brunswick
+  filter(!(decimalLongitude < -98)) %>% # remove iNat record from south Kansas, northern Kansas record verified by taxonomist
   dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
+
+# Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
+# Pay special attention to points at the edge of the range of occurrences, as these are most likely to be suspicious
+# as well as influence the model in strange ways, in comparison to inaccurate points well within the other occurrences
+
 ```
-After filter the occurrences we are left with 932 occurrences for *M. coronaria* and 1205 occurrences for *M. fusca*.
+After filter the occurrences we are left with 978 occurrences for *M. coronaria* and 1197 occurrences for *M. fusca*.
+
+You will notice that I have added a few manual filters in the code above using function `filter` and the `!` operator, to remove records that were verified to be inaccurate. For cleaning these inaccurate points, it is useful to begin by checking occurrences at the edges of the range of a species, or any other outlier points. These points at the edges are most likely to negatively influence the model if they are not **true presence** points. I personally find using a combination of the GBIF map and table view of observations, and Google Maps to verify the truth of these questionable points to be a good approach. 
 
 **NOTE:** I am using piper operators (`%>%`) from the tidyverse ecosystem to assist in the ease of data processing. It sequentially applies each argument or function to the `data.frame`, and so be careful in what order you specify functions.   
 
-Now we will save the `data.frame` object as a Rdata file. Rdata files are the best way to store/load data within the R enviroment. We will rutinely save intermediate data files to help speed up analysis of downstream workflow, so that results can be stored rather than having to be repeated every time.
+Now we will save the `data.frame` object as a Rdata file. Rdata files are the best way to store/load data within the R environment. We will routinely save intermediate data files to help speed up analysis of downstream workflow, so that results can be stored rather than having to be repeated every time.
 ```{r}
 getwd() # check what directory you are in
 setwd('../occ_data/')
 
 saveRDS(occ_cor, file = "occ_cor.Rdata") # name the file with the .Rdata file extension
 ```
-Now when revisiting an analysis you can reload the saved cleaned dataframe rather than re-running the cleaning functions which are slow computations.
+Now when revisiting an analysis you can reload the saved cleaned data frame rather than re-running the cleaning functions which are slow computations.
 ```{r eval=TRUE}
 setwd('./occ_data/')
 occ_cor <- readRDS(file = "occ_cor.Rdata") # read in the saved .Rdata object 
 head(occ_cor) # take a peak at your dateframe 
 ```
 
-Early I mentioned that we are not limiting the years in which species occurrences are recorded, however it is still important to verify that this decision is not adding 'weird' bias to the data. To do this I am going to split the occurrences in to two dateframes pre and post 1970. This date is commonly associated with when changes in significant changes in global climate began. If occurrences from pre-1970 are vastly different in geography, then we may feel uncomfortable including them in the analysis. 
+Early I mentioned that we are not limiting the years in which species occurrences are recorded, however it is still important to verify that this decision is not adding 'weird' bias to the data. To do this I am going to split the occurrences in to three date frames pre and post 1970, and those without dates. This data is commonly associated with when changes in significant changes in global climate began. If occurrences from pre-1970 are vastly different in geography, then we may feel uncomfortable including them in the analysis. Similarly those without any date should also be verified. 
 
 ```{r}
-# compare pre/post 1970 occurrences
-occ_fus_pre <- occ_fus %>% 
+# compare pre/post 1970 and nd occurrences
+occ_cor_pre <- occ_cor %>% # pre 1970
   filter(year < 1970)
 
-occ_fus_post <- occ_fus %>% 
+occ_cor_post <- occ_cor %>% # post 1970
   filter(year >= 1970)
+
+occ_cor_nd <- occ_cor %>% 
+  filter(year %in% NA)
 ```
-The best way to compare these pre/post occurrences, is by visualizing them to detect any differences in spatial coordinates. To do this we need to utilize the `terra` and `geodate` packages. The `terra` package is useful for working with Raster data and will frequently be used throught this workflow. The `geodata` package will also be used frequently, and allows easy download of geographic boundaries from Global Administrative Areas (GADM).
+The best way to compare these pre/post/nd occurrences is by visualizing them to detect any differences in spatial coordinates. To do this we need to utilize the `terra` and `geodate` packages. The `terra` package is useful for working with Raster data and will frequently be used throughout this workflow. The `geodata` package will also be used frequently, and allows easy download of geographic boundaries from Global Administrative Areas (GADM).
 
 For now plotting will be done using base R `graphics` and `terra`, final publication quality plots will be done later using `ggplot2`. 
+
+First download the basemaps, and put them in a location to access them again later to avoid having to redownload them. These files are large, so consider not pushing them to GitHub if you are working in a repo.
+
+```{r}
+setwd('../occ_data/')
+# download/load maps
+us_map <- gadm(country = 'USA', level = 1, resolution = 2,
+               path = "../occ_data/base_maps") #USA basemap w. States
+
+ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
+               path = '../occ_data/base_maps') #Canada basemap w. Provinces
+
+canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
+
+```
+
+Now plot the occurrence points. Remember that you might have to go back and add additional filters to the code above like I have for example by removing records from Texas, Oklahoma, Louisiana, and New Brunswick.
 
 ```{r}
 # M coronaria
@@ -181,12 +211,15 @@ points(occ_cor_pre$decimalLongitude, occ_cor_pre$decimalLatitude, pch = 16,
 # post-1970
 points(occ_cor_post$decimalLongitude, occ_cor_post$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
+# No date
+points(occ_cor_nd$decimalLongitude, occ_cor_nd$decimalLatitude, pch = 16,
+       col = alpha('black', 0.2))
 
 legend(x= -75,
        y = 33,
        title = 'M. coronaria',
-       legend = c('Pre-1970 (n=416)', 'Post-1970 (n=516)'), # use nrow() to check how many occurrences are in each data frame.
-       fill = c('red', 'blue'))
+       legend = c('Pre-1970 (n=412)', 'Post-1970 (n=514)', 'No Date (n=53)'),
+       fill = c('red', 'blue', 'black'))
 
 dev.off() # close graphics plot window
 ```
@@ -287,6 +320,8 @@ library(terra)
 library(predicts)
 library(geodata)
 library(ENMTools)
+library(plotly) # 3D surface Kernel bivariate plots
+library(MASS)
 ```
 
 Due to the large size of the raster files, I have saved a local copy to my machine, and will not push these fills to the GitHub repo. 
@@ -330,7 +365,7 @@ setwd("../occ_data/")
 occThin_cor <- readRDS(file = 'occThin_cor.Rdata')
 ```
 
-Now that we have the eco regions and occurrence points loaded, lets load the WorldClim predictor rasters. We want to mask and crop these predictor layers to the ecoregions. This will defined the study extent, and subsquently allow us to sample the background. 
+Now that we have the ecoregions and occurrence points loaded, lets load the WorldClim predictor rasters. We want to mask and crop these predictor layers to the ecoregions. This will defined the study extent, and subsequently allow us to sample the background. 
 
 First we need to know which of the level-II ecoregions are known to have species occurrences. To do this we will make use of the function `terra::extract`. **NOTE:** It could take a few mins for the extraction to complete 
 
@@ -360,14 +395,14 @@ points(occThin_cor, pch = 3, col = 'red') # plot M. coronaria points
 knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/cor_eco.jpeg"))
 ```
 
-And as always we want to save this intermidate object as a `.Rdata` file, so that we do not need to repeat the long computational step of extracting the ecoregions.
+And as always we want to save this intermediate object as a `.Rdata` file, so that we do not need to repeat the long computational step of extracting the ecoregions.
 
 ```{r}
 setwd('../occ_data/eco_regions')
 saveRDS(ecoNA_cor, file = 'ecoNA_cor.Rdata')
 ```
 
-Now we can use these ecoregion rasters to crop our predictor climatic rasters. Again we are doing this so that we can define the study extent and sample the enviromental background. Make sure to set the `mask` argument equal to `TRUE`.
+Now we can use these ecoregion rasters to crop our predictor climatic rasters. Again we are doing this so that we can define the study extent and sample the environmental background. Make sure to set the `mask` argument equal to `TRUE`.
 
 ```{r}
 # crop+mask extent of WorldClim data to the Malus ecoregions
@@ -379,7 +414,7 @@ saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
 
 Now we want to randomly sample background points, and store the associated predictor values as SpatVectors. Alternatively you could also use SpatRasters if you please, but I found SpatVectors easier to work with. 
 
-**IMPORTANT NOTE**: How many background points should be sampled? There is not a set default, althought it is common in some studies to see 5000 or 10000 background points. We made the decision to sample **20000 points** due to the very large spatial extent of this study. With this many points we can feel confident we the background enviroment is adequately sampled. Note that this is random, and has not yet adressed any spatial biases that may arise when modeling backgrounds (this is foreshadowing).
+**IMPORTANT NOTE**: How many background points should be sampled? There is not a set default, althought it is common in some studies to see 5000 or 10000 background points. We made the decision to sample **20000 points** due to the very large spatial extent of this study. With this many points we can feel confident we the background environment is adequately sampled. Note that this is random, and has not yet addressed any spatial biases that may arise when modeling backgrounds (this is foreshadowing).
 
 ```{r}
 set.seed(1337) # set a seed to ensure reproducible results
@@ -418,7 +453,7 @@ setwd("../occ_data/")
 saveRDS(cor_bg_vec, file = 'cor_bg_vec.Rdata')
 ```
 
-You also may want to extract the actual predictor values and put them into a `data.frame` for both the occurrence points and background points. To do this you can again make use of the `terra::extract` function like above, and the `terra::values` function to get the values from the already bg SpatVectors. I show both as it can be useful, but I use mainly the SpatVectors downsteam.
+You also may want to extract the actual predictor values and put them into a `data.frame` for both the occurrence points and background points. To do this you can again make use of the `terra::extract` function like above, and the `terra::values` function to get the values from the already bg SpatVectors. I show both as it can be useful, but I use mainly the SpatVectors downstream.
 
 ```{r}
 # Extracting presence-background raster values
@@ -439,4 +474,120 @@ setwd("../occ_data/")
 saveRDS(cor_sdmData, file = 'cor_sdmData.Rdata')
 ```
 
+So we now have successfully defined a study extent using ecoregions that contain occurrences, and croped a predictor raster so that background points could be sampled from it. Then using these background and occurrence points we extracted the bioclimatic values in the predictor raster. 
+
+Using these values in a data frame (e.g. `cor_sdmData`) we can complete several colinearity checks. These checks allow us to understand how the climatic variables relate to one another. It is important to note, that in a classical statistical approach it is considered good practice to limit colinear variables, to prevent over fitting of a model. This step is refereed to as **variable selection**. With that said, Maxent is not a linear modeling approach, and thus does not need to follow assumptions about predictor colinearity. On top of that, Maxent is known to be robust to including many predictors.
+
+See the following for more on background points: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
+
+We can start by simply plotting the relationship between all predictor pairs, using the base R `graphics`. Use the function `pairs`. This can get messy quickly with some many variables, so it is a bit hard to read. It may take a minute to plot...
+
+```{r}
+# M. coronaria
+pairs(cor_sdmData[,-1]) # drop the first column of 0/1
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/cor_wclim_colinearity.jpeg"))
+```
+
+Let's use a more helpful way to detect colinearity of predictor variables, a dendrogram, which visualizes correlation matrices. **NOTE:** This is only considering two-dimensional covariation, and cannot detect higher dimensional correlations.
+
+```{r}
+# Dendogram cluster of predictor colinearity
+threshold <- 0.7 # set the threshold for colinearity 
+cor_cors <- raster.cor.matrix(wclim_cor) # pearson correlation
+cor_dist <- as.dist(1 - abs(cor_cors)) # calculate distance of predictors
+
+cor_clust <- hclust(cor_dist, method = 'single') # calculate cluster dendogram
+cor_groups <- cutree(cor_clust, h = 1 - threshold) #calculate groupings of variables
+
+plot(cor_clust, hang = -1, main = "M. coronaria Predictors")
+rect.hclust(cor_clust, h = 1 - threshold)
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/cor_dendo.jpeg"))
+```
+
+We can also visualize the predictor covariate values to understand how they inform the model about the probability of a true presence. This involves the visualization of the distribution of the values at sampled points, presence and background, which allows us to get a peak into how the model constraints come about. 
+
+To do this we can compare the density of covariates from occurrence points and background points. I like to visualize this density using Kernel Density Plots. This plot allows you to visualize three dimensions, in this case two of the bioclimatic predictor variables, and the density of points sampled (pseudo-probability). We will build two separate plots to visualize the density of occurrence points and of background points.
+
+First we will create new data frames for each of the climatic variables (in this case mean annual temperature, and mean annual precipitation), so that we can plot them below.
+
+```{r}
+# Predictor Kernel Density Plots
+# It is helpful to visualize two predictors pairs of
+# Presence points and background points
+
+
+cor_occ.temp <- cor_sdmData %>% filter(cor_pb == 1) %>% # Presence points
+  dplyr::select(wc2.1_2.5m_bio_1) %>% # Mean annual temp
+  drop_na() %>% 
+  unlist()
+cor_bg.temp <- cor_sdmData %>% filter(cor_pb == 0) %>% # Background points
+  dplyr::select(wc2.1_2.5m_bio_1) %>% # Mean annual temp
+  drop_na() %>% 
+  unlist()
+
+cor_occ.perc <- cor_sdmData %>% filter(cor_pb == 1) %>% # Presence points
+  dplyr::select(wc2.1_2.5m_bio_12) %>% # Annual precipitation
+  drop_na() %>% 
+  unlist()
+
+cor_bg.perc <- cor_sdmData %>% filter(cor_pb == 0) %>% # Background points
+  dplyr::select(wc2.1_2.5m_bio_12) %>% # Annual precipitation
+  drop_na() %>% 
+  unlist()
+```
+
+Now that all the data is prepared, we will build the build the Kernel bivariate grid, using the function `MASS::kde2d`. This function needs three values, the x coordinate = temperature values, y coordinate = precipitation values, and the z coordinate is density of occurrence (pseudo-probability).
+
+```{r}
+cor_occ.3d <- kde2d(cor_occ.temp, cor_occ.perc)
+cor_bg.3d <- kde2d(cor_bg.temp, cor_bg.perc)
+```
+
+And plot the results using the package `plot_ly`. These build interactive 3D plots, and in this case can be used to visualize the Kernel plots.
+
+```{r}
+plot_cor.occ_3d <- plot_ly(x=cor_occ.3d$x, y=cor_occ.3d$y, z=cor_occ.3d$z) %>% 
+  add_surface() %>% 
+  layout(scene = list(xaxis = list(title = 'Mean Annual Temp (C)', autotick = F, nticks = 5, tickvals = list(0,5,10,15,20)), 
+                      yaxis = list(title = 'Mean Annual Percip. (mm)', tick0=0, tick1=2000, dtick=200), 
+                      zaxis = list(title = 'Kernel Density', tick0=0, tick1=0.001, dtick=0.0002)),
+         title = list(text = "<i>M. coronaria<i> Occurrence Points", 
+                      y = 0.95, x = 0.5, 
+                      xanchor = 'center', 
+                      yanchor = 'top'))
+
+plot_cor.occ_3d # run to view
+
+plot_cor.bg_3d <- plot_ly(x=cor_bg.3d$x, y=cor_bg.3d$y, z=cor_bg.3d$z) %>% 
+  add_surface() %>% 
+  layout(scene = list(xaxis = list(title = 'Mean Annual Temp (C)', tick0=0, tick1=20, dtick=5), 
+                      yaxis = list(title = 'Mean Annual Percip. (mm)', tick0=0, tick1=2000, dtick=200), 
+                      zaxis = list(title = 'Kernel Density')),
+         title = list(text = "<i>M. coronaria<i> Background Points", 
+                      y = 0.95, x = 0.5, 
+                      xanchor = 'center', 
+                      yanchor = 'top'))
+
+plot_cor.bg_3d
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/kernel plots/cor_3dKernel_presence.jpeg"))
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/kernel plots/cor_3dKernel_bg.jpeg"))
+```
+
+In this example I only visualize two of the 19 different bioclimatic variables. You may choose to visualize more for your own purposes. Remember this is only a visual comparison, but is valuable for understanding what the model is 'seeing' - of course it is using multidimensional space of all covariates, not just the two here.
+
+## Species Distribution Modeling and Climate Projections
+
+So now have all we need (almost) to build the SDMs, finally. We have the presence (occurrence) points, and background points. We also have the climatic predictor rasters (WorldClim bioclimatic variables). What we don't have is the future bioclimatic data, which we will use with the results of the SDM to make predictions about future suitable habitat, under different climatic scenarios. 
 
