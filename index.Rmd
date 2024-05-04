@@ -27,9 +27,9 @@ The species distribution modeling in the following analysis also requires that y
 
 ## Analysis Overview
 
-The following is a reproducible workflow for the development of species distribution models (SDMs), using presence/background occurrence data for *M. coronaria* and *M. fusca* crabapple tree species. This data will be explained in more detail bellow. Occurrence data will be downloaded from the open source Global Biodiversity Information Facility (GBIF). There are several types of SDMs, however in this workflow we use the widely adopted Maxent (Maximum Entropy), a machine learning algorithum which can handle presence/background data. The outputs of this analysis are models of predicted habitat suitability of **fundamental niches** from environmental (climate) data. These models predict suitable from historical (1970s-2000s), to future projected climate conditions due to climate change under two Shared Socioeconomic Pathways (SSP2-4.5 and SSP5-8.5). This is essential for understanding how these species may respond to changes in climate, so that they can be better managed, sampled, or conserved for the preservation of these species genetic diversity for future generations. 
+The following is a reproducible workflow for the development of species distribution models (SDMs), using presence/background occurrence data for *M. coronaria* and *M. fusca* crabapple tree species. This data will be explained in more detail bellow. Occurrence data will be downloaded from the open source Global Biodiversity Information Facility (GBIF). There are several types of SDMs, however in this workflow we use the widely adopted MaxEnt (Maximum Entropy), a machine learning algorithum which can handle presence/background data. The outputs of this analysis are models of predicted habitat suitability of **fundamental niches** from environmental (climate) data. These models predict suitable from historical (1970s-2000s), to future projected climate conditions due to climate change under two Shared Socioeconomic Pathways (SSP2-4.5 and SSP5-8.5). This is essential for understanding how these species may respond to changes in climate, so that they can be better managed, sampled, or conserved for the preservation of these species genetic diversity for future generations. 
 
-See the following for a introduction and description of Maxent: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
+See the following for a introduction and description of MaxEnt: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
 
 Here is a brief overview of the steps and associated scripts for each part of the analysis. 
 
@@ -39,7 +39,7 @@ Step| Script| Purpose
 2| `occ_clean.R` | Clean occurrence (presence) data points
 3| `occ_thin.R` | Thin occurrence points to a single observation per predictor (raster) cell
 4| `malus_bg.R` | Download ecoregions, sample background points, predictor cluster, 3D Kernel density plots
-5| `malus_sdm.R` | Split training/testing data, Maxent models, habitat predictions
+5| `malus_sdm.R` | Split training/testing data, Max models, habitat predictions
 6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 7| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
 
@@ -261,11 +261,14 @@ occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 ```
 
-Now we are going to download the WorldClim predictor rasters. WorldClim is a global data set of bioclimatic variables commonly used in ecological research, particular in SDM workflows. Variables in this data set represent a comprehensive set of climatic conditions, including tempature seasonality, perciptication in wettest/driest months and temperature extremes. See <https://www.worldclim.org/data/bioclim.html> for a complete list of all 19 bioclimatic variables included.
+Now we are going to download the WorldClim predictor rasters. WorldClim is a global data set of bioclimatic variables commonly used in ecological research, particular in SDM workflows. Variables in this data set represent a comprehensive set of climatic conditions, including tempature seasonality, perciptication in wettest/driest months and temperature extremes. See <https://www.worldclim.org/data/bioclim.html> for a complete list of all 19 bioclimatic variables included. 
+
+**NOTE:** There are three resolutions, 10, 5 and 2.5 arcminutes. I choose to use 2.5 arcminutes (and generally recommend) as it is the finest resolution which will give a greater accuracy of environmental conditions, but this is at a cost of increased computation time. For reference 2.5 arcminutes is about 3.3 km at 45 degree latitude. Pick which resolution you think is best for your use.
 
 **IMPORTANT NOTE:** These downloads are large (several thousand Mb), so if you are working in a GitHub repository make sure to add these files to the `.gitignore` file to make sure copies are not sent to the repo.
 
-I like to create a seperate file for WorldClim data, it makes workflow easier to follow and more reproducible. Create a folder within the head of the project.
+I like to create a separate file for WorldClim data, it makes workflow easier to follow and more reproducible. Create a folder within the head of the project.
+
 ```{r}
 setwd("../wclim_data/")
 # Note DO NOT PUSH wclim data**
@@ -300,7 +303,7 @@ saveRDS(occ_cor, file = 'occThin_cor.Rdata')
 ```
 
 ## Backgroud (bg) Point Sampling
-In the Analysis Overview I mentioned in passing that this is a presence/background SDM workflow. Presence/background data sets are cases in which occurrence data is presence-only (like on GBIF), meaning there is no information about the absence of species. This is an important distinction because if we are going to appropriately interpret results, we need to understand the model assumptions. In the presence/background workflow, background (bg) points are randomly sampled from the environment surrounding and overlapping known presence points (more discussion on bg sampling bellow). This effectively samples the distribution of the 'background' environment across your study extent. The Maxent modeling workflow uses this background data to make inferences about absence points, using Baye's Rule. Thus this workflow produces similar results to those as if you were modeling a presence/absence data set (but if presence/absence data is available, use it!). 
+In the Analysis Overview I mentioned in passing that this is a presence/background SDM workflow. Presence/background data sets are cases in which occurrence data is presence-only (like on GBIF), meaning there is no information about the absence of species. This is an important distinction because if we are going to appropriately interpret results, we need to understand the model assumptions. In the presence/background workflow, background (bg) points are randomly sampled from the environment surrounding and overlapping known presence points (more discussion on bg sampling bellow). This effectively samples the distribution of the 'background' environment across your study extent. The Max modeling workflow uses this background data to make inferences about absence points, using Baye's Rule. Thus this workflow produces similar results to those as if you were modeling a presence/absence data set (but if presence/absence data is available, use it!). 
 
 See the following for more on background points: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
 
@@ -476,7 +479,7 @@ saveRDS(cor_sdmData, file = 'cor_sdmData.Rdata')
 
 So we now have successfully defined a study extent using ecoregions that contain occurrences, and croped a predictor raster so that background points could be sampled from it. Then using these background and occurrence points we extracted the bioclimatic values in the predictor raster. 
 
-Using these values in a data frame (e.g. `cor_sdmData`) we can complete several colinearity checks. These checks allow us to understand how the climatic variables relate to one another. It is important to note, that in a classical statistical approach it is considered good practice to limit colinear variables, to prevent over fitting of a model. This step is refereed to as **variable selection**. With that said, Maxent is not a linear modeling approach, and thus does not need to follow assumptions about predictor colinearity. On top of that, Maxent is known to be robust to including many predictors.
+Using these values in a data frame (e.g. `cor_sdmData`) we can complete several colinearity checks. These checks allow us to understand how the climatic variables relate to one another. It is important to note, that in a classical statistical approach it is considered good practice to limit colinear variables, to prevent over fitting of a model. This step is refereed to as **variable selection**. With that said, MaxEnt is not a linear modeling approach, and thus does not need to follow assumptions about predictor colinearity. On top of that, MaxEnt is known to be robust to including many predictors.
 
 See the following for more on background points: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
 
@@ -488,7 +491,7 @@ pairs(cor_sdmData[,-1]) # drop the first column of 0/1
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/cor_wclim_colinearity.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/colinearity/cor_wclim_colinearity.jpeg"))
 ```
 
 Let's use a more helpful way to detect colinearity of predictor variables, a dendrogram, which visualizes correlation matrices. **NOTE:** This is only considering two-dimensional covariation, and cannot detect higher dimensional correlations.
@@ -507,7 +510,7 @@ rect.hclust(cor_clust, h = 1 - threshold)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/cor_dendo.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/colinearity/cor_dendo.jpeg"))
 ```
 
 We can also visualize the predictor covariate values to understand how they inform the model about the probability of a true presence. This involves the visualization of the distribution of the values at sampled points, presence and background, which allows us to get a peak into how the model constraints come about. 
@@ -589,5 +592,395 @@ In this example I only visualize two of the 19 different bioclimatic variables. 
 
 ## Species Distribution Modeling and Climate Projections
 
-So now have all we need (almost) to build the SDMs, finally. We have the presence (occurrence) points, and background points. We also have the climatic predictor rasters (WorldClim bioclimatic variables). What we don't have is the future bioclimatic data, which we will use with the results of the SDM to make predictions about future suitable habitat, under different climatic scenarios. 
+So now have all we need (almost) to build the SDMs, finally. We have the presence (occurrence) points, and background points. We also have the climatic predictor rasters (WorldClim bioclimatic variables). What we don't have is the **future bioclimatic data**, which we will use with the results of the SDM to make predictions about future suitable habitat, under different climatic scenarios. 
+
+```{r}
+library(tidyverse) # Grammar and data management
+library(terra)# Spatial Data package
+library(predicts) # SDM package
+library(geodata) # basemaps
+library(rJava) # MaxEnt models are dependant on JDK
+library(ENMeval) # Another modeling package, useful for data partitioning (Checkerboarding)
+library(raster) # RasterStack dependancy (a now deprecated function)
+library(ecospat) # Useful spatial ecology tools
+library(parallel) # speed up computation by running in parallel
+library(doParallel) # added functionality to parallel
+```
+
+
+Let's start by loading in the thinned occurrence points and background points, along with some base maps of Canada, USA, and Mexico.
+
+```{r}
+# Download/load basemaps
+us_map <- gadm(country = 'USA', level = 1, resolution = 2,
+               path = "../occ_data/base_maps") #USA basemap w. States
+
+ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
+               path = '../occ_data/base_maps') # Canada basemap w. Provinces
+
+mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
+               path = '../occ_data/base_maps') # Mexico basemap w. States
+
+canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
+
+
+NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
+
+canUSMex_map <- crop(canUSMex_map, NA_ext) # crop to Western Hemisphere
+
+plot(canUSMex_map) # plot basemap
+```
+
+Now lets download the future bioclimatic data. For this we will need to specify a few additional arguments then before when downloading the historical climate data. We will again use the `geodata` package, but instead of `worldclim_global` we will use `cmip6_world`. 
+
+This function will download data for projected future climates from Coupled Model Intercomparison Project Phase 6 (CMIP6) generated from  Global Climate Models (GCMs). CMIP6 projections are based on the Shared Socio-economic Pathway (SSP) scenarios, included in the Intergovernmental Panel on Climate Change (IPCC) Assessment Report (AR6). 
+
+In There are six different SSPs, four of which are available through `geodata`, "126", "245", "370" and "585"; for SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5. This is also available for three time periods: "2021-2040", "2041-2060", and "2061-2080"; or early century (2030), mid century (2050) and late century (2070). In this workflow I will model all three timeframes, and I chose two SSPs, SSP2-4.5 and SSP5-8.5. The former repersents a 'middle of the road' scenario with high climate adaptation, low climate mitigation; and the later is a 'worst case' or 'bussiness as usual' scenario where the global development continues down a unsustainable route with increased fossil fuel reliance. It is worth noting that SSP5-8.5 is the current tracking scenario: <https://news.stanford.edu/2023/01/30/ai-predicts-global-warming-will-exceed-1-5-degrees-2030s/>.
+
+The final decision to make is which CMIP6 climate model you are going to choose. There are several models available through `geodata`, all of which have their individual strengths and weaknesses. For the purposes of this study, as I am primary concerned with *Malus* habitat in Canada, I chose to use the Canadian Earth System Model version 5 (CanESM5). This model is still a global model, but it is most commonly employed for climate research in Canada. Read more here: <https://gmd.copernicus.org/articles/12/4823/2019/gmd-12-4823-2019.html>
+
+**NOTE:** Climate projections, are just that, *projections*. These models are useful, but can be flawed for a host of reasons. Recently it has come to the attention of climate modelers that many of the models included in CMIP6 are 'too hot', meaning the rates of warming may be too high, although this is not true for every region. Read more here: <https://www.science.org/content/article/use-too-hot-climate-models-exaggerates-impacts-global-warming>. 
+
+```{r}
+# SSP (Shared social-economic pathway) 2.45 
+# middle of the road projection, high climate adaptation, low climate mitigation
+ssp245_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+
+ssp245_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+
+ssp245_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+
+# SPP 5.85 
+# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
+ssp585_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+
+ssp585_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+
+ssp585_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")
+```
+
+**NOTE:** Just like with the previous climate data, DO NOT push these large files to a github repo due to the size of the files.
+
+Now that we have the future climate data we need to do a bit more prep work to get ready for the SDMs. First we should load in the cropped climate rasters from the background sampling script. I am doing this so I can visualize a spatial sampling method called checkerboarding (more details to come below).
+
+```{r}
+# These Rasters are useful for sampling spatial checkerboards 
+# and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
+
+setwd('../wclim_data')
+# Historical (1970-2000)
+wclim_cor <- readRDS(file = 'wclim_cor.Rdata')
+wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
+
+wclim_fus <- readRDS(file = 'wclim_fus.Rdata')
+wclim_fus_stack <- raster::stack(wclim_fus) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
+
+```
+**NOTE:** The `stack` function is from the deprecated package `raster` so it may not work in future versions of `ENMeval` (package for checkerboarding and SDM). Similar function from the more up to data `terra` package is `terra::c`, which can be used to combine SpatRasters, but does not have the required `RasterStack` object signature.
+
+
+Then for ease of making predictions downsteam we will extract the names of each bioclimatic raster layer so that we can rename the layers from the projected climates. This is so that when making predictions using our SDM downstearm the names correspond.
+```{r}
+climate_predictors <- names(wclim_cor) # extract climate predictor names, to rename layers in the rasters below
+# This is important to do for making predictions once the SDMs have been made on future climate data
+# Note that the names of the layers still correspond to the same environmental variables
+
+# Future SSPs
+# Do not need to create RasterStacks
+# SSP 245
+names(ssp245_2030) <- climate_predictors #rename raster layers for downsteam analysis
+names(ssp245_2050) <- climate_predictors 
+names(ssp245_2070) <- climate_predictors 
+
+# SSP 585
+names(ssp585_2030) <- climate_predictors #rename raster layers for downsteam analysis
+names(ssp585_2050) <- climate_predictors 
+names(ssp585_2070) <- climate_predictors 
+
+```
+
+So now we have all our data prepped and its time to start getting things sorted for the SDM. In the next few pieces of code I am going to show you how to manually partition data into training and testing groups. There are several reasons for doing this, including and most importantly evaluating the performance and generalization of the model. This is called **cross-validation**, whereby the species occurrence data is partitioned into *training* data that gets inputted into the model, and *testing* data that is withheld and used to evaluate how well the trained model fits the 'new' testing occurrences. There are several different ways to partition data, all of which have pros/cons. 
+
+The simplest method is k-fold random, where data is equally binned into groups ('folds'). However, this can be flawed as can preserve bias in the training and testing data. It is preferred to use **spatial partitioning** to reduce spatial autocorrelation preserve spatial heterogeneity, which can help reduce model overfitting. This creates partitions that are much more ecologically relevant so that the model can learn how the species is spatially organized, which in turn makes the predictions of the model more generalizable for future climate predictions.
+
+There are several different methods to spatially partition occurrence data. A common approach is to overlay a square grids and take a checkerboard pattern of occurrences, where occurrences are partitioned depending on what square they fall in. The method I will demonstrate will complete 4-fold cross validation, where four partitions are taken - three will be used for training and one for testing. As I mentioned I will show you how to do this manually, but the MaxEnt function we will use later will do this partitioning for us, as well are cycle through and withhold each group.
+
+Read more about spatial partitioning and checkerboarding in the following two articles.
+
+Radosavljevic, A., & Anderson, R. P. (2014). Making better Maxent models of species distributions: complexity, overfitting and evaluation. Journal of biogeography, 41(4), 629-643. <https://doi.org/10.1111/jbi.12227>.
+
+Muscarella, R., Galante, P. J., Soley‐Guardia, M., Boria, R. A., Kass, J. M., Uriarte, M., & Anderson, R. P. (2014). ENM eval: An R package for conducting spatially independent evaluations and estimating optimal model complexity for Maxent ecological niche models. Methods in ecology and evolution, 5(11), 1198-1205. <https://doi.org/10.1111/2041-210X.12261>.
+
+Let's get started with the partitions.
+
+```{r}
+# Spatial partitioning preparation
+
+occ_cor_coords <- as.data.frame(geom(occThin_cor)[,3:4]) # extract longitude, lattitude from occurence points
+bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+
+occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
+bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+
+```
+
+The `geom` function will get the geometry of the occurrences from the SpatVectors and store them in data frames.
+
+```{r}
+# Spatial Checkerboard partitioning of occurrence and background points cross-fold validation
+set.seed(1337)
+
+agg_factor <- c(9,9) # this defines how many adjacent cells are aggregated into the same checkboard 'sqaure'
+# I visually tested different aggregations and found 9,9 was the best fit given the spatial extent
+```
+
+Setting a random generator seed will ensure that randomized partitions yield the same results consistently. The aggregation (agg) factor determines at what scale the occurrences are aggregated in each grid cell. The first value species the fine scale 
+
+**NOTE:** We are using the `get.checkerboard2` function to get the 4-fold cross validation. This function is convenient but there is no reason why you could not do more partitions if you wanted to.
+
+There are four required arguments: **1.** the species occurrences coordinates, **2.** background point coordinates, **3.** a predictor `RasterStack` that is cropped to the extent of the background, and **4.** the above defined aggregation factor. 
+
+Then we can use the `evalplot.grps` function to visualize the partitions.
+
+```{r}
+cor_cb <- get.checkerboard2(occs = occ_cor_coords, 
+                            bg = bg_cor_coords, 
+                            envs = wclim_cor_stack, 
+                            aggregation.factor = agg_factor
+                            )
+
+evalplot.grps(pts = occ_cor_coords, pts.grp = cor_cb$occs.grp, envs = wclim_cor_stack, pts.size = .75) # plot the checkerboard partitions of occurrence points
+evalplot.grps(pts = bg_cor_coords, pts.grp = cor_cb$bg.grp, envs = wclim_cor_stack, pts.size = .75) # plot the checkerboard partitions of occurrence bg points
+# background points may return an error if the checkboard sampling, this can happen due to the aggregation factor removing some obs 
+# It is fine as we do not need to visualize groups. If you want to, must remove the difference in observations.
+
+```
+
+First lets look at the species occurrence partitions. But, it is hard to see the checkerboard pattern.
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_pr.jpeg"))
+```
+
+Now let's look at the background points. As you can see the checkerboarding is much clearer. I also show how adjusting the aggregation factor changes the scale at which the partitions are taken from.
+
+**3,3** aggregation
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_3,3.jpeg"))
+```
+
+**6,6** aggregation
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_6,6.jpeg"))
+```
+
+**9,9** aggregation, which I chose to use!
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_9,9.jpeg"))
+```
+
+**12,12** aggregation
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_12,12.jpeg"))
+```
+
+Okay, now that we have played around with the understanding how background point sampling works lets dive into developing our MaxEnt model. We are going to use **parallel processing**, to utilize multiple processors (CPUs) simultaneously. This will increase the amount of available memory and significantly decrease the computational time. If you are using a Windows computer (like me), then you only have one type of parallel processing available to you, known as 'socket' clusters. Read more here: <https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/#:~:text=As%20a%20result%2C%20it%20runs,40%25%20faster%20than%20the%20socket.>
+
+First let's take a look at the code chunk and then I will break each argument down.
+
+```{r}
+# Build Species Distribution Model using MaxEnt from the <ENMeval> package
+
+# Run prediction in a parallel using 'socket' clusters to help speed up computation
+# <ENMeval> implements parallel functions natively
+# But load <parallel> library for additional functions like <decectCores()>
+cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
+set.seed(1337)
+
+cor_maxent <- ENMevaluate(occ = occ_cor_coords, # occurrence records
+                            envs = wclim_cor, # environment from background training area
+                            n.bg = 20000, # 20000 bg points
+                            tune.args =
+                              list(rm = seq(0.5, 8, 0.5),
+                                   fc = c("L", "LQ", "H",
+                                          "LQH", "LQHP", "LQHPT")),
+                            partition.settings =
+                              list(aggregation.factor = c(9, 9),  gridSampleN = 20000), # 9,9 agg 
+                            partitions = 'checkerboard2',
+                            parallel = TRUE,
+                            numCores = cn - 1, # leave one core available for other apps
+                            parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
+                            algorithm = 'maxent.jar')
+
+```
+
+**NOTE:** The `cn` object is the number of physical CPUs your computer has. The function `detectCores` requires that you load the `parallel` library. Also, make sure to set the random generator seed to achieve consistent results. 
+
+**Breakdown of the `ENMevaluate` function**
+
+* The first argument that it is expecting is a `data.frame` of all species occurrences with two columns, longitude and latitude, in that specific order.
+
+* Like in the example we did above, we want to set `n.bg` = 20,000 background points to get a comprehensive sample. 
+
+* Next the the `envs` argument is `SpatRaster` of bioclimatic predictor data cropped to the **background extent** (or environment). We can reuse the cropped raster we produced in the `malus_bg.R` script. 
+
+* Now we can adjust, or tune, the arguments of the MaxEnt algorithm with `tune.args`. 
+  + `rm` stands for "regularization multiplier", which affects how focused or closely-fitted the
+output distribution is. Smaller values can lead to model overfitting, so it is good to test different values.
+  + `fc` stands for  "feature class". This corresponds to a mathematical transformation of the different covariates used in the model to allow complex relationship to be modeled. L = linear, Q = quadratic, H = hinge, P = product and T = threshold.
+  + `partition.settings` is where to control the aggregation factor we played around with above. As well make sure to set the number of grid cells included in the partitioning equal to the number of background points sampled. It is 10,000 by default. 
+  + `partitions` is how to select what cross-validation method will be used. Like above we are going to use the 4-fold checkerboad partitioning. The benefit of doing this in the `ENMevalutate` function is that the model will parition and then cross-validate across all groupings, meaning it will rotate what data is used in training and what is used for testing. It will then produce a continuous Boyce Index (cbi) to correlate each set of testing data against model fits.
+  + `parallel` set this equal to `TRUE` to ensure parallel processing is enabled. Likely if not enabled you will get a runtime or memory error - especially with complex models.
+  + `numCores` is where we want to specify how many cores RStudio can simultaneously access. It is good practice to leave one core free to run other processes on your computer.
+  + `parallelType` set to "doParallel" to run a socket cluster. This is the only type available on Windows. The other method, "doSNOW", will run a fork cluster - which with can decrease computational time depending - but is only available on Mac and Linux.
+  + `algorithm` is how to select which SDM you want to use. In this case I am using the `maxent.jar` algorithm, which is a version of MaxEnt implemented in the `dismo` package using Java Script. Another version of MaxEnt is also available, implemented in native R with the `maxnet` package. It is worth noting that their are subtle differences. Personally I find the memory usage with `maxnet` to be much greater than `maxent.jar`, which equals longer computational time. The benefit of `maxnet` is you do not have to install JDK, which can be a challenge. 
+
+**NOTE:** The above model took 39 minutes and 32.8 seconds to compute. My laptop has a 3.2 GHz AMD Ryzen 7 5800H processor with eight cores. Depending on your own PC specs, model complexity including number of different tunings, and study extent your modeling could take longer/shorter depending. 
+
+And just like all the previous long computations we want to save a `.Rdata` file to reload the model if needed.
+
+```{r}
+# Save the MaxEnt model so you do not have to waste time re-running the model
+setwd('../sdm_output')
+saveRDS(cor_maxent, file = 'cor_maxent.Rdata') # save
+cor_maxent <- readRDS(file = 'cor_maxent.Rdata') # load 
+
+```
+
+The next step after running several  model combinations (96 to be percise), is to select what 'best' model (with particular tuning arguments). A common approach is to use Akaike information criterion (AIC), specifically delta AICc, which is a corrected AIC value, expressed as the relative difference ib values. Delta AICc values less than 2, are considered to be equally good models. In my case, there was only a single model less than 2, the best performing model.
+
+```{r}
+# Note that maxent results provide Continuous Boyce Index (cbi)
+best_cor_maxent <- subset(cor_maxent@results, delta.AICc == 0) # selects the best performing model based on delta AICc - returns data frame object
+mod.best_cor_maxent <- eval.models(cor_maxent)[[best_cor_maxent$tune.args]] # extracts the best model - returns MaxEnt object
+
+```
+
+So now that we have selected our best performing MaxEnt model we can start to make some predictions! We are going to use the `terra` package to create a `SpatRaster` of habitat suitability scores. First, lets start by making some predictions using the historical WorldClim data. In this case we want to use the non-cropped worldclim data, to make predictions across North America. This will become more clear why once we get to the future climate change predictions.
+
+```{r}
+# Wclim is the historical climatic conditions (1970-2000)
+cor_pred_hist <- terra::predict(wclim, mod.best_cor_maxent, cores = cn - 1)
+
+plot(cor_pred_hist)
+points(occThin_cor, cex = 0.05)
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_raw.jpeg"))
+```
+
+We have made our first prediction of the **fundamental niche** of *M. coronaria*! But there are a few more things to consider before moving on. 
+
+First, is how confident can we be of these predictions? Using metrics like Area Under the Curve (AUC) and Continous Boyce Index can help us, however they have their own flaws, and so its important to **think critically** about the results of your predictions. 
+
+Second, is it best to leave these suitability scores as a continuous gradient of habitat suitability? Myself (and many others) find maps with colour gradients illegible, or less informative. Some take the approach of creating a binary threshold, where habitat suitability is boolean. There are several methods to determine this binary threshold, which can be done using the `predicts` package. A flaw of this approach is it less tangible what these thresholds mean in lay terms.
+
+```{r}
+cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
+cor_threshold <- predicts::threshold(cor_pa)
+cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
+
+```
+
+However, I find it more practical to bin suitability scores into several **categories**. Lets say three categories: "High suitability", "Moderate suitability" and "Low suitability". These categories should be **determined using qauntiles**, where suitability scores in the lowest quantiles can be considered to be lowly or moderately suitable, and higher scores considered to be of high suitability. In this case I use the 1st, 10th, and 50th percentile to classify these categories. This means that in the low habitat category we are only committing 1% of predicted values, compared to the 50th, were we are omitting 50% of predicted values.
+
+```{r}
+corPred_val <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1
+corPred_threshold_1 <- quantile(corPred_val, 0.01, na.rm = T) # Low suitability
+corPred_threshold_10 <- quantile(corPred_val, 0.1, na.rm = T) # Moderate suitability
+corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
+
+```
+
+Now let's visualize the results! As mentioned previously, we will use `ggplot2` downstream to make publication quality plots. But, this is a great start!
+
+```{r}
+legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
+fill_cols <- c('#D81B60', '#1E88E5', '#FFC107') # colour blind friendly
+
+par(mar = c(5, 5, 5, 5))
+terra::plot(cor_pred_hist > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -60), ylim = c(25, 50), main = 'Historical (1970-2000)')
+terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
+legend(x = -75, y = 30, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
+
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_bin.jpeg"))
+```
+
+Now we can move on to make predictions for the future climate scenarios. We will still use the **same threshold** values from the historical prediction to keep interpretation consistent. As always, make sure to save them.
+
+```{r}
+# Future Climate predictions
+# SSP 245
+cor_pred_ssp245_30 <- terra::predict(ssp245_2030, mod.best_cor_maxent, cores = cn - 1)
+cor_pred_ssp245_50 <- terra::predict(ssp245_2050, mod.best_cor_maxent, cores = cn - 1)
+cor_pred_ssp245_70 <- terra::predict(ssp245_2070, mod.best_cor_maxent, cores = cn - 1)
+
+# SSP585
+cor_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_cor_maxent, cores = cn - 1)
+cor_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_cor_maxent, cores = cn - 1)
+cor_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_cor_maxent, cores = cn - 1)
+
+# Save/Load M cor. SDM predictions ----------------------------------------
+setwd('../sdm_output')
+saveRDS(cor_pred_hist, file = 'cor_pred_hist.Rdata')
+
+saveRDS(cor_pred_ssp245_30, file = 'cor_pred_ssp245_30.Rdata')
+saveRDS(cor_pred_ssp245_50, file = 'cor_pred_ssp245_50.Rdata')
+saveRDS(cor_pred_ssp245_70, file = 'cor_pred_ssp245_70.Rdata')
+
+saveRDS(cor_pred_ssp585_30, file = 'cor_pred_ssp585_30.Rdata')
+saveRDS(cor_pred_ssp585_50, file = 'cor_pred_ssp585_50.Rdata')
+saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
+```
+
+For the purposes of this tutorial I am only going to show results of one of the future climate predictions - SSP5-8.5 2020-2040 (the current tracking projections). I am using the same plot code as above for the historical prediction.
+
+```{r}
+
+```
+
 
