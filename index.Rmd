@@ -871,7 +871,7 @@ output distribution is. Smaller values can lead to model overfitting, so it is g
 
 **NOTE:** The above model took 39 minutes and 32.8 seconds to compute. My laptop has a 3.2 GHz AMD Ryzen 7 5800H processor with eight cores. Depending on your own PC specs, model complexity including number of different tunings, and study extent your modeling could take longer/shorter depending. 
 
-And just like all the previous long computations we want to save a `.Rdata` file to reload the model if needed.
+And just like all the previous long computations we want to save a `.Rdata` file to reload the model if needed. **NOTE:** These files are large (>200 Mb), DO NOT PUSH to git.
 
 ```{r}
 # Save the MaxEnt model so you do not have to waste time re-running the model
