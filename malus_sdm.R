@@ -11,13 +11,15 @@ library(rJava) # MaxEnt models are dependant on JDK
 library(ENMeval) # Another modeling package, useful for data partitioning (Checkerboarding)
 library(raster) # RasterStack dependancy (a now deprecated function)
 library(ecospat) # Useful spatial ecology tools
+library(parallel) # speed up computation by running in parallel
+library(doParallel) # added functionality to parallel
 
 
 # Load occurrence data and basemaps -------------------------------------------------------
 getwd() # check you directory location
 
 # Background points in SpatVectors
-setwd("..\/occ_data/")
+setwd("../occ_data/")
 cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
 fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
 
@@ -45,182 +47,216 @@ canUSMex_map <- crop(canUSMex_map, NA_ext) # crop to Western Hemisphere
 
 plot(canUSMex_map) # plot basemap
 
+
+# Great Lakes shapefiles for making pretty maps and cropping
+great_lakes <- vect('C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/great lakes/combined great lakes/')
+great_lakes <- crop(great_lakes, NA_ext)
+
+
+# Download/load WorldClim data under future climate scenarios -------------
+# WARNING DO NOT PUSH WORLDCLIM DATA
+setwd('../wclim_data/')
+# Historical climate 1970-2000
+wclim <- geodata::worldclim_global(var = 'bio',
+                                   res = 2.5, 
+                                   version = '2.1', 
+                                   path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+# SSP (Shared social-economic pathway) 2.45 
+# middle of the road projection, high climate adaptation, low climate mitigation
+ssp245_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp245_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp245_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+# SPP 5.85 
+# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
+ssp585_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp585_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp585_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "../wclim_data/")%>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
 # Load cropped climate Rasters --------------------------------------------
 # These Rasters are useful for sampling spatial checkerboards 
 # and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
 
 setwd('../wclim_data')
 # Historical (1970-2000)
-wclim_cor <- readRDS(file = 'wclim_cor.Rdata')
-wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for depandacy in ENMeval checkboarding
+wclim_cor <- readRDS(file = 'wclim_cor.Rdata') 
+#wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
 wclim_fus <- readRDS(file = 'wclim_fus.Rdata')
-wclim_fus_stack <- raster::stack(wclim_fus) # covert SpatRaster to RasterStack for depandacy in ENMeval checkboarding
+#wclim_fus_stack <- raster::stack(wclim_fus) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
 climate_predictors <- names(wclim_cor) # extract climate predictor names, to rename layers in the rasters below
 # This is important to do for making predictions once the SDMs have been made on future climate data
-# Note that the names of the layers still correspond to the same enviromental variables
+# Note that the names of the layers still correspond to the same environmental variables
 
 # Future SSPs
 # Do not need to create RasterStacks
 # SSP 245
-cor_ssp245_2030 <- readRDS(file = 'cor_ssp245_2030.Rdata')
-names(cor_ssp245_2030) <- climate_predictors #rename raster layers for downsteam anaylsis
-fus_ssp245_2030 <- readRDS(file = 'fus_ssp245_2030.Rdata')
-names(fus_ssp245_2030) <- climate_predictors 
-
-cor_ssp245_2050 <- readRDS(file = 'cor_ssp245_2050.Rdata')
-names(cor_ssp245_2050) <- climate_predictors
-fus_ssp245_2050 <- readRDS(file = 'fus_ssp245_2050.Rdata')
-names(fus_ssp245_2050) <- climate_predictors
-
-cor_ssp245_2070 <- readRDS(file = 'cor_ssp245_2070.Rdata')
-names(cor_ssp245_2070) <- climate_predictors
-fus_ssp245_2070 <- readRDS(file = 'fus_ssp245_2070.Rdata')
-names(fus_ssp245_2070) <- climate_predictors
+names(ssp245_2030) <- climate_predictors #rename raster layers for downsteam analysis
+names(ssp245_2050) <- climate_predictors 
+names(ssp245_2070) <- climate_predictors 
 
 # SSP 585
-cor_ssp585_2030 <- readRDS(file = 'cor_ssp585_2030.Rdata')
-names(cor_ssp585_2030) <- climate_predictors
-fus_ssp585_2030 <- readRDS(file = 'fus_ssp585_2030.Rdata')
-names(fus_ssp585_2030) <- climate_predictors
-
-cor_ssp585_2050 <- readRDS(file = 'cor_ssp585_2050.Rdata')
-names(cor_ssp585_2050) <- climate_predictors
-fus_ssp585_2050 <- readRDS(file = 'fus_ssp585_2050.Rdata')
-names(fus_ssp585_2050) <- climate_predictors
-
-cor_ssp585_2070 <- readRDS(file = 'cor_ssp585_2070.Rdata')
-names(cor_ssp585_2070) <- climate_predictors
-fus_ssp585_2070 <- readRDS(file = 'fus_ssp585_2070.Rdata')
-names(fus_ssp585_2070) <- climate_predictors
+names(ssp585_2030) <- climate_predictors #rename raster layers for downsteam analysis
+names(ssp585_2050) <- climate_predictors 
+names(ssp585_2070) <- climate_predictors 
 
 
 
-# Sub-sample Test and Training Occurrences --------------------------------
-# Simple random paritioning of occurrance datapoints into k-folds ('k' number of groups)
-# This does not always capture properly spattially replicated variation in the data 
-# See spatial partitioning bellow using spatial checker boarding
-# M. coronaria
-folds_cor <- folds(occThin_cor, k = 5)
-test_cor <- occThin_cor[folds_cor == 1, ]
-train_cor <- occThin_cor[folds_cor != 1, ]
+# Coronaria - MaxEnt Model  ------------------------------------------------
 
-#take a look at the spatial distribution
-plot(canUSMex_map)
-points(train_cor, col = 'blue')
-points(test_cor, col = 'red')
-
-
-# M. fusca
-folds_fus <- folds(occThin_fus, k = 5)
-test_fus <- occThin_fus[folds_fus == 1, ]
-train_fus <- occThin_fus[folds_fus != 1, ]
-
-
-#take a look at the spatial distribution
-plot(canUSMex_map)
-points(train_fus, col = 'blue')
-points(test_fus, col = 'red')
-
-
-
-# Spatial partitioning preparation ----------------------------------------
-
+# Spatial partitioning preparation
 occ_cor_coords <- as.data.frame(geom(occThin_cor)[,3:4]) # extract longitude, lattitude from occurence points
 bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
 bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
+# Build Species Distribution Model using MaxEnt from the <ENMeval> package
 
-# Spatial Checkerboard sampling -------------------------------------------
-# Spatial Checkerboard partitioning of occurrence and background points cross-fold validation
+# Run prediction in a parallel using 'socket' clusters to help speed up computation
+# <ENMeval> implements parallel functions natively
+# But load <parallel> library for additional functions like <decectCores()>
+cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
 
-agg_factor <- c(9,9) # this defines how many adjacent cells are aggregated into the same checkboard 'sqaure'
-# I visually tested different aggregations and found 9,9 was the best fit given the spatial extent
+cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
+                            envs = wclim_cor, # environment from background training area
+                            n.bg = 20000, # 20000 bg points
+                            tune.args =
+                              list(rm = seq(0.5, 8, 0.5),
+                                   fc = c("L", "LQ", "H",
+                                          "LQH", "LQHP", "LQHPT")),
+                            partition.settings =
+                              list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
+                            partitions = 'checkerboard2',
+                            parallel = TRUE,
+                            numCores = cn - 1, # leave one core available for other apps
+                            parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
+                            algorithm = 'maxent.jar')
+
+# Save the MaxEnt model so you do not have to waste time re-running the model
+setwd('../sdm_output')
+saveRDS(cor_maxent, file = 'cor_maxent.Rdata') # save
+cor_maxent <- readRDS(file = 'cor_maxent.Rdata') # load 
 
 
-cor_cb <- get.checkerboard2(occs = occ_cor_coords, 
-                            bg = bg_cor_coords, 
-                            envs = wclim_cor_stack, 
-                            aggregation.factor = agg_factor
-                            )
+# M. coronaria Model Selection --------------------------------------------
+# Note that maxent results provide Continuous Boyce Index (cbi)
+best_cor_maxent <- subset(cor_maxent@results, delta.AICc == 0) # selects the best performing model based on delta AICc - returns data frame object
+mod.best_cor_maxent <- eval.models(cor_maxent)[[best_cor_maxent$tune.args]] # extracts the best model - returns MaxEnt object
 
-evalplot.grps(pts = occ_cor_coords, pts.grp = cor_cb$occs.grp, envs = wclim_cor_stack, pts.size = .75) # plot the checkerboard partitions of occurrence points
-evalplot.grps(pts = bg_cor_coords, pts.grp = cor_cb$bg.grp, envs = wclim_cor_stack, pts.size = .75) # plot the checkerboard partitions of occurrence bg points
-# background points may return an error if the checkboard sampling, this can happen due to the aggregation factor removing some obs
-# It is fine as we do not need to visualize groups. If you want to, must remove the difference in observations.
-
-# Separate testing and training data
-cor_occ_cbGroup <- cor_cb$occs.grp # extract group patitions into a vector
-cor_occ_train <- occThin_cor[cor_occ_cbGroup != 1, ] # 3 groups used for training the model
-cor_occ_test <- occThin_cor[cor_occ_cbGroup == 1, ] # 1 group withheld for testing the model
-
-
-fus_cb <- get.checkerboard2(occs = occ_fus_coords, 
-                            bg = bg_fus_coords, 
-                            envs = wclim_fus_stack, 
-                            aggregation.factor = agg_factor,
-                            )
-
-evalplot.grps(pts = occ_fus_coords, pts.grp = fus_cb$occs.grp, envs = wclim_fus_stack, pts.size = .75) # plot the checkerboard partitions of occurrence points
-evalplot.grps(pts = bg_fus_coords, pts.grp = fus_cb$bg.grp, envs = wclim_fus_stack, pts.size = .75) # plot the checkerboard partitions of occurrence bg points
-
-# Seperate testing and training data
-fus_cbGroup <- fus_cb$occs.grp # extract group patitions into a vector
-fus_occ_train <- occThin_fus[fus_cbGroup != 1, ] # 3 groups used for training the model
-fus_occ_test <- occThin_fus[fus_cbGroup == 1, ] # 1 group withheld for testing the model
-
-
-# Model from Predictors in Raster -------------------------------------------------------
-# Build Species Distribution Model using MaxEnt from the <predicts> package
-
-# M. coronaria
-cor_trainModel <- MaxEnt(x = wclim_cor, p = cor_occ_train, a = cor_bg_vec) # build a training model
-cor_testModel <- MaxEnt(x = wclim_cor, p = cor_occ_test, a = cor_bg_vec) # build a testing model
-# Compare AUC values between the training and test models to see how well they both perform.  Ideally have similar AUC values
-
-
-
-
-# M. fusca
-fus_trainModel <- MaxEnt(x = wclim_fus, p = fus_occ_train, a = fus_bg_vec) # build a training model
-fus_testModel <- MaxEnt(x = wclim_fus, p = fus_occ_test, a = fus_bg_vec) #build a testing model
-
-
-
-# Habitat Suitability Predictions (Histocal and Future Projections) -------
-# Run prediction in a parallel 'socket' cluster to help speed up computation
-# Terra implements parallel functions natively
-# But load <parallel> library for additional functions like <decectCores()>
-library(parallel)
-cn <- detectCores(logical = F) # number of physical RAM cores in your computure
 
 # M. coronaria predictions ------------------------------------------------
+# Now use the <terra> package to plot the SDM prediction.
+# Wclim is the historical climatic conditions (1970-2000)
+cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
+cor_pred_hist <- terra::predict(wclim, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
 
-# 'Historical Habitat Suitability'
-cor_pred_hist <- terra::predict(wclim_cor, cor_trainModel, cores = cn - 1) # leave one core for other processes, browser etc.
-plot(cor_pred_hist, main = 'Malus coronaria (Historical)') #Plot 
-points(occThin_cor, cex = 0.5) # Overlay thinned occurrences
+plot(cor_pred_hist)
+points(occThin_cor, cex = 0.05)
 
-# Boyce Index, useful for assessing model performance
-#NOT WORKING?
-ecospat.boyce(fit = cor_pred_hist, obs = occ_cor_coords_mat)
+# Evaluate predictions using Boyce Index
+# the number of true presences should decline with suitability groups 100-91, 90-81, etc. 
+# First extract suitability values for the background and presence points, make sure to omit NA values
+corPred_bg_val <- terra::extract(cor_pred_hist, bg_cor_coords)$lyr1 %>% 
+  na.omit()
 
+corPred_val_na <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1 %>% 
+  na.omit()
+
+# Evaluate predictions using Boyce Index
+ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of bg points
+                           obs = corPred_val_na, # vector of 
+                           nclass = 0, 
+                           PEplot = TRUE,
+                           method = 'spearman')
+
+# Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
+corPred_val <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1
+corPred_threshold_1 <- quantile(corPred_val, 0.01, na.rm = T) # Low suitability
+corPred_threshold_10 <- quantile(corPred_val, 0.1, na.rm = T) # Moderate suitability
+corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
+
+legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
+fill_cols <- c('#D81B60', '#1E88E5', '#FFC107')
+
+par(mar = c(5, 5, 5, 5))
+terra::plot(cor_pred_hist > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -60), ylim = c(25, 50), main = 'Historical (1970-2000)')
+terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
+legend(x = -75, y = 30, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
+
+
+# Future Climate predictions
 # SSP 245
-cor_pred_ssp245_30 <- terra::predict(cor_ssp245_2030, cor_trainModel, cores = cn - 1)
-cor_pred_ssp245_50 <- terra::predict(cor_ssp245_2050, cor_trainModel, cores = cn - 1)
-cor_pred_ssp245_70 <- terra::predict(cor_ssp245_2070, cor_trainModel, cores = cn - 1)
+cor_pred_ssp245_30 <- terra::predict(ssp245_2030, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+cor_pred_ssp245_50 <- terra::predict(ssp245_2050, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+cor_pred_ssp245_70 <- terra::predict(ssp245_2070, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
 
-# SSP585
-cor_pred_ssp585_30 <- terra::predict(cor_ssp585_2030, cor_trainModel, cores = cn - 1)
-cor_pred_ssp585_50 <- terra::predict(cor_ssp585_2050, cor_trainModel, cores = cn - 1)
-cor_pred_ssp585_70 <- terra::predict(cor_ssp585_2070, cor_trainModel, cores = cn - 1)
+# SSP 585
+cor_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+cor_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+cor_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
 
 # Save/Load M cor. SDM predictions ----------------------------------------
 setwd('../sdm_output')
+
+# Save
 saveRDS(cor_pred_hist, file = 'cor_pred_hist.Rdata')
 
 saveRDS(cor_pred_ssp245_30, file = 'cor_pred_ssp245_30.Rdata')
@@ -232,126 +268,130 @@ saveRDS(cor_pred_ssp585_50, file = 'cor_pred_ssp585_50.Rdata')
 saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
 
 # Load
-setwd('../sdm_output')
 cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
 
 cor_pred_ssp245_30 <- readRDS(file = 'cor_pred_ssp245_30.Rdata')
 cor_pred_ssp245_50 <- readRDS(file = 'cor_pred_ssp245_50.Rdata')
 cor_pred_ssp245_70 <- readRDS(file = 'cor_pred_ssp245_70.Rdata')
 
-
 cor_pred_ssp585_30 <- readRDS(file = 'cor_pred_ssp585_30.Rdata')
 cor_pred_ssp585_50 <- readRDS(file = 'cor_pred_ssp585_50.Rdata')
 cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
 
-# Plot M. coronaria historical, early/mid/late century projections of habitat suitability
-# Example: SSP245
-cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(cor_pred_hist, main = 'Historical (1970-2000)')
-plot(cor_pred_ssp585_30, main = 'Early-Century (2021-2040)')
-plot(cor_pred_ssp585_50, main = 'Mid-Century (2041-2060)')
-plot(cor_pred_ssp585_70, main = 'Late-Century (2061-2080)')
-mtext("Malus coronaria Probability of Habitat Suitability", outer = T)
 
-
-# M. coronaria model eval -------------------------------------------------
-# for evaluating the p/bg performance of models
-# pa_evaluate expects occurrences in matric form
-occ_cor_coords_mat <- as.matrix(occ_cor_coords)
-bg_cor_coords_mat <- as.matrix(bg_cor_coords)
-
-# Note make sure to change the predicted climate Raster for each model evaluation
-cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_trainModel, x = wclim_cor)
-cor_threshold <- predicts::threshold(cor_pa)
-
-# M. coronaria Habititat Suitability Maps ---------------------------------
-#Historical and predicted maps
-cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
-plot(cor_hist_habitat, col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-points(occThin_cor, cex = 0.5, pch = 4, col = 'red')
-
-cor_ssp245_2030_habitat <- cor_pred_ssp245_30 > cor_threshold$max_spec_sens
-cor_ssp245_2050_habitat <- cor_pred_ssp245_50 > cor_threshold$max_spec_sens
-cor_ssp245_2070_habitat <- cor_pred_ssp245_70 > cor_threshold$max_spec_sens
-
-cor_ssp585_2030_habitat <- cor_pred_ssp585_30 > cor_threshold$max_spec_sens
-cor_ssp585_2050_habitat <- cor_pred_ssp585_50 > cor_threshold$max_spec_sens
-cor_ssp585_2070_habitat <- cor_pred_ssp585_70 > cor_threshold$max_spec_sens
+# Plot SSP 585 2030
+par(mar = c(5, 5, 5, 5))
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -50), ylim = c(25, 60), main = 'SSP5-8.5 Early Cent. (2020-2040)')
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+legend(x = -72, y = 35, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
 
 
 
-# Save/Load M. cor. Predicted Suitable Habitat ----------------------------
+# Fusca - MaxEnt Model ----------------------------------------------------
+
+# Build Species Distribution Model using MaxEnt from the <ENMeval> package
+
+# Run prediction in a parallel using 'socket' clusters to help speed up computation
+# <ENMeval> implements parallel functions natively
+# But load <parallel> library for additional functions like <decectCores()>
+cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
+set.seed(1337)
+
+fus_maxent <- ENMevaluate(occ_fus_coords, # occurrence records
+                          envs = wclim_fus, # environment from background training area
+                          n.bg = 20000, # 20000 bg points
+                          tune.args =
+                            list(rm = seq(0.5, 8, 0.5),
+                                 fc = c("L", "LQ", "H",
+                                        "LQH", "LQHP", "LQHPT")),
+                          partition.settings =
+                            list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
+                          partitions = 'checkerboard2',
+                          parallel = TRUE,
+                          numCores = cn - 1, # leave one core available for other apps
+                          parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
+                          algorithm = 'maxent.jar')
+
+# Save the MaxEnt model so you do not have to waste time re-running the model
 setwd('../sdm_output')
-saveRDS(cor_hist_habitat, file ='cor_hist_habitat.Rdata')
-
-saveRDS(cor_ssp245_2030_habitat, file = 'cor_ssp245_2030_habitat.Rdata')
-saveRDS(cor_ssp245_2050_habitat, file = 'cor_ssp245_2050_habitat.Rdata')
-saveRDS(cor_ssp245_2070_habitat, file = 'cor_ssp245_2070_habitat.Rdata')
-
-saveRDS(cor_ssp585_2030_habitat, file = 'cor_ssp585_2030_habitat.Rdata')
-saveRDS(cor_ssp585_2050_habitat, file = 'cor_ssp585_2050_habitat.Rdata')
-saveRDS(cor_ssp585_2070_habitat, file = 'cor_ssp585_2070_habitat.Rdata')
-
-# Load
-cor_hist_habitat <- readRDS(file ='cor_hist_habitat.Rdata')
-
-cor_ssp245_2030_habitat <- readRDS(file = 'cor_ssp245_2030_habitat.Rdata')
-cor_ssp245_2050_habitat <- readRDS(file = 'cor_ssp245_2050_habitat.Rdata')
-cor_ssp245_2070_habitat <- readRDS(file = 'cor_ssp245_2070_habitat.Rdata')
-
-cor_ssp585_2030_habitat <- readRDS(file = 'cor_ssp585_2030_habitat.Rdata')
-cor_ssp585_2050_habitat <- readRDS(file = 'cor_ssp585_2050_habitat.Rdata')
-cor_ssp585_2070_habitat <- readRDS(file = 'cor_ssp585_2070_habitat.Rdata')
-
-
-# Plot M. coronaria predicted habitat -------------------------------------
-# SSP245
-cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(cor_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp245_2030_habitat, main = 'Early-Century (2021-2040)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp245_2050_habitat, main = 'Mid-Century (2041-2060)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp245_2070_habitat, main = 'Late-Century (2061-2080)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-mtext(text = expression(paste("SSP 2-4.5 ", italic("Malus coronaria "),"Predicted Suitable Habitat")), outer = T, cex = 2)
-
-#SSP585
-cor_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(cor_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp585_2030_habitat, main = 'Early-Century (2021-2040)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp585_2050_habitat, main = 'Mid-Century (2041-2060)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(cor_ssp585_2070_habitat, main = 'Late-Century (2061-2080)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-mtext(text = expression(paste("SSP 5-8.5 ", italic("Malus coronaria "),"Predicted Suitable Habitat")), outer = T, cex = 2)
+saveRDS(fus_maxent, file = 'fus_maxent.Rdata') # save
+fus_maxent <- readRDS(file = 'fus_maxent.Rdata') # load 
 
 
 
-# M. fusca predictions ----------------------------------------------------
-# M. fusca
-fus_pred_hist <- terra::predict(wclim_fus, fus_trainModel, cores = cn - 1) # leave one core for other processes, browser etc.
-#plot
-plot(fus_pred, main = 'Malus fusca (Historical)')
-points(occThin_fus, cex = 0.5) # Overlay thinned occurrences
+# M. fusca Model Selection ------------------------------------------------
+# Note that maxent results provide Continuous Boyce Index (cbi)
+# Two models had a delta AIC < 2, rm.1_fc.LQHPT and rm.1.5_fc.LQHPT
+best_fus_maxent <- subset(fus_maxent@results, delta.AICc < 2) # selects the best performing model based on delta AICc - returns data frame object
+mod.best_fus_maxent <- eval.models(fus_maxent)[[best_fus_maxent$tune.args]] # extracts the best model - returns MaxEnt object
 
+
+# M. fusca Predictions ----------------------------------------------------
+# Now use the <terra> package to plot the SDM prediction.
+# Wclim is the historical climatic conditions (1970-2000)
+cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
+fus_pred_hist <- terra::predict(wclim, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
+
+plot(fus_pred_hist)
+points(occThin_fus, cex = 0.05)
+
+# Evaluate predictions using Boyce Index
+# the number of true presences should decline with suitability groups 100-91, 90-81, etc. 
+# First extract suitability values for the background and presence points, make sure to omit NA values
+fusPred_bg_val <- terra::extract(fus_pred_hist, bg_fus_coords)$lyr1 %>% 
+  na.omit()
+
+fusPred_val_na <- terra::extract(fus_pred_hist, occ_fus_coords)$lyr1 %>% 
+  na.omit()
+
+# Evaluate predictions using Boyce Index
+ecospat.boyce(fit = fusPred_bg_val, # vector of predicted habitat suitability of bg points
+              obs = fusPred_val_na, # vector of 
+              nclass = 0, 
+              PEplot = TRUE,
+              method = 'spearman')
+
+# Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
+fusPred_val <- terra::extract(fus_pred_hist, occ_fus_coords)$lyr1
+fusPred_threshold_1 <- quantile(fusPred_val, 0.01, na.rm = T) # Low suitability
+fusPred_threshold_10 <- quantile(fusPred_val, 0.1, na.rm = T) # Moderate suitability
+fusPred_threshold_50 <- quantile(fusPred_val, 0.5, na.rm = T) # High suitability
+
+legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
+fill_cols <- c('#D81B60', '#1E88E5', '#FFC107')
+
+par(mar = c(5, 5, 5, 5))
+terra::plot(fus_pred_hist > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = 'Historical (1970-2000)')
+terra::plot(fus_pred_hist > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(fus_pred_hist > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+#points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
+legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
+
+
+# Future Climate predictions
 # SSP 245
-fus_pred_ssp245_30 <- terra::predict(fus_ssp245_2030, fus_trainModel, cores = cn - 1)
-fus_pred_ssp245_50 <- terra::predict(fus_ssp245_2050, fus_trainModel, cores = cn - 1)
-fus_pred_ssp245_70 <- terra::predict(fus_ssp245_2070, fus_trainModel, cores = cn - 1)
+fus_pred_ssp245_30 <- terra::predict(ssp245_2030, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
+fus_pred_ssp245_50 <- terra::predict(ssp245_2050, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
+fus_pred_ssp245_70 <- terra::predict(ssp245_2070, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
 
-# SSP585
-fus_pred_ssp585_30 <- terra::predict(fus_ssp585_2030, fus_trainModel, cores = cn - 1)
-fus_pred_ssp585_50 <- terra::predict(fus_ssp585_2050, fus_trainModel, cores = cn - 1)
-fus_pred_ssp585_70 <- terra::predict(fus_ssp585_2070, fus_trainModel, cores = cn - 1)
-
+# SSP 585
+fus_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
+fus_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
+fus_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
 
 # Save/Load M fus. SDM predictions ----------------------------------------
 setwd('../sdm_output')
+
+# Save
 saveRDS(fus_pred_hist, file = 'fus_pred_hist.Rdata')
 
 saveRDS(fus_pred_ssp245_30, file = 'fus_pred_ssp245_30.Rdata')
@@ -363,101 +403,24 @@ saveRDS(fus_pred_ssp585_50, file = 'fus_pred_ssp585_50.Rdata')
 saveRDS(fus_pred_ssp585_70, file = 'fus_pred_ssp585_70.Rdata')
 
 # Load
-setwd('../sdm_output')
 fus_pred_hist <- readRDS(file = 'fus_pred_hist.Rdata')
 
 fus_pred_ssp245_30 <- readRDS(file = 'fus_pred_ssp245_30.Rdata')
 fus_pred_ssp245_50 <- readRDS(file = 'fus_pred_ssp245_50.Rdata')
 fus_pred_ssp245_70 <- readRDS(file = 'fus_pred_ssp245_70.Rdata')
 
-
 fus_pred_ssp585_30 <- readRDS(file = 'fus_pred_ssp585_30.Rdata')
 fus_pred_ssp585_50 <- readRDS(file = 'fus_pred_ssp585_50.Rdata')
 fus_pred_ssp585_70 <- readRDS(file = 'fus_pred_ssp585_70.Rdata')
 
-# Plot M. fusca historical, early/mid/late century projections of habitat suitability
-# Example: SSP245
-fus_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(fus_pred_hist, main = 'Historical (1970-2000)')
-plot(fus_pred_ssp245_30, main = 'Early-Century (2021-2040)')
-plot(fus_pred_ssp245_50, main = 'Mid-Century (2041-2060)')
-plot(fus_pred_ssp245_70, main = 'Late-Century (2061-2080)')
-mtext("Malus coronaria Probability of Habitat Suitability", outer = T)
 
-# M. fusca model eval -----------------------------------------------------
-# for evaluating the p/bg performance of models
-# pa_evaluate expects occurrences in matric form
-occ_fus_coords_mat <- as.matrix(occ_fus_coords)
-bg_fus_coords_mat <- as.matrix(bg_fus_coords)
-
-# Note make sure to change the predicted climate Raster for each model evaluation
-fus_pa <- predicts::pa_evaluate(p = occ_fus_coords_mat, a = bg_fus_coords_mat, model = fus_trainModel, x = wclim_fus)
-fus_threshold <- predicts::threshold(fus_pa)
-
-
-# M. fusca Habititat Suitability Maps -------------------------------------
-#Historical and predicted maps
-fus_hist_habitat <- fus_pred_hist > fus_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
-plot(fus_hist_habitat, col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-points(occThin_cor, cex = 0.5, pch = 4, col = 'red')
-
-fus_ssp245_2030_habitat <- fus_pred_ssp245_30 > fus_threshold$max_spec_sens
-fus_ssp245_2050_habitat <- fus_pred_ssp245_50 > fus_threshold$max_spec_sens
-fus_ssp245_2070_habitat <- fus_pred_ssp245_70 > fus_threshold$max_spec_sens
-
-fus_ssp585_2030_habitat <- fus_pred_ssp585_30 > fus_threshold$max_spec_sens
-fus_ssp585_2050_habitat <- fus_pred_ssp585_50 > fus_threshold$max_spec_sens
-fus_ssp585_2070_habitat <- fus_pred_ssp585_70 > fus_threshold$max_spec_sens
-
-
-# Save M. fus. Predicted Suitable Habitat  --------------------------------
-setwd('../sdm_output')
-saveRDS(fus_hist_habitat, file = 'fus_hist_habitat.Rdata')
-
-saveRDS(fus_ssp245_2030_habitat, file = 'fus_ssp245_2030_habitat.Rdata')
-saveRDS(fus_ssp245_2050_habitat, file = 'fus_ssp245_2050_habitat.Rdata')
-saveRDS(fus_ssp245_2070_habitat, file = 'fus_ssp245_2070_habitat.Rdata')
-
-saveRDS(fus_ssp585_2030_habitat, file = 'fus_ssp585_2030_habitat.Rdata')
-saveRDS(fus_ssp585_2050_habitat, file = 'fus_ssp585_2050_habitat.Rdata')
-saveRDS(fus_ssp585_2070_habitat, file = 'fus_ssp585_2070_habitat.Rdata')
-
-# Load
-fus_hist_habitat <- readRDS(file ='fus_hist_habitat.Rdata')
-
-fus_ssp245_2030_habitat <- readRDS(file = 'fus_ssp245_2030_habitat.Rdata')
-fus_ssp245_2050_habitat <- readRDS(file = 'fus_ssp245_2050_habitat.Rdata')
-fus_ssp245_2070_habitat <- readRDS(file = 'fus_ssp245_2070_habitat.Rdata')
-
-fus_ssp585_2030_habitat <- readRDS(file = 'fus_ssp585_2030_habitat.Rdata')
-fus_ssp585_2050_habitat <- readRDS(file = 'fus_ssp585_2050_habitat.Rdata')
-fus_ssp585_2070_habitat <- readRDS(file = 'fus_ssp585_2070_habitat.Rdata')
-
-
-# Plot M. fusca predicted habitat -----------------------------------------
-# SSP 245
-fus_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(fus_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp245_2030_habitat, main = 'Early-Century (2021-2040)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp245_2050_habitat, main = 'Mid-Century (2041-2060)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp245_2070_habitat, main = 'Late-Century (2061-2080)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-mtext(text = expression(paste('SSP2-4.5',italic(" Malus fusca "),"Predicted Suitable Habitat")), outer = T, cex = 1.5)
-
-# SSP 585
-fus_par <- par(mfrow = c(2,2), mar=c(3,3,1,1), oma=c(0,0,3,1))  # oma creates space
-plot(fus_hist_habitat, main = 'Historical (1970-2000)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp585_2030_habitat, main = 'Early-Century (2021-2040)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp585_2050_habitat, main = 'Mid-Century (2041-2060)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-plot(fus_ssp585_2070_habitat, main = 'Late-Century (2061-2080)', col = c('white', 'blue'))
-plot(canUSMex_map, add = T)
-mtext(text = expression(paste('SSP5-8.5',italic(" Malus fusca "),"Predicted Suitable Habitat")), outer = T, cex = 1.5)
-
-
+# Plot SSP 585 2030
+par(mar = c(5, 5, 5, 5))
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F,  xlim = c(-170, -110), ylim = c(30, 65), main = 'SSP5-8.5 Early Cent. (2020-2040)')
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)

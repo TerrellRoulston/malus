@@ -47,11 +47,9 @@ setwd("../occ_data/")
 saveRDS(occ_cor, file = 'occThin_cor.Rdata')
 saveRDS(occ_fus, file = 'occThin_fus.Rdata')
 
-
-
 # Extract environmental data from wclim ------------------------------------
 # Extract and add wclim raster data to spatial occurrence data
 
-occ_cor <- cbind(occ_cor, extract(wclim, occ_cor)) # M. coronaria
-occ_fus <- cbind(occ_fus, extract(wclim, occ_fus)) # M. fusca
+#occ_cor <- cbind(occ_cor, extract(wclim, occ_cor)) # M. coronaria
+#occ_fus <- cbind(occ_fus, extract(wclim, occ_fus)) # M. fusca
 

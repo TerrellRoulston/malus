@@ -64,7 +64,7 @@ occThin_fus.z <- raster::extract(envs, occThin_fus.x) # M fusca
 # occSim_fus <- ENMeval::similarity(envs, occThin_fus.z)
 
 # memory intensive so save and load data
-setwd("./mess_data/")
+setwd("../mess_data/")
 # saveRDS(occSim_cor, file = 'occSim_cor.Rdata')
 # saveRDS(occSim_fus, file = 'occSim_fus.Rdata')
 

@@ -30,11 +30,17 @@ occ_cor <- gbif_cor %>%
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
-  filter(decimalLongitude >= -100) %>% #remove some records on west coast, two from bot gardens
+  filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens
+  filter(!(decimalLatitude < 35 & decimalLongitude < -86)) %>% # remove records from Texas, Oklahoma, Louisiana
+  filter(!(decimalLatitude > 45)) %>% # remove record from New Brunswick
+  filter(!(decimalLongitude < -98)) %>% # remove iNat record from Kansas, northern Kansas record verified by taxonomist
   dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
+# Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
+# Pay special attention to points at the edge of the range of occurrences, as these are most likely to be suspicious
+# as well as influence the model in strange ways, in comparison to inaccurate points well within the other occurrences
 
 # Save M. coronaria occurrence dataframe ----------------------------------
 saveRDS(occ_cor, file = "occ_cor.Rdata") 
@@ -43,11 +49,14 @@ saveRDS(occ_cor, file = "occ_cor.Rdata")
 # if no points between pre/post are drastically different then keep all data
 # consider removing if different from post-1970
 
-occ_cor_pre <- occ_cor %>% 
+occ_cor_pre <- occ_cor %>% # pre 1970
   filter(year < 1970)
 
-occ_cor_post <- occ_cor %>% 
+occ_cor_post <- occ_cor %>% # post 1970
   filter(year >= 1970)
+
+occ_cor_nd <- occ_cor %>% 
+  filter(year %in% NA)
 
 # filter M. fusca data in df
 occ_fus <- gbif_fusca %>% 
@@ -58,7 +67,9 @@ occ_fus <- gbif_fusca %>%
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
-  select(species, countryCode, decimalLatitude, 
+  filter(!(decimalLongitude > -117)) %>%  # remove record from Idaho herbarium 
+  filter(!(decimalLatitude > 64)) %>% # remove record from Interior Alaska
+  dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
@@ -72,6 +83,9 @@ occ_fus_pre <- occ_fus %>%
 
 occ_fus_post <- occ_fus %>% 
   filter(year >= 1970)
+
+occ_fus_nd <- occ_fus %>% 
+  filter(year %in% NA)
 
 # map occurrence points (take a peak) -------------------------------------
 
@@ -116,17 +130,20 @@ points(occ_cor_pre$decimalLongitude, occ_cor_pre$decimalLatitude, pch = 16,
 # post-1970
 points(occ_cor_post$decimalLongitude, occ_cor_post$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
+# No date
+points(occ_cor_nd$decimalLongitude, occ_cor_nd$decimalLatitude, pch = 16,
+       col = alpha('black', 0.2))
 
 legend(x= -75,
        y = 33,
        title = 'M. coronaria',
-       legend = c('Pre-1970 (n=416)', 'Post-1970 (n=516)'),
-       fill = c('red', 'blue'))
+       legend = c('Pre-1970 (n=412)', 'Post-1970 (n=513)', 'No Date (n=53)'),
+       fill = c('red', 'blue', 'black'))
 
 dev.off() # close graphics plot window
 
 # M fusca
-plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 60))
+plot(canUS_map, xlim = c(-170, -110), ylim = c(30, 65))
 # plot Malus fusca occurrences
 # post-1970
 points(occ_fus_post$decimalLongitude, occ_fus_post$decimalLatitude, pch = 16,
@@ -134,15 +151,16 @@ points(occ_fus_post$decimalLongitude, occ_fus_post$decimalLatitude, pch = 16,
 # pre-1970
 points(occ_fus_pre$decimalLongitude, occ_fus_pre$decimalLatitude, pch = 16,
        col = alpha("red", 0.2))
-
+# No date
+points(occ_fus_nd$decimalLongitude, occ_fus_nd$decimalLatitude, pch = 16,
+       col = alpha('black', 0.2))
 
 
 legend(x= -165,
-       y = 37,
+       y = 40,
        title = 'M. fusca',
-       legend = c('Pre-1970 (n=179)', 'Post-1970 (n=984)'),
-       fill = c('red', 'blue'))
-
+       legend = c('Pre-1970 (n=179)', 'Post-1970 (n=983)', 'No Date (n=39)'),
+       fill = c('red', 'blue', 'black'))
 
 dev.off()
 
