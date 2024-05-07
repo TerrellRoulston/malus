@@ -253,6 +253,17 @@ cor_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_cor_maxent, cores = c
 cor_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
 cor_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
 
+# Plot SSP 585 2030
+par(mar = c(5, 5, 5, 5))
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -50), ylim = c(25, 60), main = 'SSP5-8.5 Early Cent. (2020-2040)')
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+legend(x = -72, y = 35, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
+
 # Save/Load M cor. SDM predictions ----------------------------------------
 setwd('../sdm_output')
 
@@ -279,16 +290,12 @@ cor_pred_ssp585_50 <- readRDS(file = 'cor_pred_ssp585_50.Rdata')
 cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
 
 
-# Plot SSP 585 2030
-par(mar = c(5, 5, 5, 5))
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -50), ylim = c(25, 60), main = 'SSP5-8.5 Early Cent. (2020-2040)')
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
-terra::plot(canUSMex_map, add = T)
-legend(x = -72, y = 35, xpd = NA, inset = c(5, 0), 
-       title = 'Habitat Suitability', 
-       legend = legend_labs,
-       fill = fill_cols)
+
+# Save coronaria thresholds -----------------------------------------------
+setwd('../sdm_output/thresholds')
+saveRDS(corPred_threshold_1, file = 'corPred_threshold_1.Rdata')
+saveRDS(corPred_threshold_10, file = 'corPred_threshold_10.Rdata')
+saveRDS(corPred_threshold_50, file = 'corPred_threshold_50.Rdata')
 
 
 
@@ -388,6 +395,18 @@ fus_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_fus_maxent, cores = c
 fus_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
 fus_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_fus_maxent, cores = cn - 1, na.rm = T)
 
+# Plot SSP 585 2030
+par(mar = c(5, 5, 5, 5))
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F,  xlim = c(-170, -110), ylim = c(30, 65), main = 'SSP5-8.5 Early Cent. (2020-2040)')
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(canUSMex_map, add = T)
+legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
+       title = 'Habitat Suitability', 
+       legend = legend_labs,
+       fill = fill_cols)
+
+
 # Save/Load M fus. SDM predictions ----------------------------------------
 setwd('../sdm_output')
 
@@ -414,13 +433,8 @@ fus_pred_ssp585_50 <- readRDS(file = 'fus_pred_ssp585_50.Rdata')
 fus_pred_ssp585_70 <- readRDS(file = 'fus_pred_ssp585_70.Rdata')
 
 
-# Plot SSP 585 2030
-par(mar = c(5, 5, 5, 5))
-terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F,  xlim = c(-170, -110), ylim = c(30, 65), main = 'SSP5-8.5 Early Cent. (2020-2040)')
-terra::plot(fus_pred_ssp585_30 > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(fus_pred_ssp585_30 > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
-terra::plot(canUSMex_map, add = T)
-legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
-       title = 'Habitat Suitability', 
-       legend = legend_labs,
-       fill = fill_cols)
+# Save M. fusca thresholds ------------------------------------------------
+setwd('../sdm_output/thresholds')
+saveRDS(fusPred_threshold_1, file = 'fusPred_threshold_1.Rdata')
+saveRDS(fusPred_threshold_10, file = 'fusPred_threshold_10.Rdata')
+saveRDS(fusPred_threshold_50, file = 'fusPred_threshold_50.Rdata')
