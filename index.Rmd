@@ -856,7 +856,7 @@ cor_maxent <- ENMevaluate(occ = occ_cor_coords, # occurrence records
 
 * Like in the example we did above, we want to set `n.bg` = 20,000 background points to get a comprehensive sample. 
 
-* Next the the `envs` argument is `SpatRaster` of bioclimatic predictor data cropped to the **background extent** (or environment). We can reuse the cropped raster we produced in the `malus_bg.R` script. 
+* Next the the `envs` argument is `SpatRaster` of bioclimatic predictor data cropped to the **background extent** (or ecoregions). We can reuse the cropped raster we produced in the `malus_bg.R` script. 
 
 * Now we can adjust, or tune, the arguments of the MaxEnt algorithm with `tune.args`. 
   + `rm` stands for "regularization multiplier", which affects how focused or closely-fitted the
@@ -881,7 +881,7 @@ cor_maxent <- readRDS(file = 'cor_maxent.Rdata') # load
 
 ```
 
-The next step after running several  model combinations (96 to be percise), is to select what 'best' model (with particular tuning arguments). A common approach is to use Akaike information criterion (AIC), specifically delta AICc, which is a corrected AIC value, expressed as the relative difference ib values. Delta AICc values less than 2, are considered to be equally good models. In my case, there was only a single model less than 2, the best performing model.
+The next step after running several  model combinations (96 to be percise), is to select what 'best' model (with particular tuning arguments). A common approach is to use Akaike information criterion (AIC), specifically delta AICc, which is a corrected AIC value, expressed as the relative difference in AICc values of each model. Delta AICc values less than 2, are considered to be equally good models. In my case, there was only a single model less than 2, the best performing model. Typically, to deal with tiebreaks between well performing models, the least complex (meaning simplest `fc`) and/or the model with the lowest `rm` value. 
 
 ```{r}
 # Note that maxent results provide Continuous Boyce Index (cbi)
@@ -890,7 +890,7 @@ mod.best_cor_maxent <- eval.models(cor_maxent)[[best_cor_maxent$tune.args]] # ex
 
 ```
 
-So now that we have selected our best performing MaxEnt model we can start to make some predictions! We are going to use the `terra` package to create a `SpatRaster` of habitat suitability scores. First, lets start by making some predictions using the historical WorldClim data. In this case we want to use the non-cropped worldclim data, to make predictions across North America. This will become more clear why once we get to the future climate change predictions.
+So now that we have selected our best performing MaxEnt model we can start to make some **predictions!** We are going to use the `terra` package to create a `SpatRaster` of habitat suitability scores. First, lets start by making some predictions using the historical WorldClim data. In this case we want to use the *uncropped* WorldClim `SpatRaster`, to make predictions across North America. This will become more clear why once we get to the future climate change predictions.
 
 ```{r}
 # Wclim is the historical climatic conditions (1970-2000)
@@ -900,15 +900,49 @@ plot(cor_pred_hist)
 points(occThin_cor, cex = 0.05)
 ```
 
-```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
 knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_raw.jpeg"))
 ```
 
 We have made our first prediction of the **fundamental niche** of *M. coronaria*! But there are a few more things to consider before moving on. 
 
-First, is how confident can we be of these predictions? Using metrics like Area Under the Curve (AUC) and Continous Boyce Index can help us, however they have their own flaws, and so its important to **think critically** about the results of your predictions. 
+First, is how confident can we be of these predictions? Using metrics like Area Under the Curve (AUC) and Continous Boyce Index can help us, however they have their own flaws, and so its important to **think critically** about the results of your predictions. Note that `ENMevaluate` and the MaxEnt algorithm automatically compute several indices, including separate indices calculated on the training data, and those calculated on the validation (testing) data. 
 
-Second, is it best to leave these suitability scores as a continuous gradient of habitat suitability? Myself (and many others) find maps with colour gradients illegible, or less informative. Some take the approach of creating a binary threshold, where habitat suitability is boolean. There are several methods to determine this binary threshold, which can be done using the `predicts` package. A flaw of this approach is it less tangible what these thresholds mean in lay terms.
+* **AUC** is the visualization of the Relative Operating Characteristic (ROC) curve, which plots the False Positive Rate (1 - Specificity) vs. the True Positive Rate (Sensitivity). The closer the ROC curve follows the y-axis, the greater the area under the curve. In other words AUC is the sum of the area under the ROC curve.
+  + An AUC value of **0.5** indicates the model cannot make predictions better than random. 
+  + An AUC value of **1** represents a perfect prediction.
+  + As a general rule of thumb is a score over 0.7 is a moderately well performing model, and a score over 0.9 is excellent. 
+  + **NOTE:** Some authors points out that AUC can be misleading and should not be used as an ultimate method to evaluate model performance, and should be used in caution especially when comparing performance of different models.
+  + Relevant reading: Lobo, J. M., Jiménez-Valverde, A., & Real, R. (2008). AUC: A misleading measure of the performance of predictive distribution models. Global Ecology and Biogeography, 17(2), 145–151. <https://doi.org/10.1111/j.1466-8238.2007.00358.x>.
+
+* **CBI** is a plot of predicted-to-expected ratios, grouped into classes. The classes (or bins) are grouped by habitat suitability values. By default `ecospat.boyce` uses a moving window, where it forms classes by  1/10th of the suitability range. The Boyce Index is then calculated using a **Spearman rank correlation** metric between P/E scores and habitat suitability scores. What we expect to see is a steady increase in P/E with an increase suitability scores.
+  + **NOTE:** It is important to plot the PE plot, and not just trust the correlation score at face value. If there is a sudden jump in P/E scores this can be suspicious. 
+  + Relevant reading: Hirzel, Alexandre H., Gwenaëlle Le Lay, Véronique Helfer, Christophe Randin, and Antoine Guisan. "Evaluating the ability of habitat suitability models to predict species presences." Ecological modelling 199, no. 2 (2006): 142-152. <https://doi.org/10.1016/j.ecolmodel.2006.05.017>.
+  
+```{r}
+# Evaluate predictions using Boyce Index
+# the number of true presences should decline with suitability groups 100-91, 90-81, etc. 
+# First extract suitability values for the background and presence points, make sure to omit NA values
+corPred_bg_val <- terra::extract(cor_pred_hist, bg_cor_coords)$lyr1 %>% 
+  na.omit()
+
+corPred_val_na <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1 %>% 
+  na.omit()
+
+# Evaluate predictions using Boyce Index
+ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of bg points
+                           obs = corPred_val, # vector of 
+                           nclass = 0, 
+                           PEplot = TRUE,
+                           method = 'spearman')
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/boyce index/cor_pred_hist_cbi.jpeg"))
+```
+
+
+Second, is it best to leave these suitability scores as a continuous gradient of habitat suitability? Myself (and many others) find maps with colour gradients illegible, or less informative at a glance. Some take the approach of creating a binary threshold, where habitat suitability is boolean. There are several methods to determine this binary threshold, which can be done using the `predicts` package. A flaw of this approach is it less tangible what these thresholds mean in lay terms.
 
 ```{r}
 cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
@@ -917,7 +951,7 @@ cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold a
 
 ```
 
-However, I find it more practical to bin suitability scores into several **categories**. Lets say three categories: "High suitability", "Moderate suitability" and "Low suitability". These categories should be **determined using qauntiles**, where suitability scores in the lowest quantiles can be considered to be lowly or moderately suitable, and higher scores considered to be of high suitability. In this case I use the 1st, 10th, and 50th percentile to classify these categories. This means that in the low habitat category we are only committing 1% of predicted values, compared to the 50th, were we are omitting 50% of predicted values.
+However, I think it is more practical to bin suitability scores into several **categories**. Lets say three categories: "High suitability", "Moderate suitability" and "Low suitability". These categories are **determined using qauntiles**, where suitability scores in the lowest percentiles can be considered to be lowly or moderately suitable, and higher scores considered to be of high suitability. In this case I use the 1st, 10th, and 50th percentile to classify these categories. This means that in the low habitat category we are only omitting 1% of predicted suitable habitat, compared to the 50th, were we are omitting 50% of predicted values. It is important to understand that this approach also has flaws, but typically the 10th percentile is considered a acceptable minimum threshold.
 
 ```{r}
 corPred_val <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1
@@ -946,11 +980,11 @@ legend(x = -75, y = 30, xpd = NA, inset = c(5, 0),
 
 ```
 
-```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
+```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
 knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_bin.jpeg"))
 ```
 
-Now we can move on to make predictions for the future climate scenarios. We will still use the **same threshold** values from the historical prediction to keep interpretation consistent. As always, make sure to save them.
+Now we can move on to make predictions for the future climate scenarios. We will still use the **same threshold** values from the historical prediction to keep interpretation consistent. As always, make sure to save the predictions to save time when having to reload.
 
 ```{r}
 # Future Climate predictions
@@ -977,10 +1011,12 @@ saveRDS(cor_pred_ssp585_50, file = 'cor_pred_ssp585_50.Rdata')
 saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
 ```
 
-For the purposes of this tutorial I am only going to show results of one of the future climate predictions - SSP5-8.5 2020-2040 (the current tracking projections). I am using the same plot code as above for the historical prediction.
+For the purposes of this tutorial I am only going to show results of one of the future climate predictions - SSP5-8.5 2020-2040 (the current tracking projection). I am using the same  code as above for the historical suitability plot.
 
-```{r}
-
+```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_ssp585_bin.jpeg"))
 ```
+
+We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, at least in the near future. Also pay attention to areas where fundamental habitat is being lost. Remember that these are simply predictions, that carry a lot of assumptions.
 
 
