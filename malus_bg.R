@@ -4,13 +4,12 @@
 # Started Feb 29, 2024
 
 library(tidyverse)
-library(dismo)
 library(terra) 
-library(raster)
-library(sp)
 library(predicts)
 library(geodata)
 library(ENMTools)
+library(plotly) # 3D surface Kernel bivariate plots
+library(MASS)
 
 
 # Ecoregion prep ----------------------------------------------------------
@@ -22,6 +21,7 @@ ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref a
 
 # download/load maps
 getwd()
+setwd('../occ_data/')
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
                path = "../occ_data/base_maps") #USA basemap w. States
 
@@ -48,8 +48,8 @@ setwd("../wclim_data/")
 wclim <- geodata::worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "../wclim_data/")
 
 
-# M. coronaria eco regions ------------------------------------------------
-# extract eco region polygon that contain M. coronaria occurrence points
+# M. coronaria ecoregions -------------------------------------------------
+# extract ecoregion polygon that contain M. coronaria occurrence points
 eco_cor <- extract(ecoNA, occThin_cor) # extract what polygons contained points 
 
 # return vector of eco region codes of the polygons that contain occurrences
@@ -58,7 +58,7 @@ eco_cor_code <- eco_cor_code[eco_cor_code != '0.0']  #remove the 'water' '0.0' e
 
 #CODES: "8.1" "8.2" "5.3" "8.4" "8.3" "9.4" "8.5" "5.2"
 
-ecoNA_cor <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_cor_code) # subset eco region spat vector by the codes
+ecoNA_cor <- terra::subset(ecoNA, ecoNA$NA_L2CODE %in% eco_cor_code) # subset eco region spat vector by the codes
 
 plot(ecoNA_cor) # plot the subseted M. coronaria eco regions
 points(occThin_cor, pch = 3, col = 'red') # plot M. coronaria points
@@ -75,7 +75,7 @@ eco_fus_code <- eco_fus_code[eco_fus_code != '0.0'] # remove NA value
 
 ecoNA_fus <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_fus_code)
 
-plot(ecoNA_fus, col = 'red')
+plot(ecoNA_fus)
 points(occThin_fus, pch = 3, col = 'red') # plot M. coronaria points
 
 setwd('../occ_data/eco_regions')
@@ -90,11 +90,12 @@ wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
 wclim_fus <- terra::crop(wclim, ecoNA_fus, mask = T)
 
 # Save cropped wclim data for downsteam SDM workflow
+setwd('../wclim_data/')
 saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
 saveRDS(wclim_fus, file = 'wclim_fus.Rdata')
 
 
-set.seed(1337) # set a seed to ensure consistent results
+set.seed(1337) # set a seed to ensure reproducible results
 
 # NOTE: Set arguments as.raster = T to return raster
 # OR as.points to return spatvector = T to return spatvector
@@ -103,13 +104,15 @@ set.seed(1337) # set a seed to ensure consistent results
 # SpatVector
 
 # Note upped bg points from 5000 to 20000 to be more suitable to better reflect a mean probability of presence 1 - a/2
+
 cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_cor[[1]])
 points(cor_bg_vec, cex = 0.01)
 
 expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
 # 5683684 km^2
-# 5000/5683684 = 0.000879 samples/km
+20000/5683684
+# 0.00035 samples/km
 
 # M. fusca background
 # SpatVector
@@ -142,8 +145,8 @@ cor_predvals <- cor_predvals[-1] # drop ID column
 fus_predvals <- extract(wclim_fus, occThin_fus) # M. fusca
 fus_predvals <- fus_predvals[-1] # drop ID column
 
-cor_bgvals <- values(cor_bg) # Extract raster values for bg points
-fus_bgvals <- values(fus_bg) # Extract raster values for bg points
+cor_bgvals <- values(cor_bg_vec) # Extract raster values for bg points
+fus_bgvals <- values(fus_bg_vec) # Extract raster values for bg points
 
 
 # Create a df for presence-background raster values for SDM ---------------
@@ -163,24 +166,17 @@ saveRDS(fus_sdmData, file = 'fus_sdmData.Rdata')
 
 cor_sdmData <- readRDS(file = 'cor_sdmData.Rdata')
 
-# Check for colinearity of predictor varirables for presence-bg -----------
-# Want to select variables that are not colinear to avoid issues with model fitting
-# Dendograms useful for indentifying groupings of variables
-# Select one variable from each group to use in modeling
-
+# Check for colinearity of predictor variables for presence-bg -----------
+# Although Maxent is equipped to handle variable selection through its built in variable regularization,
+# it is still important to under the relationships between predictors.
+# Dendograms useful for identifying groupings or clusters of colinear variables
 
 # M. coronaria
-pairs(cor_sdmData[,2:5])
-pairs(cor_sdmData[,6:9])
-pairs(cor_sdmData[,10:13])
-pairs(cor_sdmData[,14:17])
-pairs(cor_sdmData[,17:20])
-
-pairs(cor_sdmData[,-1])
+pairs(cor_sdmData[,-1]) # drop the first column of 0/1
 
 # Dendogram cluster of predictor colinearity
 threshold <- 0.7 # set the threshold for colinearity 
-cor_cors <- raster.cor.matrix(wclim_cor)
+cor_cors <- raster.cor.matrix(wclim_cor) # pearson correlation
 cor_dist <- as.dist(1 - abs(cor_cors)) # calculate distance of predictors
 
 cor_clust <- hclust(cor_dist, method = 'single') # calculate cluster dendogram
@@ -237,9 +233,6 @@ cor_bg.perc <- cor_sdmData %>% filter(cor_pb == 0) %>% # Background points
   unlist()
 
 
-library(plotly) # 3D surface Kernel bivariate plots
-library(MASS)
-
 cor_occ.3d <- kde2d(cor_occ.temp, cor_occ.perc)
 cor_bg.3d <- kde2d(cor_bg.temp, cor_bg.perc)
 
@@ -255,6 +248,8 @@ plot_cor.occ_3d <- plot_ly(x=cor_occ.3d$x, y=cor_occ.3d$y, z=cor_occ.3d$z) %>%
                       xanchor = 'center', 
                       yanchor = 'top'))
 
+plot_cor.occ_3d # run to view
+
 plot_cor.bg_3d <- plot_ly(x=cor_bg.3d$x, y=cor_bg.3d$y, z=cor_bg.3d$z) %>% 
   add_surface() %>% 
   layout(scene = list(xaxis = list(title = 'Mean Annual Temp (C)', tick0=0, tick1=20, dtick=5), 
@@ -264,6 +259,8 @@ plot_cor.bg_3d <- plot_ly(x=cor_bg.3d$x, y=cor_bg.3d$y, z=cor_bg.3d$z) %>%
                       y = 0.95, x = 0.5, 
                       xanchor = 'center', 
                       yanchor = 'top'))
+
+plot_cor.bg_3d
 
 
 
