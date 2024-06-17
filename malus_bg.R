@@ -13,7 +13,7 @@ library(MASS)
 
 
 # Ecoregion prep ----------------------------------------------------------
-# Download NA Ecoregion shapefile from: https://www.epa.gov/eco-re 
+# Download NA Ecoregion shapefile from: https://www.epa.gov/eco-research/ecoregions-north-america
 # Load shapefile from local files
 ecoNA <- vect(x = "C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
 ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref as basemap
@@ -21,7 +21,7 @@ ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref a
 
 # download/load maps
 getwd()
-setwd('../occ_data/')
+setwd('../malus/occ_data/')
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
                path = "../occ_data/base_maps") #USA basemap w. States
 
@@ -34,6 +34,9 @@ canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
 plot(canUS_map, xlim = c(-180, -50))
 # plot ecoregions 
 lines(ecoNA, col = 'red')
+
+plot(ecoNA)
+points(occThin_cor, col = 'red')
 
 dev.off()
 
