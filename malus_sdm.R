@@ -4,7 +4,7 @@
 # Started Feb 29, 2024
 
 library(tidyverse) # Grammar and data management
-library(terra)# Spatial Data package
+library(terra) # Spatial Data package
 library(predicts) # SDM package
 library(geodata) # basemaps
 library(rJava) # MaxEnt models are dependant on JDK
@@ -169,6 +169,8 @@ bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, latt
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
 
+# current version of maxent.jar =  v3.4.4
+
 cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
                             envs = wclim_cor, # environment from background training area
                             n.bg = 20000, # 20000 bg points
@@ -297,6 +299,89 @@ saveRDS(corPred_threshold_1, file = 'corPred_threshold_1.Rdata')
 saveRDS(corPred_threshold_10, file = 'corPred_threshold_10.Rdata')
 saveRDS(corPred_threshold_50, file = 'corPred_threshold_50.Rdata')
 
+corPred_threshold_1 <- readRDS(file = 'corPred_threshold_1.Rdata')
+corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
+corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
+
+
+# Habitat predictions -----------------------------------------------------
+# Categorical habitat suitability
+# Historical
+cor_pred_high_hist <- cor_pred_hist > corPred_threshold_50
+cor_pred_mod_hist <- cor_pred_hist > corPred_threshold_10
+cor_pred_low_hist <- cor_pred_hist > corPred_threshold_1
+
+#SSP245 
+cor_pred_high_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_50
+cor_pred_mod_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_10
+cor_pred_low_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_1
+
+cor_pred_high_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_50
+cor_pred_mod_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_10
+cor_pred_low_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_1
+
+cor_pred_high_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_50
+cor_pred_mod_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_10
+cor_pred_low_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_1
+
+#SSP585
+cor_pred_high_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_50
+cor_pred_mod_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_10
+cor_pred_low_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_1
+
+cor_pred_high_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_50
+cor_pred_mod_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_10
+cor_pred_low_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_1
+
+cor_pred_high_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_50
+cor_pred_mod_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_10
+cor_pred_low_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_1
+
+# Save
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
+
+# Historical
+saveRDS(cor_pred_high_hist, file = 'cor_pred_high_hist.Rdata')
+saveRDS(cor_pred_mod_hist, file = 'cor_pred_mod_hist.Rdata')
+saveRDS(cor_pred_low_hist, file = 'cor_pred_low_hist.Rdata')
+
+# SSP245
+saveRDS(cor_pred_high_ssp245_30, file = 'cor_pred_high_ssp245_30.Rdata')
+saveRDS(cor_pred_mod_ssp245_30, file = 'cor_pred_mod_ssp245_30.Rdata')
+saveRDS(cor_pred_low_ssp245_30, file = 'cor_pred_low_ssp245_30.Rdata')
+
+saveRDS(cor_pred_high_ssp245_50, file = 'cor_pred_high_ssp245_50.Rdata')
+saveRDS(cor_pred_mod_ssp245_50, file = 'cor_pred_mod_ssp245_50.Rdata')
+saveRDS(cor_pred_low_ssp245_50, file = 'cor_pred_low_ssp245_50.Rdata')
+
+saveRDS(cor_pred_high_ssp245_70, file = 'cor_pred_high_ssp245_70.Rdata')
+saveRDS(cor_pred_mod_ssp245_70, file = 'cor_pred_mod_ssp245_70.Rdata')
+saveRDS(cor_pred_low_ssp245_70, file = 'cor_pred_low_ssp245_70.Rdata')
+
+# SSP585
+saveRDS(cor_pred_high_ssp585_30, file = 'cor_pred_high_ssp585_30.Rdata')
+saveRDS(cor_pred_mod_ssp585_30, file = 'cor_pred_mod_ssp585_30.Rdata')
+saveRDS(cor_pred_low_ssp585_30, file = 'cor_pred_low_ssp585_30.Rdata')
+
+saveRDS(cor_pred_high_ssp585_50, file = 'cor_pred_high_ssp585_50.Rdata')
+saveRDS(cor_pred_mod_ssp585_50, file = 'cor_pred_mod_ssp585_50.Rdata')
+saveRDS(cor_pred_low_ssp585_50, file = 'cor_pred_low_ssp585_50.Rdata')
+
+saveRDS(cor_pred_high_ssp585_70, file = 'cor_pred_high_ssp585_70.Rdata')
+saveRDS(cor_pred_mod_ssp585_70, file = 'cor_pred_mod_ssp585_70.Rdata')
+saveRDS(cor_pred_low_ssp585_70, file = 'cor_pred_low_ssp585_70.Rdata')
+
+# Load
+
+
+
+# Binary pred habitat GAP ANALYSIS ----------------------------------------
+
+
+cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
+cor_threshold <- predicts::threshold(cor_pa)
+
+cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
 
 
 # Fusca - MaxEnt Model ----------------------------------------------------
