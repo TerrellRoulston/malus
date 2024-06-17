@@ -182,7 +182,7 @@ occ_cor_nd <- occ_cor %>%
 ```
 The best way to compare these pre/post/nd occurrences is by visualizing them to detect any differences in spatial coordinates. To do this we need to utilize the `terra` and `geodate` packages. The `terra` package is useful for working with Raster data and will frequently be used throughout this workflow. The `geodata` package will also be used frequently, and allows easy download of geographic boundaries from Global Administrative Areas (GADM).
 
-For now plotting will be done using base R `graphics` and `terra`, final publication quality plots will be done later using `ggplot2`. 
+For now plotting will be done quickly using base R `graphics` and `terra`. At the end we will produce publication qaulity maps.
 
 First download the basemaps, and put them in a location to access them again later to avoid having to redownload them. These files are large, so consider not pushing them to GitHub if you are working in a repo.
 
@@ -881,7 +881,7 @@ cor_maxent <- readRDS(file = 'cor_maxent.Rdata') # load
 
 ```
 
-The next step after running several  model combinations (96 to be percise), is to select what 'best' model (with particular tuning arguments). A common approach is to use Akaike information criterion (AIC), specifically delta AICc, which is a corrected AIC value, expressed as the relative difference in AICc values of each model. Delta AICc values less than 2, are considered to be equally good models. In my case, there was only a single model less than 2, the best performing model. Typically, to deal with tiebreaks between well performing models, the least complex (meaning simplest `fc`) and/or the model with the lowest `rm` value. 
+The next step after running several  model combinations (96 to be precise), is to select what 'best' model (with particular tuning arguments). A common approach is to use Akaike information criterion (AIC), specifically delta AICc, which is a corrected AIC value, expressed as the relative difference in AICc values of each model. Delta AICc values less than 2, are considered to be equally good models. In my case, there was only a single model less than 2, the best performing model. Typically, to deal with tiebreaks between well performing models, the least complex (meaning simplest `fc`) and/or the model with the lowest `rm` value. 
 
 ```{r}
 # Note that maxent results provide Continuous Boyce Index (cbi)
@@ -961,7 +961,7 @@ corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
 
 ```
 
-Now let's visualize the results! As mentioned previously, we will use `ggplot2` downstream to make publication quality plots. But, this is a great start!
+Now let's visualize the results! As mentioned previously, we will tidy things up downstream to make publication quality plots. But, this is a great start!
 
 ```{r}
 legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
@@ -1017,6 +1017,6 @@ For the purposes of this tutorial I am only going to show results of one of the 
 knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_ssp585_bin.jpeg"))
 ```
 
-We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, at least in the near future. Also pay attention to areas where fundamental habitat is being lost. Remember that these are simply predictions, that carry a lot of assumptions.
+We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, as well as an expansion in Quebec and the Maritimes. Also pay attention to areas where fundamental habitat is being lost, especially in the US. Remember that these are simply predictions, that carry a lot of assumptions.
 
-
+##Publication Plots
