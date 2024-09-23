@@ -7,6 +7,9 @@
 library(tidyverse) # data management, grammar
 library(rgbif) # access GBIF data
 
+getwd()
+setwd('../malus/')
+
 # Download occurrence data from GBIF
 
 # GBIF user info
@@ -24,7 +27,7 @@ taxonKey <- 3001166
 basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATTERIAL_SAMPLES', 'LIVING_SPECIMEN') 
 hasCoordinates <- TRUE # limit to records with coordinates
 #years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
-#Tyler suggest not limiting records to 1970
+# Tyler suggest not limiting records to 1970
 # Main reason for Malus not occurring in places it did pre-1970 is due to habitat destruction
 # Not due to unsuitable climatic niches
 
@@ -50,7 +53,7 @@ gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
 # fusca download ----------------------------------------------------------
 
 taxonKey <- 3001080
-basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLES') # excluded living specimens and material samples (germplasm)
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATTERIAL_SAMPLES', 'LIVING_SPECIMEN')
 hasCoordinates <- TRUE # limit to records with coordinates
 #years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
 #see comments above about years of occurrence
