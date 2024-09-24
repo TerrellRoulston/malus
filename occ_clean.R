@@ -67,8 +67,9 @@ occ_fus <- gbif_fusca %>%
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
   cc_sea() %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
-  filter(!(decimalLongitude > -117)) %>%  # remove record from Idaho herbarium 
+  filter(!(decimalLongitude > -113)) %>%  # remove record from Idaho herbarium 
   filter(!(decimalLatitude > 64)) %>% # remove record from Interior Alaska
+  filter(!(stateProvince == 	'Idaho')) %>% # remove phishy record from Idaho
   dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
@@ -137,7 +138,7 @@ points(occ_cor_nd$decimalLongitude, occ_cor_nd$decimalLatitude, pch = 16,
 legend(x= -75,
        y = 33,
        title = 'M. coronaria',
-       legend = c('Pre-1970 (n=412)', 'Post-1970 (n=513)', 'No Date (n=53)'),
+       legend = c('Pre-1970 (n=422)', 'Post-1970 (n=558)', 'No Date (n=52)'),
        fill = c('red', 'blue', 'black'))
 
 dev.off() # close graphics plot window
@@ -159,7 +160,7 @@ points(occ_fus_nd$decimalLongitude, occ_fus_nd$decimalLatitude, pch = 16,
 legend(x= -165,
        y = 40,
        title = 'M. fusca',
-       legend = c('Pre-1970 (n=179)', 'Post-1970 (n=983)', 'No Date (n=39)'),
+       legend = c('Pre-1970 (n=191)', 'Post-1970 (n=1230)', 'No Date (n=45)'),
        fill = c('red', 'blue', 'black'))
 
 dev.off()
