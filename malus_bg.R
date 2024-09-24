@@ -15,7 +15,7 @@ library(MASS)
 # Ecoregion prep ----------------------------------------------------------
 # Download NA Ecoregion shapefile from: https://www.epa.gov/eco-research/ecoregions-north-america
 # Load shapefile from local files
-ecoNA <- vect(x = "C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
+ecoNA <- vect(x = "C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
 ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref as basemap
 
 
@@ -28,10 +28,14 @@ us_map <- gadm(country = 'USA', level = 1, resolution = 2,
 ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
                path = '../occ_data/base_maps') #Canada basemap w. Provinces
 
-canUS_map <- rbind(us_map, ca_map) #combine US and Canada vector map
+mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
+               path = '../occ_data/base_maps') # Mexico basemap w. States
+
+canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
+
 
 # plot basemap
-plot(canUS_map, xlim = c(-180, -50))
+plot(canUSMex_map, xlim = c(-180, -50))
 # plot ecoregions 
 lines(ecoNA, col = 'red')
 
@@ -59,7 +63,7 @@ eco_cor <- extract(ecoNA, occThin_cor) # extract what polygons contained points
 eco_cor_code <- eco_cor$NA_L2CODE %>% unique() 
 eco_cor_code <- eco_cor_code[eco_cor_code != '0.0']  #remove the 'water' '0.0' ecoregion
 
-#CODES: "8.1" "8.2" "5.3" "8.4" "8.3" "9.4" "8.5" "5.2"
+#CODES: "8.1" "8.2" "5.3" "8.4" "8.3" "8.5" "9.2" "9.4" "5.2"
 
 ecoNA_cor <- terra::subset(ecoNA, ecoNA$NA_L2CODE %in% eco_cor_code) # subset eco region spat vector by the codes
 
@@ -93,7 +97,8 @@ wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
 wclim_fus <- terra::crop(wclim, ecoNA_fus, mask = T)
 
 # Save cropped wclim data for downsteam SDM workflow
-setwd('../wclim_data/')
+getwd()
+setwd('../wclim_data/..')
 saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
 saveRDS(wclim_fus, file = 'wclim_fus.Rdata')
 
