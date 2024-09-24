@@ -49,7 +49,7 @@ plot(canUSMex_map) # plot basemap
 
 
 # Great Lakes shapefiles for making pretty maps and cropping
-great_lakes <- vect('C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/great lakes/combined great lakes/')
+great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
 great_lakes <- crop(great_lakes, NA_ext)
 
 
