@@ -7,7 +7,7 @@
 library(tidyverse) # data management, grammar
 library(rgbif) # access GBIF data
 
-getwd()
+  getwd()
 setwd('../malus/')
 
 # Download occurrence data from GBIF
@@ -24,7 +24,7 @@ email='REDACTED'
 # Coronaria download ------------------------------------------------------
 
 taxonKey <- 3001166
-basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATTERIAL_SAMPLES', 'LIVING_SPECIMEN') 
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLE', 'LIVING_SPECIMEN') 
 hasCoordinates <- TRUE # limit to records with coordinates
 #years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
 # Tyler suggest not limiting records to 1970
@@ -53,10 +53,10 @@ gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
 # fusca download ----------------------------------------------------------
 
 taxonKey <- 3001080
-basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATTERIAL_SAMPLES', 'LIVING_SPECIMEN')
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLE', 'LIVING_SPECIMEN')
 hasCoordinates <- TRUE # limit to records with coordinates
-#years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
-#see comments above about years of occurrence
+# years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
+# see comments above about years of occurrence
 
 # Download data
 # Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple

@@ -227,7 +227,7 @@ dev.off() # close graphics plot window
 **NOTE:** Plotting geographic coordinates can be tricky, and often you will have to play around with the plot limits and legend location to get it to something that is visually appealing.
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/occurences/m_coronaria_pre_post_1970.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/occurences/m_coronaria_pre_post_1970.jpeg"))
 ```
 
 Inspecting the plot of *M. coronria* occurrences there is a large amount of overlap between occurrences from pre and post 1970, thus we feel comfortable keeping all the data no matter the year in the analysis. It is important you evaluate this for your own species and ask if it fits your research question. 
@@ -283,7 +283,7 @@ plot(wclim$wc2.1_2.5m_bio_1, main = 'Annual Mean Temperature')
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/wclim/wclim_bio1.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/wclim/wclim_bio1.jpeg"))
 ```
 
 Now we have vectorized occurrence data and rasterised predictor variables, it is time to thin the occurrences data. We will use the `terra::spatSample()` function to take a random sample of a single occurrence per raster cell.
@@ -329,7 +329,7 @@ library(MASS)
 
 Due to the large size of the raster files, I have saved a local copy to my machine, and will not push these fills to the GitHub repo. 
 ```{r}
-ecoNA <- vect(x = "C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
+ecoNA <- vect(x = "C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
 ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref as basemap
 ```
 **NOTE:** I project the ecoregion rasters the same CSR as the climate predictor rasters. 
@@ -357,7 +357,7 @@ dev.off()
 
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/eco_region_projection_NA.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/eco_region_projection_NA.jpeg"))
 ```
 
 Now lets load our thinned occurrences from the `occ_thin.R` script.
@@ -395,7 +395,7 @@ points(occThin_cor, pch = 3, col = 'red') # plot M. coronaria points
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/cor_eco.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/cor_eco.jpeg"))
 ```
 
 And as always we want to save this intermediate object as a `.Rdata` file, so that we do not need to repeat the long computational step of extracting the ecoregions.
@@ -436,7 +436,7 @@ points(cor_bg_vec, cex = 0.01)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/eco regions/cor_bg.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/cor_bg.jpeg"))
 ```
 
 We can also measure how many km^2 these ecoregions comprise, to get an idea of how many samples are taken per km^2.
@@ -491,7 +491,7 @@ pairs(cor_sdmData[,-1]) # drop the first column of 0/1
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/colinearity/cor_wclim_colinearity.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/colinearity/cor_wclim_colinearity.jpeg"))
 ```
 
 Let's use a more helpful way to detect colinearity of predictor variables, a dendrogram, which visualizes correlation matrices. **NOTE:** This is only considering two-dimensional covariation, and cannot detect higher dimensional correlations.
@@ -510,7 +510,7 @@ rect.hclust(cor_clust, h = 1 - threshold)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/colinearity/cor_dendo.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/colinearity/cor_dendo.jpeg"))
 ```
 
 We can also visualize the predictor covariate values to understand how they inform the model about the probability of a true presence. This involves the visualization of the distribution of the values at sampled points, presence and background, which allows us to get a peak into how the model constraints come about. 
@@ -581,11 +581,11 @@ plot_cor.bg_3d
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/kernel plots/cor_3dKernel_presence.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/kernel plots/cor_3dKernel_presence.jpeg"))
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/kernel plots/cor_3dKernel_bg.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/kernel plots/cor_3dKernel_bg.jpeg"))
 ```
 
 In this example I only visualize two of the 19 different bioclimatic variables. You may choose to visualize more for your own purposes. Remember this is only a visual comparison, but is valuable for understanding what the model is 'seeing' - of course it is using multidimensional space of all covariates, not just the two here.
@@ -789,7 +789,7 @@ evalplot.grps(pts = bg_cor_coords, pts.grp = cor_cb$bg.grp, envs = wclim_cor_sta
 First lets look at the species occurrence partitions. But, it is hard to see the checkerboard pattern.
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_pr.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_pr.jpeg"))
 ```
 
 Now let's look at the background points. As you can see the checkerboarding is much clearer. I also show how adjusting the aggregation factor changes the scale at which the partitions are taken from.
@@ -797,25 +797,25 @@ Now let's look at the background points. As you can see the checkerboarding is m
 **3,3** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_3,3.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_3,3.jpeg"))
 ```
 
 **6,6** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_6,6.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_6,6.jpeg"))
 ```
 
 **9,9** aggregation, which I chose to use!
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_9,9.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_9,9.jpeg"))
 ```
 
 **12,12** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/checkboard_aggregation/cor_cb_bg_12,12.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_12,12.jpeg"))
 ```
 
 Okay, now that we have played around with the understanding how background point sampling works lets dive into developing our MaxEnt model. We are going to use **parallel processing**, to utilize multiple processors (CPUs) simultaneously. This will increase the amount of available memory and significantly decrease the computational time. If you are using a Windows computer (like me), then you only have one type of parallel processing available to you, known as 'socket' clusters. Read more here: <https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/#:~:text=As%20a%20result%2C%20it%20runs,40%25%20faster%20than%20the%20socket.>
@@ -901,7 +901,7 @@ points(occThin_cor, cex = 0.05)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_raw.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_raw.jpeg"))
 ```
 
 We have made our first prediction of the **fundamental niche** of *M. coronaria*! But there are a few more things to consider before moving on. 
@@ -938,7 +938,7 @@ ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/boyce index/cor_pred_hist_cbi.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/boyce index/cor_pred_hist_cbi.jpeg"))
 ```
 
 
@@ -981,7 +981,7 @@ legend(x = -75, y = 30, xpd = NA, inset = c(5, 0),
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_bin.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_bin.jpeg"))
 ```
 
 Now we can move on to make predictions for the future climate scenarios. We will still use the **same threshold** values from the historical prediction to keep interpretation consistent. As always, make sure to save the predictions to save time when having to reload.
@@ -1014,7 +1014,7 @@ saveRDS(cor_pred_ssp585_70, file = 'cor_pred_ssp585_70.Rdata')
 For the purposes of this tutorial I am only going to show results of one of the future climate predictions - SSP5-8.5 2020-2040 (the current tracking projection). I am using the same  code as above for the historical suitability plot.
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/UBC/Botanical Garden/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_ssp585_bin.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_ssp585_bin.jpeg"))
 ```
 
 We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, as well as an expansion in Quebec and the Maritimes. Also pay attention to areas where fundamental habitat is being lost, especially in the US. Remember that these are simply predictions, that carry a lot of assumptions.
