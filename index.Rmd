@@ -39,7 +39,7 @@ Step| Script| Purpose
 2| `occ_clean.R` | Clean occurrence (presence) data points
 3| `occ_thin.R` | Thin occurrence points to a single observation per predictor (raster) cell
 4| `malus_bg.R` | Download ecoregions, sample background points, predictor cluster, 3D Kernel density plots
-5| `malus_sdm.R` | Split training/testing data, Max models, habitat predictions
+5| `malus_sdm.R` | Climate predictor data, Maxent modeling and tuning, habitat suitability predictions
 6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 7| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
 
@@ -153,7 +153,7 @@ You will notice that I have added a few manual filters in the code above using f
 
 **NOTE:** I am using piper operators (`%>%`) from the tidyverse ecosystem to assist in the ease of data processing. It sequentially applies each argument or function to the `data.frame`, and so be careful in what order you specify functions.   
 
-Now we will save the `data.frame` object as a Rdata file. Rdata files are the best way to store/load data within the R environment. We will routinely save intermediate data files to help speed up analysis of downstream workflow, so that results can be stored rather than having to be repeated every time.
+Now we will save the `data.frame` object as a `.Rdata` file. `.Rdata` files are the best way to store/load data within the R environment. We will routinely save intermediate data files to help speed up analysis of downstream workflow, so that results can be stored rather than having to be repeated every time the R session is closed (**INCLUDING WHEN IT CRASHES UNEXPECTEDLY**.
 ```{r}
 getwd() # check what directory you are in
 setwd('../occ_data/')
@@ -279,7 +279,7 @@ wclim <- worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "../wc
 
 ```{r}
 # plot a raster layer to check it downloaded properly
-plot(wclim$wc2.1_2.5m_bio_1, main = 'Annual Mean Temperature')
+plot(wclim$wc2.1_2.5m_bio_1, main = expression(atop('WorldClim Bioclimatic Predictor 1', 'Mean Annual Tempature (1970-2000)')))
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
@@ -901,7 +901,7 @@ points(occThin_cor, cex = 0.05)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/habitat suitability/Predicted Suitability/coronaria_historical_raw.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/habitat suitability/Predicted Suitability/raw model prediction/coronaria_historical_raw.jpeg"))
 ```
 
 We have made our first prediction of the **fundamental niche** of *M. coronaria*! But there are a few more things to consider before moving on. 
@@ -964,13 +964,14 @@ corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
 Now let's visualize the results! As mentioned previously, we will tidy things up downstream to make publication quality plots. But, this is a great start!
 
 ```{r}
-legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
-fill_cols <- c('#D81B60', '#1E88E5', '#FFC107') # colour blind friendly
+legend_labs <- c('Low Suitability', 'Moderate Suitability', 'High Suitability')
+# brewer.pal(3, "YlOrBr") # Brewer palettes are helpful for mapping colour gradients
+fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
 
 par(mar = c(5, 5, 5, 5))
-terra::plot(cor_pred_hist > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -60), ylim = c(25, 50), main = 'Historical (1970-2000)')
-terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
+terra::plot(cor_pred_hist > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-100, -50), ylim = c(30, 60), main = expression(atop(italic('Malus coronaria'), " Historical Suitability (1970-2000)")), background = 'lightskyblue1')
+terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#FEC44F'), add = T, legend = F)
+terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#D95F0E'), add = T, legend = F)
 terra::plot(canUSMex_map, add = T)
 points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
 legend(x = -75, y = 30, xpd = NA, inset = c(5, 0), 
@@ -1019,4 +1020,77 @@ knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/
 
 We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, as well as an expansion in Quebec and the Maritimes. Also pay attention to areas where fundamental habitat is being lost, especially in the US. Remember that these are simply predictions, that carry a lot of assumptions.
 
-##Publication Plots
+**Note:** It may also be helpful to save individual raster layers for the low, moderate and high suitability results. This of course can quickly become a lot of layers/files but it can help in situations where you may want to share these results with others as it is clear what the results are rather than having to send them complete predictions and threshold files. And of course we can re-load them for downstream work as done many times above.
+
+```{r}
+# Categorical habitat suitability
+# Historical
+cor_pred_high_hist <- cor_pred_hist > corPred_threshold_50
+cor_pred_mod_hist <- cor_pred_hist > corPred_threshold_10
+cor_pred_low_hist <- cor_pred_hist > corPred_threshold_1
+
+#SSP245 
+cor_pred_high_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_50
+cor_pred_mod_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_10
+cor_pred_low_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_1
+
+cor_pred_high_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_50
+cor_pred_mod_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_10
+cor_pred_low_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_1
+
+cor_pred_high_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_50
+cor_pred_mod_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_10
+cor_pred_low_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_1
+
+#SSP585
+cor_pred_high_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_50
+cor_pred_mod_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_10
+cor_pred_low_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_1
+
+cor_pred_high_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_50
+cor_pred_mod_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_10
+cor_pred_low_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_1
+
+cor_pred_high_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_50
+cor_pred_mod_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_10
+cor_pred_low_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_1
+
+# Save
+getwd()
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
+
+# Historical
+saveRDS(cor_pred_high_hist, file = 'cor_pred_high_hist.Rdata')
+saveRDS(cor_pred_mod_hist, file = 'cor_pred_mod_hist.Rdata')
+saveRDS(cor_pred_low_hist, file = 'cor_pred_low_hist.Rdata')
+
+# SSP245
+saveRDS(cor_pred_high_ssp245_30, file = 'cor_pred_high_ssp245_30.Rdata')
+saveRDS(cor_pred_mod_ssp245_30, file = 'cor_pred_mod_ssp245_30.Rdata')
+saveRDS(cor_pred_low_ssp245_30, file = 'cor_pred_low_ssp245_30.Rdata')
+
+saveRDS(cor_pred_high_ssp245_50, file = 'cor_pred_high_ssp245_50.Rdata')
+saveRDS(cor_pred_mod_ssp245_50, file = 'cor_pred_mod_ssp245_50.Rdata')
+saveRDS(cor_pred_low_ssp245_50, file = 'cor_pred_low_ssp245_50.Rdata')
+
+saveRDS(cor_pred_high_ssp245_70, file = 'cor_pred_high_ssp245_70.Rdata')
+saveRDS(cor_pred_mod_ssp245_70, file = 'cor_pred_mod_ssp245_70.Rdata')
+saveRDS(cor_pred_low_ssp245_70, file = 'cor_pred_low_ssp245_70.Rdata')
+
+# SSP585
+saveRDS(cor_pred_high_ssp585_30, file = 'cor_pred_high_ssp585_30.Rdata')
+saveRDS(cor_pred_mod_ssp585_30, file = 'cor_pred_mod_ssp585_30.Rdata')
+saveRDS(cor_pred_low_ssp585_30, file = 'cor_pred_low_ssp585_30.Rdata')
+
+saveRDS(cor_pred_high_ssp585_50, file = 'cor_pred_high_ssp585_50.Rdata')
+saveRDS(cor_pred_mod_ssp585_50, file = 'cor_pred_mod_ssp585_50.Rdata')
+saveRDS(cor_pred_low_ssp585_50, file = 'cor_pred_low_ssp585_50.Rdata')
+
+saveRDS(cor_pred_high_ssp585_70, file = 'cor_pred_high_ssp585_70.Rdata')
+saveRDS(cor_pred_mod_ssp585_70, file = 'cor_pred_mod_ssp585_70.Rdata')
+saveRDS(cor_pred_low_ssp585_70, file = 'cor_pred_low_ssp585_70.Rdata')
+```
+
+Now that we have made all our predictions and saved all results as `.Rdata` files lets move onto to tidying up plots to prepare them for a results section and publication! Also, if you have made it this far take a minute to appreciate just how much work has been accomplished.
+
+## Publication Plots
