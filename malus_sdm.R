@@ -19,7 +19,7 @@ library(doParallel) # added functionality to parallel
 getwd() # check you directory location
 
 # Background points in SpatVectors
-setwd("../occ_data/")
+setwd("./occ_data/")
 cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
 fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
 
@@ -29,13 +29,13 @@ occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
 occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
 
 # Download/load basemaps
-us_map <- gadm(country = 'USA', level = 1, resolution = 2,
+us_map <- gadm(country = 'USA', level = 0, resolution = 2,
                path = "../occ_data/base_maps") #USA basemap w. States
 
-ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
+ca_map <- gadm(country = 'CA', level = 0, resolution = 2,
                path = '../occ_data/base_maps') # Canada basemap w. Provinces
 
-mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
+mex_map <-gadm(country = 'MX', level = 0, resolution = 2,
                path = '../occ_data/base_maps') # Mexico basemap w. States
 
 canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
@@ -186,6 +186,7 @@ cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
                             parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
                             algorithm = 'maxent.jar')
 
+
 # Save the MaxEnt model so you do not have to waste time re-running the model
 setwd('../sdm_output')
 saveRDS(cor_maxent, file = 'cor_maxent.Rdata') # save
@@ -229,16 +230,21 @@ corPred_threshold_1 <- quantile(corPred_val, 0.01, na.rm = T) # Low suitability
 corPred_threshold_10 <- quantile(corPred_val, 0.1, na.rm = T) # Moderate suitability
 corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
 
-legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
-fill_cols <- c('#D81B60', '#1E88E5', '#FFC107')
+# Plotting the prediction
+legend_labs <- c('Low Suitability', 'Moderate Suitability', 'High Suitability')
 
+# brewer.pal(3, "YlOrBr") # Brewer palettes are helpful for mapping colour gradients
+fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
+#fill_cols <- c('#D81B60', '#1E88E5', '#FFC107') # old colours
+
+dev.off()
 par(mar = c(5, 5, 5, 5))
-terra::plot(cor_pred_hist > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -60), ylim = c(25, 50), main = 'Historical (1970-2000)')
-terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
-terra::plot(canUSMex_map, add = T)
-points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
-legend(x = -75, y = 30, xpd = NA, inset = c(5, 0), 
+terra::plot(cor_pred_hist > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-100, -50), ylim = c(30, 60), main = expression(atop(italic('Malus coronaria'), " Historical Suitability (1970-2000)")), background = 'lightskyblue1')
+terra::plot(cor_pred_hist > corPred_threshold_10, col = c(NA, '#FEC44F'), add = T, legend = F)
+terra::plot(cor_pred_hist > corPred_threshold_50, col = c(NA, '#D95F0E'), add = T, legend = F)
+#terra::plot(canUSMex_map, add = T, cex = .1)
+#points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
+legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
        legend = legend_labs,
        fill = fill_cols)
@@ -257,11 +263,11 @@ cor_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_cor_maxent, cores = c
 
 # Plot SSP 585 2030
 par(mar = c(5, 5, 5, 5))
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-100, -50), ylim = c(25, 60), main = 'SSP5-8.5 Early Cent. (2020-2040)')
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(cor_pred_ssp585_30 > corPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
-terra::plot(canUSMex_map, add = T)
-legend(x = -72, y = 35, xpd = NA, inset = c(5, 0), 
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-100, -50), ylim = c(30, 60), main = expression(atop(italic('Malus coronaria'), " SSP5-8.5 Prediction: Early Century (2020-2040)")), background = 'lightskyblue1')
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_10, col = c(NA, '#FEC44F'), add = T, legend = F)
+terra::plot(cor_pred_ssp585_30 > corPred_threshold_50, col = c(NA, '#D95F0E'), add = T, legend = F)
+#terra::plot(canUSMex_map, add = T)
+legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
        legend = legend_labs,
        fill = fill_cols)
@@ -304,7 +310,7 @@ corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
 corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
 
 
-# Habitat predictions -----------------------------------------------------
+# M coronaria Habitat predictions -----------------------------------------
 # Categorical habitat suitability
 # Historical
 cor_pred_high_hist <- cor_pred_hist > corPred_threshold_50
@@ -338,6 +344,7 @@ cor_pred_mod_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_10
 cor_pred_low_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_1
 
 # Save
+getwd()
 setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
 
 # Historical
@@ -454,14 +461,14 @@ fusPred_threshold_1 <- quantile(fusPred_val, 0.01, na.rm = T) # Low suitability
 fusPred_threshold_10 <- quantile(fusPred_val, 0.1, na.rm = T) # Moderate suitability
 fusPred_threshold_50 <- quantile(fusPred_val, 0.5, na.rm = T) # High suitability
 
-legend_labs <- c('Low Suitability (1st percentile)', 'Moderate Suitability (10th percentile)', 'High Suitability (50th percentile)')
-fill_cols <- c('#D81B60', '#1E88E5', '#FFC107')
+legend_labs <- c('Low Suitability', 'Moderate Suitability', 'High Suitability')
+fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
 
 par(mar = c(5, 5, 5, 5))
-terra::plot(fus_pred_hist > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = 'Historical (1970-2000)')
-terra::plot(fus_pred_hist > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
-terra::plot(fus_pred_hist > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
-terra::plot(canUSMex_map, add = T)
+terra::plot(fus_pred_hist > fusPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus fusca'), " Historical Suitability (1970-2000)")), background = 'lightskyblue1')
+terra::plot(fus_pred_hist > fusPred_threshold_10, col = c(NA, '#FEC44F'), add = T, legend = F)
+terra::plot(fus_pred_hist > fusPred_threshold_50, col = c(NA, '#D95F0E'), add = T, legend = F)
+#terra::plot(canUSMex_map, add = T)
 #points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
 legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -482,7 +489,7 @@ fus_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_fus_maxent, cores = c
 
 # Plot SSP 585 2030
 par(mar = c(5, 5, 5, 5))
-terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F,  xlim = c(-170, -110), ylim = c(30, 65), main = 'SSP5-8.5 Early Cent. (2020-2040)')
+terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('lightgrey', '#D81B60'), legend = F,  xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus coronaria'), " SSP5-8.5 Prediction: Early Century (2020-2040)")), background = 'lightskyblue1')
 terra::plot(fus_pred_ssp585_30 > fusPred_threshold_10, col = c(NA, '#1E88E5'), add = T, legend = F)
 terra::plot(fus_pred_ssp585_30 > fusPred_threshold_50, col = c(NA, '#FFC107'), add = T, legend = F)
 terra::plot(canUSMex_map, add = T)
@@ -493,7 +500,7 @@ legend(x = -165, y = 45, xpd = NA, inset = c(5, 0),
 
 
 # Save/Load M fus. SDM predictions ----------------------------------------
-setwd('../sdm_output')
+setwd('../sdm_output/../../')
 
 # Save
 saveRDS(fus_pred_hist, file = 'fus_pred_hist.Rdata')
@@ -523,3 +530,73 @@ setwd('../sdm_output/thresholds')
 saveRDS(fusPred_threshold_1, file = 'fusPred_threshold_1.Rdata')
 saveRDS(fusPred_threshold_10, file = 'fusPred_threshold_10.Rdata')
 saveRDS(fusPred_threshold_50, file = 'fusPred_threshold_50.Rdata')
+
+# M fusca Habitat predictions ---------------------------------------------
+# Categorical habitat suitability
+# Historical
+fus_pred_high_hist <- fus_pred_hist > fusPred_threshold_50
+fus_pred_mod_hist <- fus_pred_hist > fusPred_threshold_10
+fus_pred_low_hist <- fus_pred_hist > fusPred_threshold_1
+
+#SSP245 
+fus_pred_high_ssp245_30 <- fus_pred_ssp245_30 > fusPred_threshold_50
+fus_pred_mod_ssp245_30 <- fus_pred_ssp245_30 > fusPred_threshold_10
+fus_pred_low_ssp245_30 <- fus_pred_ssp245_30 > fusPred_threshold_1
+
+fus_pred_high_ssp245_50 <- fus_pred_ssp245_50 > fusPred_threshold_50
+fus_pred_mod_ssp245_50 <- fus_pred_ssp245_50 > fusPred_threshold_10
+fus_pred_low_ssp245_50 <- fus_pred_ssp245_50 > fusPred_threshold_1
+
+fus_pred_high_ssp245_70 <- fus_pred_ssp245_70 > fusPred_threshold_50
+fus_pred_mod_ssp245_70 <- fus_pred_ssp245_70 > fusPred_threshold_10
+fus_pred_low_ssp245_70 <- fus_pred_ssp245_70 > fusPred_threshold_1
+
+#SSP585
+fus_pred_high_ssp585_30 <- fus_pred_ssp585_30 > fusPred_threshold_50
+fus_pred_mod_ssp585_30 <- fus_pred_ssp585_30 > fusPred_threshold_10
+fus_pred_low_ssp585_30 <- fus_pred_ssp585_30 > fusPred_threshold_1
+
+fus_pred_high_ssp585_50 <- fus_pred_ssp585_50 > fusPred_threshold_50
+fus_pred_mod_ssp585_50 <- fus_pred_ssp585_50 > fusPred_threshold_10
+fus_pred_low_ssp585_50 <- fus_pred_ssp585_50 > fusPred_threshold_1
+
+fus_pred_high_ssp585_70 <- fus_pred_ssp585_70 > fusPred_threshold_50
+fus_pred_mod_ssp585_70 <- fus_pred_ssp585_70 > fusPred_threshold_10
+fus_pred_low_ssp585_70 <- fus_pred_ssp585_70 > fusPred_threshold_1
+
+# Save
+getwd()
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
+
+# Historical
+saveRDS(fus_pred_high_hist, file = 'fus_pred_high_hist.Rdata')
+saveRDS(fus_pred_mod_hist, file = 'fus_pred_mod_hist.Rdata')
+saveRDS(fus_pred_low_hist, file = 'fus_pred_low_hist.Rdata')
+
+# SSP245
+saveRDS(fus_pred_high_ssp245_30, file = 'fus_pred_high_ssp245_30.Rdata')
+saveRDS(fus_pred_mod_ssp245_30, file = 'fus_pred_mod_ssp245_30.Rdata')
+saveRDS(fus_pred_low_ssp245_30, file = 'fus_pred_low_ssp245_30.Rdata')
+
+saveRDS(fus_pred_high_ssp245_50, file = 'fus_pred_high_ssp245_50.Rdata')
+saveRDS(fus_pred_mod_ssp245_50, file = 'fus_pred_mod_ssp245_50.Rdata')
+saveRDS(fus_pred_low_ssp245_50, file = 'fus_pred_low_ssp245_50.Rdata')
+
+saveRDS(fus_pred_high_ssp245_70, file = 'fus_pred_high_ssp245_70.Rdata')
+saveRDS(fus_pred_mod_ssp245_70, file = 'fus_pred_mod_ssp245_70.Rdata')
+saveRDS(fus_pred_low_ssp245_70, file = 'fus_pred_low_ssp245_70.Rdata')
+
+# SSP585
+saveRDS(fus_pred_high_ssp585_30, file = 'fus_pred_high_ssp585_30.Rdata')
+saveRDS(fus_pred_mod_ssp585_30, file = 'fus_pred_mod_ssp585_30.Rdata')
+saveRDS(fus_pred_low_ssp585_30, file = 'fus_pred_low_ssp585_30.Rdata')
+
+saveRDS(fus_pred_high_ssp585_50, file = 'fus_pred_high_ssp585_50.Rdata')
+saveRDS(fus_pred_mod_ssp585_50, file = 'fus_pred_mod_ssp585_50.Rdata')
+saveRDS(fus_pred_low_ssp585_50, file = 'fus_pred_low_ssp585_50.Rdata')
+
+saveRDS(fus_pred_high_ssp585_70, file = 'fus_pred_high_ssp585_70.Rdata')
+saveRDS(fus_pred_mod_ssp585_70, file = 'fus_pred_mod_ssp585_70.Rdata')
+saveRDS(fus_pred_low_ssp585_70, file = 'fus_pred_low_ssp585_70.Rdata')
+
+# Load
