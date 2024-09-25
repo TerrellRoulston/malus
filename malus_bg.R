@@ -53,7 +53,7 @@ occThin_fus <- readRDS(file = 'occThin_fus.Rdata')
 setwd("../wclim_data/")
 # Note DO NOT PUSH wclim data**
 wclim <- geodata::worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "../wclim_data/")
-
+plot(wclim$wc2.1_2.5m_bio_1, main = expression(atop('WorldClim Bioclimatic Predictor 1', 'Mean Annual Tempature (1970-2000)')))
 
 # M. coronaria ecoregions -------------------------------------------------
 # extract ecoregion polygon that contain M. coronaria occurrence points
