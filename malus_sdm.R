@@ -19,7 +19,7 @@ library(doParallel) # added functionality to parallel
 getwd() # check you directory location
 
 # Background points in SpatVectors
-setwd("./occ_data/")
+setwd("../occ_data/")
 cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
 fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
 
@@ -28,30 +28,10 @@ setwd("../occ_data/")
 occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
 occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
 
-# Download/load basemaps
-us_map <- gadm(country = 'USA', level = 0, resolution = 2,
-               path = "../occ_data/base_maps") #USA basemap w. States
-
-ca_map <- gadm(country = 'CA', level = 0, resolution = 2,
-               path = '../occ_data/base_maps') # Canada basemap w. Provinces
-
-mex_map <-gadm(country = 'MX', level = 0, resolution = 2,
-               path = '../occ_data/base_maps') # Mexico basemap w. States
-
-canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
-
-
-NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
-
-canUSMex_map <- crop(canUSMex_map, NA_ext) # crop to Western Hemisphere
-
-plot(canUSMex_map) # plot basemap
-
-
 # Great Lakes shapefiles for making pretty maps and cropping
 great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
-great_lakes <- crop(great_lakes, NA_ext)
 
+NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
 
 # Download/load WorldClim data under future climate scenarios -------------
 # WARNING DO NOT PUSH WORLDCLIM DATA
@@ -235,7 +215,6 @@ legend_labs <- c('Low Suitability', 'Moderate Suitability', 'High Suitability')
 
 # brewer.pal(3, "YlOrBr") # Brewer palettes are helpful for mapping colour gradients
 fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
-#fill_cols <- c('#D81B60', '#1E88E5', '#FFC107') # old colours
 
 dev.off()
 par(mar = c(5, 5, 5, 5))
@@ -299,12 +278,13 @@ cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
 
 
 
-# Save coronaria thresholds -----------------------------------------------
+# M coronaria thresholds --------------------------------------------------
 setwd('../sdm_output/thresholds')
 saveRDS(corPred_threshold_1, file = 'corPred_threshold_1.Rdata')
 saveRDS(corPred_threshold_10, file = 'corPred_threshold_10.Rdata')
 saveRDS(corPred_threshold_50, file = 'corPred_threshold_50.Rdata')
 
+# Load
 corPred_threshold_1 <- readRDS(file = 'corPred_threshold_1.Rdata')
 corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
 corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
@@ -379,17 +359,38 @@ saveRDS(cor_pred_mod_ssp585_70, file = 'cor_pred_mod_ssp585_70.Rdata')
 saveRDS(cor_pred_low_ssp585_70, file = 'cor_pred_low_ssp585_70.Rdata')
 
 # Load
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
 
+# Historical
+cor_pred_high_hist <- readRDS(file = 'cor_pred_high_hist.Rdata')
+cor_pred_mod_hist <- readRDS(file = 'cor_pred_mod_hist.Rdata')
+cor_pred_low_hist <- readRDS(file = 'cor_pred_low_hist.Rdata')
 
+# SSP245
+cor_pred_high_ssp245_30 <- readRDS(file = 'cor_pred_high_ssp245_30.Rdata')
+cor_pred_mod_ssp245_30 <- readRDS(file = 'cor_pred_mod_ssp245_30.Rdata')
+cor_pred_low_ssp245_30 <- readRDS(file = 'cor_pred_low_ssp245_30.Rdata')
 
-# Binary pred habitat GAP ANALYSIS ----------------------------------------
+cor_pred_high_ssp245_50 <- readRDS(file = 'cor_pred_high_ssp245_50.Rdata')
+cor_pred_mod_ssp245_50 <- readRDS(file = 'cor_pred_mod_ssp245_50.Rdata')
+cor_pred_low_ssp245_50 <- readRDS(file = 'cor_pred_low_ssp245_50.Rdata')
 
+cor_pred_high_ssp245_70 <- readRDS(file = 'cor_pred_high_ssp245_70.Rdata')
+cor_pred_mod_ssp245_70 <- readRDS(file = 'cor_pred_mod_ssp245_70.Rdata')
+cor_pred_low_ssp245_70 <- readRDS(file = 'cor_pred_low_ssp245_70.Rdata')
 
-cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
-cor_threshold <- predicts::threshold(cor_pa)
+# SSP585
+cor_pred_high_ssp585_30 <- readRDS(file = 'cor_pred_high_ssp585_30.Rdata')
+cor_pred_mod_ssp585_30 <- readRDS(file = 'cor_pred_mod_ssp585_30.Rdata')
+cor_pred_low_ssp585_30 <- readRDS(file = 'cor_pred_low_ssp585_30.Rdata')
 
-cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
+cor_pred_high_ssp585_50 <- readRDS(file = 'cor_pred_high_ssp585_50.Rdata')
+cor_pred_mod_ssp585_50 <- readRDS(file = 'cor_pred_mod_ssp585_50.Rdata')
+cor_pred_low_ssp585_50 <- readRDS(file = 'cor_pred_low_ssp585_50.Rdata')
 
+cor_pred_high_ssp585_70 <- readRDS(file = 'cor_pred_high_ssp585_70.Rdata')
+cor_pred_mod_ssp585_70 <- readRDS(file = 'cor_pred_mod_ssp585_70.Rdata')
+cor_pred_low_ssp585_70 <- readRDS(file = 'cor_pred_low_ssp585_70.Rdata')
 
 # Fusca - MaxEnt Model ----------------------------------------------------
 
@@ -600,3 +601,50 @@ saveRDS(fus_pred_mod_ssp585_70, file = 'fus_pred_mod_ssp585_70.Rdata')
 saveRDS(fus_pred_low_ssp585_70, file = 'fus_pred_low_ssp585_70.Rdata')
 
 # Load
+# Load
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
+
+# Historical
+fus_pred_high_hist <- readRDS(file = 'fus_pred_high_hist.Rdata')
+fus_pred_mod_hist <- readRDS(file = 'fus_pred_mod_hist.Rdata')
+fus_pred_low_hist <- readRDS(file = 'fus_pred_low_hist.Rdata')
+
+# SSP245
+fus_pred_high_ssp245_30 <- readRDS(file = 'fus_pred_high_ssp245_30.Rdata')
+fus_pred_mod_ssp245_30 <- readRDS(file = 'fus_pred_mod_ssp245_30.Rdata')
+fus_pred_low_ssp245_30 <- readRDS(file = 'fus_pred_low_ssp245_30.Rdata')
+
+fus_pred_high_ssp245_50 <- readRDS(file = 'fus_pred_high_ssp245_50.Rdata')
+fus_pred_mod_ssp245_50 <- readRDS(file = 'fus_pred_mod_ssp245_50.Rdata')
+fus_pred_low_ssp245_50 <- readRDS(file = 'fus_pred_low_ssp245_50.Rdata')
+
+fus_pred_high_ssp245_70 <- readRDS(file = 'fus_pred_high_ssp245_70.Rdata')
+fus_pred_mod_ssp245_70 <- readRDS(file = 'fus_pred_mod_ssp245_70.Rdata')
+fus_pred_low_ssp245_70 <- readRDS(file = 'fus_pred_low_ssp245_70.Rdata')
+
+# SSP585
+fus_pred_high_ssp585_30 <- readRDS(file = 'fus_pred_high_ssp585_30.Rdata')
+fus_pred_mod_ssp585_30 <- readRDS(file = 'fus_pred_mod_ssp585_30.Rdata')
+fus_pred_low_ssp585_30 <- readRDS(file = 'fus_pred_low_ssp585_30.Rdata')
+
+fus_pred_high_ssp585_50 <- readRDS(file = 'fus_pred_high_ssp585_50.Rdata')
+fus_pred_mod_ssp585_50 <- readRDS(file = 'fus_pred_mod_ssp585_50.Rdata')
+fus_pred_low_ssp585_50 <- readRDS(file = 'fus_pred_low_ssp585_50.Rdata')
+
+fus_pred_high_ssp585_70 <- readRDS(file = 'fus_pred_high_ssp585_70.Rdata')
+fus_pred_mod_ssp585_70 <- readRDS(file = 'fus_pred_mod_ssp585_70.Rdata')
+fus_pred_low_ssp585_70 <- readRDS(file = 'fus_pred_low_ssp585_70.Rdata')
+
+
+# Binary Thresholds for Gap Analysis --------------------------------------
+# For the purposed of the Gap Analysis it is best to use a binary threshold of habitat suitability.
+# You could use the moderate, or high suitability thresholds from above, but that is not very well accepted in the literature.
+# In this case there are several binary thresholds that exist, including several in the <predicts> package
+# See ?predicts::threshold
+
+
+cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
+cor_binary_threshold <- predicts::threshold(cor_pa)
+
+cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
+
