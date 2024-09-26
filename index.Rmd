@@ -41,7 +41,7 @@ Step| Script| Purpose
 4| `malus_bg.R` | Download ecoregions, sample background points, predictor cluster, 3D Kernel density plots
 5| `malus_sdm.R` | Climate predictor data, Maxent modeling and tuning, habitat suitability predictions
 6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
-7| `malus_MESS.R` | Multivariate Environmental Similarity Surfaces, assess novel (dissimiar) environments
+7| `malus_gap` | Conservation gap analysis to assess the level of conservation of species
 
 
 ## GBIF Species Occurrences Download
@@ -1217,4 +1217,16 @@ Now let's break down some of the decisions I made when designing the map.
 * As previously mentioned, in previous iterations I had administrative boundaries for each province/state but it was making the plots very busy. The question I asked myself is, is the cluster worth the information being presented - or is it even relevant at all. No, not really! BUT it is important to show the international border! 
 
 * The ocean could have remained white, but it is a bit more clear what is water if we make it blue. The light blue matches the soft browns and grey. It also distinguishes the background of the map from the rest of the figure. 
+
+* The arrangement of the historical plot and then the SSPs which it creates a sensible hierarchy with each year as a column and row as a different SSP. It is more natural to read left to right, following the time progression then to compare up and down. 
+
+* The legend is large and clear.
+
+* The species is in the  top left to be the first thing the reader sees, with a accompanying picture that draws the reader in and reminds them what species they are looking at. The same picture is used in a previous figure introducing the species to create continuity. 
+
+* Each panel is labeled with letters so that they can be easily referenced in-text.
+
+* Overall the plot is minimal, nothing is excessive, and the whole plot is soft and easy to look at. (At least in my humble opinion).
+
+
 
