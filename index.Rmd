@@ -608,7 +608,7 @@ library(doParallel) # added functionality to parallel
 ```
 
 
-Let's start by loading in the thinned occurrence points and background points, along with some base maps of Canada, USA, and Mexico.
+Let's start by loading in the thinned occurrence points and background points, along with some base maps of Canada, USA, and Mexico. (Note: In the end I decided not to use these boundaries for plotting, but you may want to for your purposes so I left the chunk here).
 
 ```{r}
 # Download/load basemaps
@@ -631,6 +631,15 @@ canUSMex_map <- crop(canUSMex_map, NA_ext) # crop to Western Hemisphere
 plot(canUSMex_map) # plot basemap
 ```
 
+We are also going to load a shape file that outlines the Great Lakes. This helps to make the figures more pretty, and we can also use the vector layer to mask the predictor layers so that no predictions are made over the Great Lakes (Malus cannot swim...). You can download the shape files from the url below. 
+
+```{r}
+# Great Lakes shapefiles for making pretty maps
+# Shape files downloaded from the USGS (https://www.sciencebase.gov/catalog/item/530f8a0ee4b0e7e46bd300dd)
+great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+```
+
+
 Now lets download the future bioclimatic data. For this we will need to specify a few additional arguments then before when downloading the historical climate data. We will again use the `geodata` package, but instead of `worldclim_global` we will use `cmip6_world`. 
 
 This function will download data for projected future climates from Coupled Model Intercomparison Project Phase 6 (CMIP6) generated from  Global Climate Models (GCMs). CMIP6 projections are based on the Shared Socio-economic Pathway (SSP) scenarios, included in the Intergovernmental Panel on Climate Change (IPCC) Assessment Report (AR6). 
@@ -642,6 +651,14 @@ The final decision to make is which CMIP6 climate model you are going to choose.
 **NOTE:** Climate projections, are just that, *projections*. These models are useful, but can be flawed for a host of reasons. Recently it has come to the attention of climate modelers that many of the models included in CMIP6 are 'too hot', meaning the rates of warming may be too high, although this is not true for every region. Read more here: <https://www.science.org/content/article/use-too-hot-climate-models-exaggerates-impacts-global-warming>. 
 
 ```{r}
+# Historical climate 1970-2000
+wclim <- geodata::worldclim_global(var = 'bio',
+                                   res = 2.5, 
+                                   version = '2.1', 
+                                   path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
 # SSP (Shared social-economic pathway) 2.45 
 # middle of the road projection, high climate adaptation, low climate mitigation
 ssp245_2030 <- cmip6_world(model = "CanESM5",
@@ -649,21 +666,27 @@ ssp245_2030 <- cmip6_world(model = "CanESM5",
                            time = "2021-2040",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 ssp245_2050 <- cmip6_world(model = "CanESM5",
                            ssp = "245",
                            time = "2041-2060",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 ssp245_2070 <- cmip6_world(model = "CanESM5",
                            ssp = "245",
                            time = "2061-2080",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 # SPP 5.85 
 # low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
@@ -672,21 +695,27 @@ ssp585_2030 <- cmip6_world(model = "CanESM5",
                            time = "2021-2040",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 ssp585_2050 <- cmip6_world(model = "CanESM5",
                            ssp = "585",
                            time = "2041-2060",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 ssp585_2070 <- cmip6_world(model = "CanESM5",
                            ssp = "585",
                            time = "2061-2080",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")
+                           path = "../wclim_data/")%>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 ```
 
 **NOTE:** Just like with the previous climate data, DO NOT push these large files to a github repo due to the size of the files.
@@ -942,7 +971,9 @@ knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/boyce
 ```
 
 
-Second, is it best to leave these suitability scores as a continuous gradient of habitat suitability? Myself (and many others) find maps with colour gradients illegible, or less informative at a glance. Some take the approach of creating a binary threshold, where habitat suitability is boolean. There are several methods to determine this binary threshold, which can be done using the `predicts` package. A flaw of this approach is it less tangible what these thresholds mean in lay terms.
+Second, is it best to leave these suitability scores as a continuous gradient of habitat suitability? Myself (and many others) find maps with colour gradients illegible, or less informative at a glance. Some take the approach of creating a binary threshold, where habitat suitability is boolean. There are several methods to determine this binary threshold, which can be done using the `predicts` package. A flaw of this approach is it less tangible what these thresholds mean in lay terms, and biology is never as simple as YES/NO.
+
+With that said (foreshadowing),  these binary thresholds are very useful for completing gap analyses. Gap analyses are a natural next step after completing a SDM to understand how much of a species suitable habitat is covered by protected areas (PAs) so that we know how much of the specie's habitat is protected.
 
 ```{r}
 cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
@@ -958,6 +989,13 @@ corPred_val <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1
 corPred_threshold_1 <- quantile(corPred_val, 0.01, na.rm = T) # Low suitability
 corPred_threshold_10 <- quantile(corPred_val, 0.1, na.rm = T) # Moderate suitability
 corPred_threshold_50 <- quantile(corPred_val, 0.5, na.rm = T) # High suitability
+
+# Save suitability thresholds
+
+setwd('../sdm_output/thresholds')
+saveRDS(corPred_threshold_1, file = 'corPred_threshold_1.Rdata')
+saveRDS(corPred_threshold_10, file = 'corPred_threshold_10.Rdata')
+saveRDS(corPred_threshold_50, file = 'corPred_threshold_50.Rdata')
 
 ```
 
@@ -999,7 +1037,7 @@ cor_pred_ssp585_30 <- terra::predict(ssp585_2030, mod.best_cor_maxent, cores = c
 cor_pred_ssp585_50 <- terra::predict(ssp585_2050, mod.best_cor_maxent, cores = cn - 1)
 cor_pred_ssp585_70 <- terra::predict(ssp585_2070, mod.best_cor_maxent, cores = cn - 1)
 
-# Save/Load M cor. SDM predictions ----------------------------------------
+# Save M cor. SDM predictions 
 setwd('../sdm_output')
 saveRDS(cor_pred_hist, file = 'cor_pred_hist.Rdata')
 
@@ -1020,77 +1058,163 @@ knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/
 
 We can see a clear shift in the fundamental niche of *M. coronaria* northward. At the same time, it seems that the climate for *M. coronaria* will be favourable in Southern Ontario, as well as an expansion in Quebec and the Maritimes. Also pay attention to areas where fundamental habitat is being lost, especially in the US. Remember that these are simply predictions, that carry a lot of assumptions.
 
-**Note:** It may also be helpful to save individual raster layers for the low, moderate and high suitability results. This of course can quickly become a lot of layers/files but it can help in situations where you may want to share these results with others as it is clear what the results are rather than having to send them complete predictions and threshold files. And of course we can re-load them for downstream work as done many times above.
-
-```{r}
-# Categorical habitat suitability
-# Historical
-cor_pred_high_hist <- cor_pred_hist > corPred_threshold_50
-cor_pred_mod_hist <- cor_pred_hist > corPred_threshold_10
-cor_pred_low_hist <- cor_pred_hist > corPred_threshold_1
-
-#SSP245 
-cor_pred_high_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_50
-cor_pred_mod_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_10
-cor_pred_low_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_1
-
-cor_pred_high_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_50
-cor_pred_mod_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_10
-cor_pred_low_ssp245_50 <- cor_pred_ssp245_50 > corPred_threshold_1
-
-cor_pred_high_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_50
-cor_pred_mod_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_10
-cor_pred_low_ssp245_70 <- cor_pred_ssp245_70 > corPred_threshold_1
-
-#SSP585
-cor_pred_high_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_50
-cor_pred_mod_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_10
-cor_pred_low_ssp585_30 <- cor_pred_ssp585_30 > corPred_threshold_1
-
-cor_pred_high_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_50
-cor_pred_mod_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_10
-cor_pred_low_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_1
-
-cor_pred_high_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_50
-cor_pred_mod_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_10
-cor_pred_low_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_1
-
-# Save
-getwd()
-setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
-
-# Historical
-saveRDS(cor_pred_high_hist, file = 'cor_pred_high_hist.Rdata')
-saveRDS(cor_pred_mod_hist, file = 'cor_pred_mod_hist.Rdata')
-saveRDS(cor_pred_low_hist, file = 'cor_pred_low_hist.Rdata')
-
-# SSP245
-saveRDS(cor_pred_high_ssp245_30, file = 'cor_pred_high_ssp245_30.Rdata')
-saveRDS(cor_pred_mod_ssp245_30, file = 'cor_pred_mod_ssp245_30.Rdata')
-saveRDS(cor_pred_low_ssp245_30, file = 'cor_pred_low_ssp245_30.Rdata')
-
-saveRDS(cor_pred_high_ssp245_50, file = 'cor_pred_high_ssp245_50.Rdata')
-saveRDS(cor_pred_mod_ssp245_50, file = 'cor_pred_mod_ssp245_50.Rdata')
-saveRDS(cor_pred_low_ssp245_50, file = 'cor_pred_low_ssp245_50.Rdata')
-
-saveRDS(cor_pred_high_ssp245_70, file = 'cor_pred_high_ssp245_70.Rdata')
-saveRDS(cor_pred_mod_ssp245_70, file = 'cor_pred_mod_ssp245_70.Rdata')
-saveRDS(cor_pred_low_ssp245_70, file = 'cor_pred_low_ssp245_70.Rdata')
-
-# SSP585
-saveRDS(cor_pred_high_ssp585_30, file = 'cor_pred_high_ssp585_30.Rdata')
-saveRDS(cor_pred_mod_ssp585_30, file = 'cor_pred_mod_ssp585_30.Rdata')
-saveRDS(cor_pred_low_ssp585_30, file = 'cor_pred_low_ssp585_30.Rdata')
-
-saveRDS(cor_pred_high_ssp585_50, file = 'cor_pred_high_ssp585_50.Rdata')
-saveRDS(cor_pred_mod_ssp585_50, file = 'cor_pred_mod_ssp585_50.Rdata')
-saveRDS(cor_pred_low_ssp585_50, file = 'cor_pred_low_ssp585_50.Rdata')
-
-saveRDS(cor_pred_high_ssp585_70, file = 'cor_pred_high_ssp585_70.Rdata')
-saveRDS(cor_pred_mod_ssp585_70, file = 'cor_pred_mod_ssp585_70.Rdata')
-saveRDS(cor_pred_low_ssp585_70, file = 'cor_pred_low_ssp585_70.Rdata')
-```
-
-Now that we have made all our predictions and saved all results as `.Rdata` files lets move onto to tidying up plots to prepare them for a results section and publication! Also, if you have made it this far take a minute to appreciate just how much work has been accomplished.
+Now that we have made all our predictions and thresholds saved as `.Rdata` files lets move onto to tidying up plots to prepare them for a results section and publication! Also, if you have made it this far take a minute to appreciate just how much work has been accomplished.
 
 ## Publication Plots
+
+One of my favourite, but most time consuming steps in a SDM workflow is producing figures. Designing a plot  that effectively display results at the same time as being simple and aesthetically pleasing can take a lot of time and fine tuning. Not to mention that plotting spatial data  can be difficult to say the least. With that said once you do nail a plot it is so rewarding! 
+
+It is important to note that there are several different approaches and packages that you can use to plot spatial vectors and rasters. One of the most popular packages is `ggplot2` (a.k.a ggplot), which is highly maintained and polished. It can be a bit of a learning curve, but once you get the hang of it it is THE way to make (most) plots. Not to mention there are endless packages that add functionality to `ggplot2` that can do a lot of cool things.  
+
+Now, with that said for the purposes of my publication and workflow I will be using the plotting functionality built into `terra`. As this is a newer package, there is less support and documentation in `ggplot2` but a package called `tidyterra` is well into development. Also, the `terra::plot` function builds off the base R graphics package, which can also have its advantages. 
+
+Now what exactly goes into a 'publication quality' plot. There is a long list of things that separates a good figure from a bad figure. I will go over a few decisions I have made, but I will not begin to scratch the surface. I **highly reccomend** taking a look at this YouTube video by the Riffomonas Project on creating publication quality figures (https://youtu.be/3y7pJYURspA?si=NsdrJU9MxnmNF6b_). The creator, Dr. Pat Schloss, is a microbiologist at the University of Michigan. He has an immense experience base in computational statistics, and a talent for simply explaining complex code. Checkout his catalog of videos and his website!! I take a lot of inspiration from his philosophy on open access statistics and coding - and certainly have learned a lot from him. Okay that is enough about my statics crush...
+
+For a `terra` specific introduction to plotting checkout this great introduction to making simple maps with `terra` by my collaborator Dr. Tyler Smith, (https://plantarum.ca/2023/02/13/terra-maps/). He has recently updated the blog to be up to date with all the new `terra` functionality. Also checkout the rest of his blogs! 
+
+As always, let's start by loading the raster layers and thresholds we saved from the SDM outputs. 
+
+**NOTE:** Due to the Lambert projection the x any y axes are now a projected coordinate system, and no longer standard  geographic coordinates (Lat and Lon). Thus the axes limits must be set differently. IF you want to still plot lat/lon coordinates you need to project a graticule, which I will cover below.
+
+Let's begin...
+
+```{r}
+# Load occurrences and  raster/vectors
+# Occurrence Points in SpatVectors
+getwd()
+setwd("../occ_data/")
+occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
+
+# Great Lakes shapefiles for making pretty maps
+# Shape files downloaded from the USGS (https://www.sciencebase.gov/catalog/item/530f8a0ee4b0e7e46bd300dd)
+great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+```
+
+While plotting the SDM results in the previous script I realized that the `gadm` country  boundaries were making the results of the SDM really hard to see in areas at the coast. This was especially true for *Malus fusca* on the west coast of British Columbia, where there are many many inlets and bays (see photo example of a prelimary map below). Because of this I chose to scarp the admin boundaries that outline the entirity of Canada and the US, and download a shape file of just the border instead.
+
+```{r}
+# Canada/US Border for showing the international line. Gadm admin boundaries trace the entire country, vs this is just the border
+# Much easier to see the SDM results along coastlines where tracing obscures the data
+# Downloaded from  https://koordinates.com/layer/111012-canada-and-us-border/
+can_us_border <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/can_us border')
+```
+
+A small tweak I made to the vector was to remove the border lines drawn in the ocean on both coasts. This was purely for aesthetic reasons.Thankfully each segment of the vector is clearly named and easy to drop.
+
+```{r}
+can_us_border$SectionEng # access variable names of each segment
+# Two line segments are in the water and are not needed in this case, lets remove them to make the maps look prettier
+segments_to_remove <- c("Gulf of Maine", "Straits of Georgia and Juan de Fuca")
+can_us_border <- can_us_border[!can_us_border$SectionEng %in% segments_to_remove, ]
+```
+
+Up until now all the maps produced above have been done using the World Geodectic System 1984 (a.k.a WGS84); which is a pseudo-Mercator projection that is the de facto standard for most web apps. With that said it is not very nice for producing figures of maps because it distorts shape and size of areas. So we will be using the **Lambert Conformal Conic projection**. This projection is ideal for mapping Canada and the US because its east-west orientation minimizes distortion across these large, elongated regions, providing a more accurate representation of geographic features and distances. It is also pretty much the standard projection in every Canadian geography textbook and it is also the official mapping projection of the Government of Canada.
+
+For an introduction into projections and 'Coordinate Reference Systems' (CRS) visit in R https://rspatial.org/raster/spatial/6-crs.html.
+
+```{r}
+projLam <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
+```
+
+As I mentioned above, when creating a new projection in R other than the WGS84, you will need to produce graticules to show the latitude and longitude on the new coordinate system you are using. There is a function in `terra` to do this. I am not going to use it for my plots but it is good to know how to do it!
+
+```{r}
+# Gratitcules
+g.cor <- terra::graticule(
+  lon = seq(-110, -55, by = 10),  # Longitude from 130°W to 50°W
+  lat = seq(30, 55, by = 10),     # Latitude from 25°N to 75°N
+  crs = projLam
+)
+```
+
+So now we need to get all of the spatial data we are going to project on the same coordinate system (The Lambert). This can take a few minutes to run!
+
+```{r}
+# Great lakes
+great_lakes.lcc <- project(great_lakes, projLam)
+
+# Can/US border
+can_us_border.lcc <- project(can_us_border, projLam)
+
+# Occurrences
+occThin_cor.lcc <- project(occThin_cor, projLam)
+occThin_fus.lcc <- project(occThin_fus, projLam)
+
+# Habitat suitability
+cor_pred_hist.lcc <- project(cor_pred_hist, projLam)
+
+cor_pred_ssp245_30.lcc <- project(cor_pred_ssp245_30, projLam)
+cor_pred_ssp245_50.lcc <- project(cor_pred_ssp245_50, projLam)
+cor_pred_ssp245_70.lcc <- project(cor_pred_ssp245_70, projLam)
+
+cor_pred_ssp585_30.lcc <- project(cor_pred_ssp585_30, projLam)
+cor_pred_ssp585_50.lcc <- project(cor_pred_ssp585_50, projLam)
+cor_pred_ssp585_70.lcc <- project(cor_pred_ssp585_70, projLam)
+```
+
+Ok we have done all the prep work we needed to do, now let's make some figures!
+
+```{r}
+# We need three colours that clearly show the threshold categories 
+brewer.pal(3, "YlOrBr") # Brewer palettes are helpful for mapping colour gradients
+
+legend_labs <- c('Low Suitability', 'Moderate Suitability', 'High Suitability')
+fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
+
+# Then we need to determine some plot limits. Unfortunately it is a bit more tricky compared to the Mercator projection
+# It can take some trial and error
+
+cor.xlim <- c(-5*10^5, 3.1*10^6)
+cor.ylim <- c(-2*10^6, 2*10^6)
+```
+
+I want to make a figure with multiple panels. You could absolutely do this in R, BUT sometimes the simplier solution can be easier. In this case I am going to make all the elements/panels of the figure and then edit it all together in PowerPoint! To start I am going to produce a legend.
+
+```{r}
+# Plot a legend that can be saved on its own
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+legend('center', xpd = NA, title = c(as.expression(bquote(bold('Habitat Suitability')))), legend = legend_labs, fill = fill_cols, cex = 3)
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '200px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/publication/suitability_legend.jpeg"))
+```
+
+```{r}
+# Plot historical distribution 
+terra::plot(cor_pred_hist.lcc > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'),
+            background = 'lightskyblue1',
+            legend = F, 
+            xlim = cor.xlim, ylim = cor.ylim, 
+            main = " Historical Suitability (1970-2000)",
+            cex.main = 3,
+            axes = F,
+            box = T,
+            mar = c(5, 5, 5, 5))
+terra::plot(cor_pred_hist.lcc > corPred_threshold_10, col = c(NA, '#FEC44F'), add = T, legend = F)
+terra::plot(cor_pred_hist.lcc > corPred_threshold_50, col = c(NA, '#D95F0E'), add = T, legend = F)
+terra::plot(can_us_border.lcc, add = T)
+#terra::plot(g.cor, add = T, retro = T, col = '#999999',lab.lat = c(2,3,4), lab.lon = c(2,3,4,5), lab.cex = 1.5, mar = c(5,5,5,5), lab.loc = 1, off.lat = -0.01) # Code for adding a gratitcule to the plot.
+```
+
+```{r, eval = TRUE, echo=FALSE, out.width= '15000px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/publication/coronaria_historical.jpeg"))
+```
+
+Now I have repeated the plotting process for all time periods for both the SSPs. I took all those photos and went into PowerPoint and produced the following figure!
+
+```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/figures/coronaria_habitat_suitability.jpg"))
+```
+
+Now let's break down some of the decisions I made when designing the map.
+
+* I chose the sequential Brewer palettes as light colours stress lower values and darker greater values. This makes sense for habitat suitability going from low to high. The shades of brown are quick and easy to distinguish (but are not colour blind friendly). They are also soft hues that are ~aesthetic~.
+
+* The light grey background of North America is easily recognizable but it is not too dark to take the readers attention away from SDM results.
+
+* As previously mentioned, in previous iterations I had administrative boundaries for each province/state but it was making the plots very busy. The question I asked myself is, is the cluster worth the information being presented - or is it even relevant at all. No, not really! BUT it is important to show the international border! 
+
+* The ocean could have remained white, but it is a bit more clear what is water if we make it blue. The light blue matches the soft browns and grey. It also distinguishes the background of the map from the rest of the figure. 
+
