@@ -1229,16 +1229,18 @@ Now let's break down some of the decisions I made when designing the map.
 * Overall the plot is minimal, nothing is excessive, and the whole plot is soft and easy to look at. (At least in my humble opinion).
 
 ## Gap Analysis
-The natural next step after completing a SDM is to complete a gap analyis.
+
+The natural next step after completing a SDM is to complete a gap analysis.
 
 A gap analysis is a method in conservation biology to assess the effectiveness of existing protected areas (PAs) and ex situ collections in conserving biodiversity. The analysis can identify where the species of interest (or ecosystem) is protected or not, and to what extent they are represented within those protected areas. There are many different approaches and software for completing this analysis, but to as we have come this far we will be sticking with R. Dan Carver et al. 2021 (https://nsojournals.onlinelibrary.wiley.com/doi/full/10.1111/ecog.05430) published a great package for completing gap analyses in R, but there are now several deprecated dependencies which has made the package inoperable. With that said we can still use their equations to complete the analysis ourselves.
 
-Unfortunately for the *Malus* species I am working with there are simply not enough ex situ data in existence in Canada to complete it. We do however thankfully have enough data to do an in situ analysis. 
+Unfortunately for the *Malus* species I am working with there are simply not enough ex situ data in existence in Canada to complete it. We do however thankfully have enough data to do an **in situ analysis**. 
 
 ```{r}
 library(tidyverse) # Grammar and data management
 library(terra) # Spatial Data package
 library(geodata) # basemaps
+library(ggpubr) # arrange ggplot figures
 
 # The following gap analysis is referencing Carver et al. (2021)
 # https://nsojournals.onlinelibrary.wiley.com/doi/full/10.1111/ecog.05430
@@ -1266,7 +1268,7 @@ pro_area <- project(pro_area, 'WGS84') # project the PAs to be the same CRS as t
 
 **ADD A PIC OF PAs**
 
-Now let's load in all the necessary SDM layers and species occurrences.
+Now let's load in all the necessary SDM layers, species occurrences and base maps.
 ```{r}
 # I am using the complete suitability rasters and thresholds separately
 # Could also load pre-categorized layers as well
@@ -1292,9 +1294,214 @@ corPred_threshold_1 <- readRDS(file = 'corPred_threshold_1.Rdata')
 corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
 corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
 
+# Load a Canada Admin boundary
+getwd()
+setwd('../occ_data')
+ca_bound <- gadm(country = 'CA', level = 0, resolution = 1,
+               path = '../occ_data/base_maps') 
 ```
 
+**NOTE:** I am following Carver et al., 2021. I will not be explaining in very much detail what each metric repersents so go checkout the paper!
+
+**ANOTHER NOTE:** One major difference in this workflow to Carver et al., 2021 is that I am using the projected SSPs to look at the future scores of these metrics - if the PAs were to stay the same as they are today. 
+
+Now the first gap analysis statistic we want to calculate is the sampling representativeness score in situ (SRSin). To do this we will need to crop and mask the predicted SDM layers to Canada's borders. Then we will take the product of that and crop and mask it to only the protected areas (PAs).
+
+I will note that the way I am coding it here is not likely the most efficient or clean - but it will get the job done! Let's hope Dan can get get the GapAnalysisR package back to complete strength. But this workflow does serve as an example on how to manually complete these calculations on your own!
+
+```{r}
+# Mask and crop SDM layer to Canada
+
+# M. coronaria
+# Historical
+can_cor_pred_hist <- crop(cor_pred_hist, ca_bound, mask = T) 
+
+# SSP245
+can_cor_pred_ssp245_30 <- crop(cor_pred_ssp245_30, ca_bound, mask = T)
+can_cor_pred_ssp245_50 <- crop(cor_pred_ssp245_50, ca_bound, mask = T)
+can_cor_pred_ssp245_70 <- crop(cor_pred_ssp245_70, ca_bound, mask = T)
+
+# SSP585
+can_cor_pred_ssp585_30 <- crop(cor_pred_ssp585_30, ca_bound, mask = T)
+can_cor_pred_ssp585_50 <- crop(cor_pred_ssp585_50, ca_bound, mask = T)
+can_cor_pred_ssp585_70 <- crop(cor_pred_ssp585_70, ca_bound, mask = T)
+
+# Mask Suitable Habitat rasters to the PA polygons
+
+#M. coronaria
+#Historical 
+pa_cor_pred_hist <- crop(can_cor_pred_hist, pro_area, mask = T) 
+
+# SSP245
+pa_cor_pred_ssp245_30 <- crop(cor_pred_ssp245_30, pro_area, mask = T)
+pa_cor_pred_ssp245_50 <- crop(cor_pred_ssp245_50, pro_area, mask = T) 
+pa_cor_pred_ssp245_70 <- crop(cor_pred_ssp245_70, pro_area, mask = T) 
+
+# SSP585
+pa_cor_pred_ssp585_30 <- crop(cor_pred_ssp585_30, pro_area, mask = T) 
+pa_cor_pred_ssp585_50 <- crop(cor_pred_ssp585_50, pro_area, mask = T) 
+pa_cor_pred_ssp585_70 <- crop(cor_pred_ssp585_70, pro_area, mask = T) 
+```
+
+So now that the layers are properly cropped and masked to the only the areas we want to consider, we need to extract all the true presences. As you will remember from above these are the cases where occurrences fall within an area that is predicted as suitable. Then we will do the same for all the true positive occurences that fall within PAs.
+
+```{r}
+# Extract occurrence points that fall within the SDM prediction
+# M. coronaria
+# Historical
+index_cor_pos_hist_low <- extract(can_cor_pred_hist > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_hist_mod <- extract(can_cor_pred_hist > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_hist_high <- extract(can_cor_pred_hist > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+# SSP245
+index_cor_pos_ssp245_30_low <- extract(can_cor_pred_ssp245_30 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp245_30_mod <- extract(can_cor_pred_ssp245_30 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp245_30_high <- extract(can_cor_pred_ssp245_30 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_cor_pos_ssp245_50_low <- extract(can_cor_pred_ssp245_50 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp245_50_mod <- extract(can_cor_pred_ssp245_50 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp245_50_high <- extract(can_cor_pred_ssp245_50 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_cor_pos_ssp245_70_low <- extract(can_cor_pred_ssp245_70 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp245_70_mod <- extract(can_cor_pred_ssp245_70 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp245_70_high <- extract(can_cor_pred_ssp245_70 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+# SSP585
+index_cor_pos_ssp585_30_low <- extract(can_cor_pred_ssp585_30 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp585_30_mod <- extract(can_cor_pred_ssp585_30 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp585_30_high <- extract(can_cor_pred_ssp585_30 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_cor_pos_ssp585_50_low <- extract(can_cor_pred_ssp585_50 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp585_50_mod <- extract(can_cor_pred_ssp585_50 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp585_50_high <- extract(can_cor_pred_ssp585_50 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_cor_pos_ssp585_70_low <- extract(can_cor_pred_ssp585_70 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_cor_pos_ssp585_70_mod <- extract(can_cor_pred_ssp585_70 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_cor_pos_ssp585_70_high <- extract(can_cor_pred_ssp585_70 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
 
 
+# Extract that occurrences that fall within the PAs
+# M. coronaria
+# Historical
+index_pa_cor_pos_hist_low <- extract(pa_cor_pred_hist > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_hist_mod <- extract(pa_cor_pred_hist > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_hist_high <- extract(pa_cor_pred_hist > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+# SSP245
+index_pa_cor_pos_ssp245_30_low <- extract(pa_cor_pred_ssp245_30 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp245_30_mod <- extract(pa_cor_pred_ssp245_30 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp245_30_high <- extract(pa_cor_pred_ssp245_30 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_pa_cor_pos_ssp245_50_low <- extract(pa_cor_pred_ssp245_50 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp245_50_mod <- extract(pa_cor_pred_ssp245_50 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp245_50_high <- extract(pa_cor_pred_ssp245_50 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_pa_cor_pos_ssp245_70_low <- extract(pa_cor_pred_ssp245_70 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp245_70_mod <- extract(pa_cor_pred_ssp245_70 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp245_70_high <- extract(pa_cor_pred_ssp245_70 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+# SSP585
+index_pa_cor_pos_ssp585_30_low <- extract(pa_cor_pred_ssp585_30 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp585_30_mod <- extract(pa_cor_pred_ssp585_30 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp585_30_high <- extract(pa_cor_pred_ssp585_30 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_pa_cor_pos_ssp585_50_low <- extract(pa_cor_pred_ssp585_50 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp585_50_mod <- extract(pa_cor_pred_ssp585_50 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp585_50_high <- extract(pa_cor_pred_ssp585_50 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+
+index_pa_cor_pos_ssp585_70_low <- extract(pa_cor_pred_ssp585_70 > corPred_threshold_1, occThin_cor) %>% filter(lyr1 == T) # filter only the true cases # filter only the true cases
+index_pa_cor_pos_ssp585_70_mod <- extract(pa_cor_pred_ssp585_70 > corPred_threshold_10, occThin_cor) %>% filter(lyr1 == T)
+index_pa_cor_pos_ssp585_70_high <- extract(pa_cor_pred_ssp585_70 > corPred_threshold_50, occThin_cor) %>% filter(lyr1 == T)
+```
+
+**Note:** We need to filter the layers to only include the 'lyr1' value equal to T (or True).
+
+Now we have a list of all the true positive occurrences for the entire predicted suitable area in Canada, and those cases that fall within PAs in Canada. So now we want to count how of each there are and calculate the SRSin metric.
+
+```{r}
+# return count of the number of occurrences
+# positive occurrences (overall)
+# list of obj names from above
+occ_names <- list(
+  index_cor_pos_hist_low,
+  index_cor_pos_hist_mod,
+  index_cor_pos_hist_high,
+  index_cor_pos_ssp245_30_low,
+  index_cor_pos_ssp245_30_mod,
+  index_cor_pos_ssp245_30_high,
+  index_cor_pos_ssp245_50_low,
+  index_cor_pos_ssp245_50_mod,
+  index_cor_pos_ssp245_50_high,
+  index_cor_pos_ssp245_70_low,
+  index_cor_pos_ssp245_70_mod,
+  index_cor_pos_ssp245_70_high,
+  index_cor_pos_ssp585_30_low,
+  index_cor_pos_ssp585_30_mod,
+  index_cor_pos_ssp585_30_high,
+  index_cor_pos_ssp585_50_low,
+  index_cor_pos_ssp585_50_mod,
+  index_cor_pos_ssp585_50_high,
+  index_cor_pos_ssp585_70_low,
+  index_cor_pos_ssp585_70_mod,
+  index_cor_pos_ssp585_70_high)
+
+# return counts in a vector
+SRSin_occ <- occ_names %>% 
+  lapply(., nrow) %>% 
+  unlist()
+
+# positive occurrences within PAs
+pa_names <- list(
+  index_pa_cor_pos_hist_low,
+  index_pa_cor_pos_hist_mod,
+  index_pa_cor_pos_hist_high,
+  index_pa_cor_pos_ssp245_30_low,
+  index_pa_cor_pos_ssp245_30_mod,
+  index_pa_cor_pos_ssp245_30_high,
+  index_pa_cor_pos_ssp245_50_low,
+  index_pa_cor_pos_ssp245_50_mod,
+  index_pa_cor_pos_ssp245_50_high,
+  index_pa_cor_pos_ssp245_70_low,
+  index_pa_cor_pos_ssp245_70_mod,
+  index_pa_cor_pos_ssp245_70_high,
+  index_pa_cor_pos_ssp585_30_low,
+  index_pa_cor_pos_ssp585_30_mod,
+  index_pa_cor_pos_ssp585_30_high,
+  index_pa_cor_pos_ssp585_50_low,
+  index_pa_cor_pos_ssp585_50_mod,
+  index_pa_cor_pos_ssp585_50_high,
+  index_pa_cor_pos_ssp585_70_low,
+  index_pa_cor_pos_ssp585_70_mod,
+  index_pa_cor_pos_ssp585_70_high)
+
+# return counts in a vector
+SRSin_pa <- pa_names %>% 
+            lapply(., nrow) %>% 
+            unlist() 
+
+# Calculate SRSin score
+
+SRSin_score <- ((SRSin_pa/SRSin_occ) * 100) %>% replace_na(., 0) # some values are NAs as there are 0 in the denominator
+
+```
+
+**NOTE:** Some NA values are produced in the SRSin calculation, as there are cases where in the future SDM predictions there is no suitable area covering where occurrence data is found. So we take those cases to equal zero here.
+
+Now we want to create a dataframe to store all the results in. We also should be thinking about how we can make it easy on ourselves to plot this data in `ggplot2` downsteam.
+
+```{r}
+in_situ <- data.frame(
+  species = c(rep('Malus coronaria', times = 21)),
+  ssp = c(rep('historical', times = 3), rep(245, times = 9), rep(585, times = 9)),
+  suitability = rep(c('low', 'moderate', 'high'), times = 7),
+  period = c(rep(2000, times = 3), rep(2030, times = 3), rep(2050, times = 3), rep(2070, times = 3), 
+             rep(2030, times = 3), rep(2050, times = 3), rep(2070, times = 3)),
+  SRSin = SRSin_score
+)
+
+print(in_situ)
+```
+
+TO CONTINUE
 
 
