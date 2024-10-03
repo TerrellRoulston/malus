@@ -11,7 +11,7 @@ library(scales) #alpha adjust colours
 
 # set wd
 getwd()
-setwd("./occ_data/") 
+setwd("../occ_data/") 
 
 
 # load occurrence csv files ------------------------------------------------
@@ -37,6 +37,7 @@ occ_cor <- gbif_cor %>%
   dplyr::select(species, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
+
 
 # Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
 # Pay special attention to points at the edge of the range of occurrences, as these are most likely to be suspicious
