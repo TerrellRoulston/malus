@@ -1228,5 +1228,73 @@ Now let's break down some of the decisions I made when designing the map.
 
 * Overall the plot is minimal, nothing is excessive, and the whole plot is soft and easy to look at. (At least in my humble opinion).
 
+## Gap Analysis
+The natural next step after completing a SDM is to complete a gap analyis.
+
+A gap analysis is a method in conservation biology to assess the effectiveness of existing protected areas (PAs) and ex situ collections in conserving biodiversity. The analysis can identify where the species of interest (or ecosystem) is protected or not, and to what extent they are represented within those protected areas. There are many different approaches and software for completing this analysis, but to as we have come this far we will be sticking with R. Dan Carver et al. 2021 (https://nsojournals.onlinelibrary.wiley.com/doi/full/10.1111/ecog.05430) published a great package for completing gap analyses in R, but there are now several deprecated dependencies which has made the package inoperable. With that said we can still use their equations to complete the analysis ourselves.
+
+Unfortunately for the *Malus* species I am working with there are simply not enough ex situ data in existence in Canada to complete it. We do however thankfully have enough data to do an in situ analysis. 
+
+```{r}
+library(tidyverse) # Grammar and data management
+library(terra) # Spatial Data package
+library(geodata) # basemaps
+
+# The following gap analysis is referencing Carver et al. (2021)
+# https://nsojournals.onlinelibrary.wiley.com/doi/full/10.1111/ecog.05430
+
+# For the purposes of the analysis we are restricting the study area to just Canada
+
+```
+
+To begin we need to get spatial data of the protected areas in Canada. The Canadian government releases all their protected and conserved areas - this includes terrestrial and marine areas, as well as effective area-based conservation measures (OECM). In this analysis I am only considering PAs, although for your purposes you may want to consider including OECMs. Link to Canadian Protected and Conserved Areas Database (CPCAD) https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html.
+
+Read more about Canadian OECMs here: https://www.canada.ca/en/environment-climate-change/services/nature-legacy/other-effective-area-based-measures.html.
+
+```{r}
+# Protected Area and OECM data from 
+# Download .kmz file and vectorize using terra
+
+pro_area <- terra::vect("C:/Users/terre/Documents/Acadia/Malus Project/maps/canada_pa/ProtectedConservedArea_2023/ProtectedConservedArea_2023/ProtectedConservedArea_2023.gdb")
+pro_area <- pro_area[pro_area$BIOME == 'T'] # filter only the terrestrial protected areas and OECMs
+pro_area <- pro_area[pro_area$PA_OECM_DF == '1'] # filter only protected areas (remove OECMs)
+pro_area <- project(pro_area, 'WGS84') # project the PAs to be the same CRS as the SDM layers
+
+
+```
+**NOTE:** The CPCAD data uses a different projection than what we saved our spatial data as so make sure to change the projection.
+
+**ADD A PIC OF PAs**
+
+Now let's load in all the necessary SDM layers and species occurrences.
+```{r}
+# I am using the complete suitability rasters and thresholds separately
+# Could also load pre-categorized layers as well
+
+# M. coronaria
+getwd()
+setwd('../sdm_output/')
+
+cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
+
+cor_pred_ssp245_30 <- readRDS(file = 'cor_pred_ssp245_30.Rdata')
+cor_pred_ssp245_50 <- readRDS(file = 'cor_pred_ssp245_50.Rdata')
+cor_pred_ssp245_70 <- readRDS(file = 'cor_pred_ssp245_70.Rdata')
+
+cor_pred_ssp585_30 <- readRDS(file = 'cor_pred_ssp585_30.Rdata')
+cor_pred_ssp585_50 <- readRDS(file = 'cor_pred_ssp585_50.Rdata')
+cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
+
+# Thresholds
+# M. coronaria
+setwd('../sdm_output/thresholds')
+corPred_threshold_1 <- readRDS(file = 'corPred_threshold_1.Rdata')
+corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
+corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
+
+```
+
+
+
 
 
