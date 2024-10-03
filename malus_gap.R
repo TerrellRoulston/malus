@@ -673,4 +673,162 @@ ggarrange(cor_ssp245_grsin, cor_ssp245_srsin, cor_ssp245_ersin, cor_ssp245_fcsin
           legend = "bottom",
           common.legend = T)
 
+# bar plots 
+fill_cols <- c("#EDF8B1", "#7FCDBB", "#2C7FB8")
+
+# M. coronaria
+cor_srs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = SRSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+cor_grs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = GRSin, fill = ssp)) + 
+  geom_col(position = position_dodge(15), width = 15) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+cor_ers_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = ERSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                     
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+cor_fcs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = FCSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+ggarrange(cor_srs_combined, cor_grs_combined, cor_ers_combined, cor_fcs_combined,
+          nrow = 1, ncol = 4,
+          legend = "top",
+          common.legend = T)
+
+# M. fusca
+fus_srs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = SRSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+fus_grs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = GRSin, fill = ssp)) + 
+  geom_col(position = position_dodge(15), width = 15) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+fus_ers_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = ERSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                     
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+fus_fcs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability == 'high') %>% 
+  ggplot(aes(x = period, y = FCSin, fill = ssp)) + 
+  geom_col(position = position_dodge()) +
+  scale_x_continuous(limits = c(1990, 2080),
+                     breaks = c(2000, 2030, 2050, 2070),
+                     labels = c("Historical", 2030, 2050, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('historical', '245', '585'),
+                    labels = c('Historical', 'SSP245', 'SSP585')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank())
+
+ggarrange(fus_srs_combined, fus_grs_combined, fus_ers_combined, fus_fcs_combined,
+          nrow = 1, ncol = 4,
+          legend = "top",
+          common.legend = T)
 
