@@ -14,6 +14,8 @@ library(ggpubr) # arrange ggplot figures
 # For the purposes of the analysis we are restricting the study area to just Canada
 
 
+# IN SITU ANALYSIS --------------------------------------------------------
+
 # Protected areas ---------------------------------------------------------
 # Protected Area and OECM data from https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html
 # Download .kmz file and vector using terra
@@ -459,7 +461,7 @@ can_fus_pred_ssp585_70 > fusPred_threshold_50
 
 
 # the following will return a vector of the total suitable habitat in km^2
-# lapply allows you to interate functions over a list
+# lapply allows you to iterate functions over a list
 # terra::extract calculates the total area of a raster
 # I then initiate a anaymous function to create a dataframe of the listed values so that
 # they can be filtered such that only TRUE suitable areas (value = 1) are selected
@@ -528,7 +530,7 @@ pa_area <- lapply(pa_area_rasts, terra::expanse, byValue = T, unit = 'km') %>%
 # calculate the GRSin score
 GRSin_score <- (pa_area/total_area) * 100 
 
-# add it to the data frame from abouve
+# add it to the data frame from above
 
 in_situ <- in_situ %>% mutate(GRSin = GRSin_score)
 
@@ -583,7 +585,7 @@ saveRDS(pa_area_eco, file = 'pa_area_eco.Rdata')
 suitable_area_eco <- readRDS(file = 'suitable_area_eco.Rdata')
 pa_area_eco <- readRDS('pa_area_eco.Rdata')
 
-# return unqiue names and number of eco regions
+# return unique names and number of eco regions
 
 suit_area_eco_num <- suitable_area_eco %>% 
                       bind_rows(.id = 'source_list') %>% # bind the lists of lists together 
@@ -630,49 +632,6 @@ fus_ssp585_in_situ <- in_situ %>% dplyr::filter(species == 'Malus fusac' & ssp %
 
 
 # Plotting
-
-# M. coronaria ssp245
-# GRSin
-cor_ssp245_grsin <- ggplot(data = cor_ssp245_in_situ, aes(x = period, y = GRSin, colour = suitability)) + 
-  geom_point(size = 5) +
-  geom_line() +
-  ylim(0, 40) +
-  scale_x_continuous(limits = c(2000, 2070),
-                     breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070))
-
-# SRSin  
-cor_ssp245_srsin <- ggplot(data = cor_ssp245_in_situ, aes(x = period, y = SRSin, colour = suitability)) + 
-  geom_point(size = 5) +
-  geom_line() +
-  ylim(0, 50) +
-  scale_x_continuous(limits = c(2000, 2070),
-                     breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070))
-
-# ERSin 
-cor_ssp245_ersin <- ggplot(data = cor_ssp245_in_situ, aes(x = period, y = ERSin, colour = suitability)) + 
-  geom_point(size = 5) +
-  geom_line() +
-  ylim(0, 100) +
-  scale_x_continuous(limits = c(2000, 2070),
-                     breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070))
-
-# FCSin
-cor_ssp245_fcsin <- ggplot(data = cor_ssp245_in_situ, aes(x = period, y = FCSin, colour = suitability)) + 
-  geom_point(size = 5) +
-  geom_line() +
-  ylim(0, 70) +
-  scale_x_continuous(limits = c(2000, 2070),
-                     breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070))
-
-ggarrange(cor_ssp245_grsin, cor_ssp245_srsin, cor_ssp245_ersin, cor_ssp245_fcsin,
-          nrow = 4, ncol = 1,
-          legend = "bottom",
-          common.legend = T)
-
 # bar plots 
 fill_cols <- c("#EDF8B1", "#7FCDBB", "#2C7FB8")
 
@@ -831,4 +790,9 @@ ggarrange(fus_srs_combined, fus_grs_combined, fus_ers_combined, fus_fcs_combined
           nrow = 1, ncol = 4,
           legend = "top",
           common.legend = T)
+
+
+
+
+
 
