@@ -177,6 +177,14 @@ cor_maxent <- readRDS(file = 'cor_maxent.Rdata') # load
 # Note that maxent results provide Continuous Boyce Index (cbi)
 best_cor_maxent <- subset(cor_maxent@results, delta.AICc == 0) # selects the best performing model based on delta AICc - returns data frame object
 mod.best_cor_maxent <- eval.models(cor_maxent)[[best_cor_maxent$tune.args]] # extracts the best model - returns MaxEnt object
+# Best = rm.1_fc.LQHPT
+
+eval.variable.importance(cor_maxent)
+# BIO5 = Max Temperature of Warmest Month - 26.69% contribution
+# BIO6 = Min Temperature of Coldest Month - 15.95% contribution
+# BIO1 = Annual Mean Temperature - 15.898% contribution
+# BIO15 = Precipitation Seasonality (Coefficient of Variation) - 12.27% contribution
+
 
 
 # M. coronaria predictions ------------------------------------------------
@@ -426,10 +434,15 @@ fus_maxent <- readRDS(file = 'fus_maxent.Rdata') # load
 
 # M. fusca Model Selection ------------------------------------------------
 # Note that maxent results provide Continuous Boyce Index (cbi)
-# Two models had a delta AIC < 2, rm.1_fc.LQHPT and rm.1.5_fc.LQHPT
 best_fus_maxent <- subset(fus_maxent@results, delta.AICc < 2) # selects the best performing model based on delta AICc - returns data frame object
 mod.best_fus_maxent <- eval.models(fus_maxent)[[best_fus_maxent$tune.args]] # extracts the best model - returns MaxEnt object
+# Best = rm.2_fc.LQHPT
 
+eval.variable.importance(fus_maxent)
+# BIO19 = Precipitation of Coldest Quarter - 41.73% Contribution
+# BIO7 = Temperature Annual Range (BIO5-BIO6) (Max Temp Warmest Month - Min Temp of Coldest Month) - 20.219% Contribution
+# BIO10 = Mean Temperature of Warmest Quarter - 10.782% Contribution
+# BIO2 = Mean Diurnal Range (Mean of monthly (max temp - min temp)) - 10.54% Contribution
 
 # M. fusca Predictions ----------------------------------------------------
 # Now use the <terra> package to plot the SDM prediction.
