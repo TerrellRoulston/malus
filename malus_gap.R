@@ -792,7 +792,77 @@ ggarrange(fus_srs_combined, fus_grs_combined, fus_ers_combined, fus_fcs_combined
           common.legend = T)
 
 
+# Publication plots -------------------------------------------------------
+fill_cols <- c( "#7FCDBB", "#2C7FB8")
 
+# M. coronaria
+cor_in_situ_plot <- in_situ %>% filter(species == 'Malus coronaria')%>% 
+  filter(ssp %in% c('historical','585')) %>% 
+  filter(suitability == 'high') %>% 
+  filter(period %in% c('2000', '2030', '2070')) %>% 
+  pivot_longer(
+    cols = c(SRSin, GRSin),
+    names_to = 'metric',
+    values_to = 'value'
+    ) %>% 
+  select(period, metric, value) %>% 
+  mutate(period = as.character(period)) %>% 
+  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin'))) %>% 
+ggplot(aes(x = period, y = value, fill = metric)) +
+  geom_col(position = position_dodge()) +
+  scale_x_discrete(breaks = c(2000, 2030, 2070),
+                     labels = c("Historical", 2030, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('SRSin', 'GRSin')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank(),
+        legend.position = 'bottom',
+        plot.title = element_text(hjust = 0.5)) +
+  ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
+  ggtitle(expression(paste(italic("Malus coronaria"))))
 
+# M. fusca
+fus_in_situ_plot <- in_situ %>% filter(species == 'Malus fusca')%>% 
+  filter(ssp %in% c('historical','585')) %>% 
+  filter(suitability == 'high') %>% 
+  filter(period %in% c('2000', '2030', '2070')) %>% 
+  pivot_longer(
+    cols = c(SRSin, GRSin),
+    names_to = 'metric',
+    values_to = 'value'
+  ) %>% 
+  select(period, metric, value) %>% 
+  mutate(period = as.character(period)) %>% 
+  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin'))) %>% 
+  ggplot(aes(x = period, y = value, fill = metric)) +
+  geom_col(position = position_dodge()) +
+  scale_x_discrete(breaks = c(2000, 2030, 2070),
+                   labels = c("Historical", 2030, 2070)) +
+  scale_y_continuous(limits = c(0, 105),
+                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     expand = c(0,0)) +
+  theme_classic() +
+  scale_fill_manual(values = fill_cols, 
+                    breaks = c('SRSin', 'GRSin')) +
+  theme(text = element_text(size = 30, colour = 'black'),
+        axis.text = element_text(colour = 'black'),
+        axis.title.x=element_blank(),
+        legend.title = element_blank(),
+        legend.position = 'bottom',
+        plot.title = element_text(hjust = 0.5)) +
+  ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
+  ggtitle(expression(paste(italic("Malus fusca"))))
+
+ggarrange(NULL, cor_in_situ_plot, NULL, fus_in_situ_plot, NULL,
+          nrow = 5, ncol = 1,
+          legend = "bottom",
+          common.legend = T,
+          heights = c(0.05, 1, 0.1, 1, 0.05))
 
 
