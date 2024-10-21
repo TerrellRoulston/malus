@@ -825,7 +825,8 @@ ggplot(aes(x = period, y = value, fill = metric)) +
         legend.position = 'bottom',
         plot.title = element_text(hjust = 0.5)) +
   ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
-  ggtitle(expression(paste(italic("Malus coronaria"))))
+  ggtitle(expression(paste(italic("Malus coronaria")))) +
+  geom_hline(yintercept = 25, linetype ='dashed', col = 'black', lwd = 3) 
 
 # M. fusca
 fus_in_situ_plot <- in_situ %>% filter(species == 'Malus fusca')%>% 
@@ -857,7 +858,8 @@ fus_in_situ_plot <- in_situ %>% filter(species == 'Malus fusca')%>%
         legend.position = 'bottom',
         plot.title = element_text(hjust = 0.5)) +
   ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
-  ggtitle(expression(paste(italic("Malus fusca"))))
+  ggtitle(expression(paste(italic("Malus fusca")))) +
+  geom_hline(yintercept = 25, linetype ='dashed', col = 'black', lwd = 3) 
 
 ggarrange(NULL, cor_in_situ_plot, NULL, fus_in_situ_plot, NULL,
           nrow = 5, ncol = 1,
