@@ -128,6 +128,22 @@ g.cor <- terra::graticule(
   crs = projLam
 )
 
+# Plot species occurrences
+
+terra::plot(cor_pred_hist.lcc , col = c('#E8E8E8', '#E8E8E8'),
+            background = 'lightskyblue1',
+            legend = F, 
+            xlim = cor.xlim, ylim = cor.ylim, 
+            main = "M. coronaria Occurrences",
+            cex.main = 3,
+            axes = F,
+            box = T,
+            mar = c(5, 5, 5, 5))
+terra::plot(can_us_border.lcc, add = T)
+terra::points(occThin_cor.lcc)
+
+
+
 # Plot historical distribtion 
 terra::plot(cor_pred_hist.lcc > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'),
             background = 'lightskyblue1',
@@ -237,6 +253,20 @@ terra::plot(can_us_border.lcc, add = T)
 
 fus.xlim <- c(-4*10^6, -1*10^6)
 fus.ylim <- c(-2*10^6, 3.2*10^6)
+
+
+terra::plot(fus_pred_hist.lcc , col = c('#E8E8E8', '#E8E8E8'),
+            background = 'lightskyblue1',
+            legend = F, 
+            xlim = fus.xlim, ylim = fus.ylim, 
+            main = "M. fusca Occurrences",
+            cex.main = 3,
+            axes = F,
+            box = T,
+            mar = c(5, 5, 5, 5))
+terra::plot(can_us_border.lcc, add = T)
+terra::points(occThin_fus.lcc)
+
 
 terra::plot(fus_pred_hist.lcc > fusPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, 
             background = 'lightskyblue1',             
