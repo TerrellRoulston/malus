@@ -35,7 +35,7 @@ terra::plot(pro_area)
 
 # M. coronaria
 getwd()
-setwd('./sdm_output/')
+setwd('../sdm_output/')
 
 cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
 
@@ -72,6 +72,7 @@ fusPred_threshold_50 <- readRDS(file = 'fusPred_threshold_50.Rdata')
 
 # Load occurrence points
 getwd()
+setwd('../../')
 setwd("./occ_data/")
 occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
 occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
@@ -582,6 +583,9 @@ setwd('../gap_analysis')
 saveRDS(suitable_area_eco, file = 'suitable_area_eco.Rdata')
 saveRDS(pa_area_eco, file = 'pa_area_eco.Rdata')
 
+
+getwd()
+setwd('../gap_analysis')
 suitable_area_eco <- readRDS(file = 'suitable_area_eco.Rdata')
 pa_area_eco <- readRDS('pa_area_eco.Rdata')
 
@@ -793,7 +797,7 @@ ggarrange(fus_srs_combined, fus_grs_combined, fus_ers_combined, fus_fcs_combined
 
 
 # Publication plots -------------------------------------------------------
-fill_cols <- c( "#7FCDBB", "#2C7FB8")
+fill_cols <- c('#C7E9B4', "#7FCDBB", "#41AE76", '#0868AC')
 
 # M. coronaria
 cor_in_situ_plot <- in_situ %>% filter(species == 'Malus coronaria')%>% 
@@ -801,28 +805,29 @@ cor_in_situ_plot <- in_situ %>% filter(species == 'Malus coronaria')%>%
   filter(suitability == 'high') %>% 
   filter(period %in% c('2000', '2030', '2070')) %>% 
   pivot_longer(
-    cols = c(SRSin, GRSin),
+    cols = c(SRSin, GRSin, ERSin, FCSin),
     names_to = 'metric',
     values_to = 'value'
     ) %>% 
   select(period, metric, value) %>% 
   mutate(period = as.character(period)) %>% 
-  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin'))) %>% 
+  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin', 'ERSin', 'FCSin'))) %>% 
 ggplot(aes(x = period, y = value, fill = metric)) +
   geom_col(position = position_dodge()) +
   scale_x_discrete(breaks = c(2000, 2030, 2070),
                      labels = c("Historical", 2030, 2070)) +
   scale_y_continuous(limits = c(0, 105),
-                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     breaks = seq(0, 100, by = 25),                      
                      expand = c(0,0)) +
   theme_classic() +
   scale_fill_manual(values = fill_cols, 
-                    breaks = c('SRSin', 'GRSin')) +
+                    breaks = c('SRSin', 'GRSin', 'ERSin', 'FCSin')) +
   theme(text = element_text(size = 30, colour = 'black'),
         axis.text = element_text(colour = 'black'),
         axis.title.x=element_blank(),
         legend.title = element_blank(),
-        legend.position = 'bottom',
+        legend.position =  c(.1, 0.8),
+        legend.key.size = unit(1.2, "cm"),
         plot.title = element_text(hjust = 0.5)) +
   ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
   ggtitle(expression(paste(italic("Malus coronaria")))) +
@@ -834,28 +839,29 @@ fus_in_situ_plot <- in_situ %>% filter(species == 'Malus fusca')%>%
   filter(suitability == 'high') %>% 
   filter(period %in% c('2000', '2030', '2070')) %>% 
   pivot_longer(
-    cols = c(SRSin, GRSin),
+    cols = c(SRSin, GRSin, ERSin, FCSin),
     names_to = 'metric',
     values_to = 'value'
   ) %>% 
   select(period, metric, value) %>% 
   mutate(period = as.character(period)) %>% 
-  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin'))) %>% 
+  mutate(metric = factor(metric, levels = c('SRSin', 'GRSin', 'ERSin', 'FCSin'))) %>% 
   ggplot(aes(x = period, y = value, fill = metric)) +
   geom_col(position = position_dodge()) +
   scale_x_discrete(breaks = c(2000, 2030, 2070),
                    labels = c("Historical", 2030, 2070)) +
   scale_y_continuous(limits = c(0, 105),
-                     breaks = c(0, 20, 40, 60, 80, 100),                      
+                     breaks = seq(0, 100, by = 25),                      
                      expand = c(0,0)) +
   theme_classic() +
   scale_fill_manual(values = fill_cols, 
-                    breaks = c('SRSin', 'GRSin')) +
+                    breaks = c('SRSin', 'GRSin', 'ERSin', 'FCSin')) +
   theme(text = element_text(size = 30, colour = 'black'),
         axis.text = element_text(colour = 'black'),
         axis.title.x=element_blank(),
         legend.title = element_blank(),
-        legend.position = 'bottom',
+        legend.position =  c(.1, 0.8),
+        legend.key.size = unit(1.2, "cm"),
         plot.title = element_text(hjust = 0.5)) +
   ylab(bquote(atop(italic("in situ"), "Conservation Score"))) + 
   ggtitle(expression(paste(italic("Malus fusca")))) +
@@ -865,6 +871,8 @@ ggarrange(NULL, cor_in_situ_plot, NULL, fus_in_situ_plot, NULL,
           nrow = 5, ncol = 1,
           legend = "bottom",
           common.legend = T,
-          heights = c(0.05, 1, 0.1, 1, 0.05))
+          heights = c(0.05, 1, 0.1, 1, 0.05),
+          labels = c(NA, paste0("(",'a',")"), NA, paste0("(",'b',")")),
+          font.label = list(size = 20))
 
 
