@@ -260,7 +260,7 @@ legend(x = -72, y = 40, xpd = NA, inset = c(5, 0),
        fill = fill_cols)
 
 # Save/Load M cor. SDM predictions ----------------------------------------
-setwd('../sdm_output')
+setwd('../malus/sdm_output')
 
 # Save
 saveRDS(cor_pred_hist, file = 'cor_pred_hist.Rdata')
@@ -306,7 +306,7 @@ cor_pred_mod_hist <- cor_pred_hist > corPred_threshold_10
 cor_pred_low_hist <- cor_pred_hist > corPred_threshold_1
 
 #SSP245 
-cor_pred_high_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_50
+cor_pred_high_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_50 
 cor_pred_mod_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_10
 cor_pred_low_ssp245_30 <- cor_pred_ssp245_30 > corPred_threshold_1
 
@@ -330,6 +330,7 @@ cor_pred_low_ssp585_50 <- cor_pred_ssp585_50 > corPred_threshold_1
 cor_pred_high_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_50
 cor_pred_mod_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_10
 cor_pred_low_ssp585_70 <- cor_pred_ssp585_70 > corPred_threshold_1
+
 
 # Save
 getwd()
@@ -399,6 +400,77 @@ cor_pred_low_ssp585_50 <- readRDS(file = 'cor_pred_low_ssp585_50.Rdata')
 cor_pred_high_ssp585_70 <- readRDS(file = 'cor_pred_high_ssp585_70.Rdata')
 cor_pred_mod_ssp585_70 <- readRDS(file = 'cor_pred_mod_ssp585_70.Rdata')
 cor_pred_low_ssp585_70 <- readRDS(file = 'cor_pred_low_ssp585_70.Rdata')
+
+# Crop categorical layers to restrict the extent of predicted suitability.
+# In this case the model is making predictions outside of what ecologicaly makes sense!
+cor_ext <- ext(-100, -52, 30, 70)
+
+# Historical
+cor_pred_high_hist_crop <- crop(cor_pred_high_hist, cor_ext)
+cor_pred_mod_hist_crop <- crop(cor_pred_mod_hist, cor_ext)
+cor_pred_low_hist_crop <- crop(cor_pred_low_hist, cor_ext)
+
+#SSP245 
+cor_pred_high_ssp245_30_crop <- crop(cor_pred_high_ssp245_30, cor_ext)
+cor_pred_mod_ssp245_30_crop <- crop(cor_pred_mod_ssp245_30, cor_ext)
+cor_pred_low_ssp245_30_crop <- crop(cor_pred_low_ssp245_30, cor_ext)
+
+cor_pred_high_ssp245_50_crop <- crop(cor_pred_high_ssp245_50, cor_ext)
+cor_pred_mod_ssp245_50_crop <- crop(cor_pred_mod_ssp245_50, cor_ext)
+cor_pred_low_ssp245_50_crop <- crop(cor_pred_low_ssp245_50, cor_ext)
+
+cor_pred_high_ssp245_70_crop <- crop(cor_pred_high_ssp245_70, cor_ext)
+cor_pred_mod_ssp245_70_crop <- crop(cor_pred_mod_ssp245_70, cor_ext)
+cor_pred_low_ssp245_70_crop <- crop(cor_pred_low_ssp245_70, cor_ext)
+
+#SSP585
+cor_pred_high_ssp585_30_crop <- crop(cor_pred_high_ssp585_30, cor_ext)
+cor_pred_mod_ssp585_30_crop <- crop(cor_pred_mod_ssp585_30, cor_ext)
+cor_pred_low_ssp585_30_crop <- crop(cor_pred_low_ssp585_30, cor_ext)
+
+cor_pred_high_ssp585_50_crop <- crop(cor_pred_high_ssp585_50, cor_ext)
+cor_pred_mod_ssp585_50_crop <- crop(cor_pred_mod_ssp585_50, cor_ext)
+cor_pred_low_ssp585_50_crop <- crop(cor_pred_low_ssp585_50, cor_ext)
+
+cor_pred_high_ssp585_70_crop <- crop(cor_pred_high_ssp585_70, cor_ext)
+cor_pred_mod_ssp585_70_crop <- crop(cor_pred_mod_ssp585_70, cor_ext)
+cor_pred_low_ssp585_70_crop <- crop(cor_pred_low_ssp585_70, cor_ext)
+
+# Save
+getwd()
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_predictions')
+
+# Historical
+saveRDS(cor_pred_high_hist_crop, file = 'cor_pred_high_hist_crop.Rdata')
+saveRDS(cor_pred_mod_hist_crop, file = 'cor_pred_mod_hist_crop.Rdata')
+saveRDS(cor_pred_low_hist_crop, file = 'cor_pred_low_hist_crop.Rdata')
+
+# SSP245
+saveRDS(cor_pred_high_ssp245_30_crop, file = 'cor_pred_high_ssp245_30_crop.Rdata')
+saveRDS(cor_pred_mod_ssp245_30_crop, file = 'cor_pred_mod_ssp245_30_crop.Rdata')
+saveRDS(cor_pred_low_ssp245_30_crop, file = 'cor_pred_low_ssp245_30_crop.Rdata')
+
+saveRDS(cor_pred_high_ssp245_50_crop, file = 'cor_pred_high_ssp245_50_crop.Rdata')
+saveRDS(cor_pred_mod_ssp245_50_crop, file = 'cor_pred_mod_ssp245_50_crop.Rdata')
+saveRDS(cor_pred_low_ssp245_50_crop, file = 'cor_pred_low_ssp245_50_crop.Rdata')
+
+saveRDS(cor_pred_high_ssp245_70_crop, file = 'cor_pred_high_ssp245_70_crop.Rdata')
+saveRDS(cor_pred_mod_ssp245_70_crop, file = 'cor_pred_mod_ssp245_70_crop.Rdata')
+saveRDS(cor_pred_low_ssp245_70_crop, file = 'cor_pred_low_ssp245_70_crop.Rdata')
+
+# SSP585
+saveRDS(cor_pred_high_ssp585_30_crop, file = 'cor_pred_high_ssp585_30_crop.Rdata')
+saveRDS(cor_pred_mod_ssp585_30_crop, file = 'cor_pred_mod_ssp585_30_crop.Rdata')
+saveRDS(cor_pred_low_ssp585_30_crop, file = 'cor_pred_low_ssp585_30_crop.Rdata')
+
+saveRDS(cor_pred_high_ssp585_50_crop, file = 'cor_pred_high_ssp585_50_crop.Rdata')
+saveRDS(cor_pred_mod_ssp585_50_crop, file = 'cor_pred_mod_ssp585_50_crop.Rdata')
+saveRDS(cor_pred_low_ssp585_50_crop, file = 'cor_pred_low_ssp585_50_crop.Rdata')
+
+saveRDS(cor_pred_high_ssp585_70_crop, file = 'cor_pred_high_ssp585_70_crop.Rdata')
+saveRDS(cor_pred_mod_ssp585_70_crop, file = 'cor_pred_mod_ssp585_70_crop.Rdata')
+saveRDS(cor_pred_low_ssp585_70_crop, file = 'cor_pred_low_ssp585_70_crop.Rdata')
+
 
 # Fusca - MaxEnt Model ----------------------------------------------------
 
@@ -514,8 +586,8 @@ legend(x = -165, y = 45, xpd = NA, inset = c(5, 0),
 
 
 # Save/Load M fus. SDM predictions ----------------------------------------
-setwd('../sdm_output/../../')
-
+setwd('R/malus/sdm_output/')
+getwd()
 # Save
 saveRDS(fus_pred_hist, file = 'fus_pred_hist.Rdata')
 
@@ -544,6 +616,12 @@ setwd('../sdm_output/thresholds')
 saveRDS(fusPred_threshold_1, file = 'fusPred_threshold_1.Rdata')
 saveRDS(fusPred_threshold_10, file = 'fusPred_threshold_10.Rdata')
 saveRDS(fusPred_threshold_50, file = 'fusPred_threshold_50.Rdata')
+
+# Load
+fusPred_threshold_1 <- readRDS(file = 'fusPred_threshold_1.Rdata')
+fusPred_threshold_10 <- readRDS(file = 'fusPred_threshold_10.Rdata')
+fusPred_threshold_50 <- readRDS(file = 'fusPred_threshold_50.Rdata')
+
 
 # M fusca Habitat predictions ---------------------------------------------
 # Categorical habitat suitability
@@ -615,7 +693,7 @@ saveRDS(fus_pred_low_ssp585_70, file = 'fus_pred_low_ssp585_70.Rdata')
 
 # Load
 # Load
-setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions')
+setwd('./sdm_output/habitat_predictions/high_moderate_low_predictions')
 
 # Historical
 fus_pred_high_hist <- readRDS(file = 'fus_pred_high_hist.Rdata')
@@ -647,6 +725,77 @@ fus_pred_low_ssp585_50 <- readRDS(file = 'fus_pred_low_ssp585_50.Rdata')
 fus_pred_high_ssp585_70 <- readRDS(file = 'fus_pred_high_ssp585_70.Rdata')
 fus_pred_mod_ssp585_70 <- readRDS(file = 'fus_pred_mod_ssp585_70.Rdata')
 fus_pred_low_ssp585_70 <- readRDS(file = 'fus_pred_low_ssp585_70.Rdata')
+
+
+# Crop categorical layers to restrict the extent of predicted suitability.
+# In this case the model is making predictions outside of what ecologicaly makes sense!
+fus_ext <- ext(-180, -100, 30, 70)
+
+# Historical
+fus_pred_high_hist_crop <- crop(fus_pred_high_hist, fus_ext)
+fus_pred_mod_hist_crop <- crop(fus_pred_mod_hist, fus_ext)
+fus_pred_low_hist_crop <- crop(fus_pred_low_hist, fus_ext)
+
+#SSP245 
+fus_pred_high_ssp245_30_crop <- crop(fus_pred_high_ssp245_30, fus_ext)
+fus_pred_mod_ssp245_30_crop <- crop(fus_pred_mod_ssp245_30, fus_ext)
+fus_pred_low_ssp245_30_crop <- crop(fus_pred_low_ssp245_30, fus_ext)
+
+fus_pred_high_ssp245_50_crop <- crop(fus_pred_high_ssp245_50, fus_ext)
+fus_pred_mod_ssp245_50_crop <- crop(fus_pred_mod_ssp245_50, fus_ext)
+fus_pred_low_ssp245_50_crop <- crop(fus_pred_low_ssp245_50, fus_ext)
+
+fus_pred_high_ssp245_70_crop <- crop(fus_pred_high_ssp245_70, fus_ext)
+fus_pred_mod_ssp245_70_crop <- crop(fus_pred_mod_ssp245_70, fus_ext)
+fus_pred_low_ssp245_70_crop <- crop(fus_pred_low_ssp245_70, fus_ext)
+
+#SSP585
+fus_pred_high_ssp585_30_crop <- crop(fus_pred_high_ssp585_30, fus_ext)
+fus_pred_mod_ssp585_30_crop <- crop(fus_pred_mod_ssp585_30, fus_ext)
+fus_pred_low_ssp585_30_crop <- crop(fus_pred_low_ssp585_30, fus_ext)
+
+fus_pred_high_ssp585_50_crop <- crop(fus_pred_high_ssp585_50, fus_ext)
+fus_pred_mod_ssp585_50_crop <- crop(fus_pred_mod_ssp585_50, fus_ext)
+fus_pred_low_ssp585_50_crop <- crop(fus_pred_low_ssp585_50, fus_ext)
+
+fus_pred_high_ssp585_70_crop <- crop(fus_pred_high_ssp585_70, fus_ext)
+fus_pred_mod_ssp585_70_crop <- crop(fus_pred_mod_ssp585_70, fus_ext)
+fus_pred_low_ssp585_70_crop <- crop(fus_pred_low_ssp585_70, fus_ext)
+
+# Save
+getwd()
+setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_predictions')
+
+# Historical
+saveRDS(fus_pred_high_hist_crop, file = 'fus_pred_high_hist_crop.Rdata')
+saveRDS(fus_pred_mod_hist_crop, file = 'fus_pred_mod_hist_crop.Rdata')
+saveRDS(fus_pred_low_hist_crop, file = 'fus_pred_low_hist_crop.Rdata')
+
+# SSP245
+saveRDS(fus_pred_high_ssp245_30_crop, file = 'fus_pred_high_ssp245_30_crop.Rdata')
+saveRDS(fus_pred_mod_ssp245_30_crop, file = 'fus_pred_mod_ssp245_30_crop.Rdata')
+saveRDS(fus_pred_low_ssp245_30_crop, file = 'fus_pred_low_ssp245_30_crop.Rdata')
+
+saveRDS(fus_pred_high_ssp245_50_crop, file = 'fus_pred_high_ssp245_50_crop.Rdata')
+saveRDS(fus_pred_mod_ssp245_50_crop, file = 'fus_pred_mod_ssp245_50_crop.Rdata')
+saveRDS(fus_pred_low_ssp245_50_crop, file = 'fus_pred_low_ssp245_50_crop.Rdata')
+
+saveRDS(fus_pred_high_ssp245_70_crop, file = 'fus_pred_high_ssp245_70_crop.Rdata')
+saveRDS(fus_pred_mod_ssp245_70_crop, file = 'fus_pred_mod_ssp245_70_crop.Rdata')
+saveRDS(fus_pred_low_ssp245_70_crop, file = 'fus_pred_low_ssp245_70_crop.Rdata')
+
+# SSP585
+saveRDS(fus_pred_high_ssp585_30_crop, file = 'fus_pred_high_ssp585_30_crop.Rdata')
+saveRDS(fus_pred_mod_ssp585_30_crop, file = 'fus_pred_mod_ssp585_30_crop.Rdata')
+saveRDS(fus_pred_low_ssp585_30_crop, file = 'fus_pred_low_ssp585_30_crop.Rdata')
+
+saveRDS(fus_pred_high_ssp585_50_crop, file = 'fus_pred_high_ssp585_50_crop.Rdata')
+saveRDS(fus_pred_mod_ssp585_50_crop, file = 'fus_pred_mod_ssp585_50_crop.Rdata')
+saveRDS(fus_pred_low_ssp585_50_crop, file = 'fus_pred_low_ssp585_50_crop.Rdata')
+
+saveRDS(fus_pred_high_ssp585_70_crop, file = 'fus_pred_high_ssp585_70_crop.Rdata')
+saveRDS(fus_pred_mod_ssp585_70_crop, file = 'fus_pred_mod_ssp585_70_crop.Rdata')
+saveRDS(fus_pred_low_ssp585_70_crop, file = 'fus_pred_low_ssp585_70_crop.Rdata')
 
 
 # Binary Thresholds for Gap Analysis --------------------------------------
