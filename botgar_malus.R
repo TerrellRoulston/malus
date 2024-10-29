@@ -11,6 +11,10 @@ library(tidyterra)
 # Load data
 malus_data <- read_excel("C:/Users/terre/Documents/Acadia/Malus Project/ex situ data/botanical_garden_data.xlsx")
 
+# calculate some statistics about the data
+
+malus_data %>% filter(Class == 'Native, Wild') %>% nrow()
+
 # Summarize data for visualization
 
 malus_summary <- malus_data %>% 
