@@ -1,5 +1,5 @@
 # malus
-UBC Botanical Garden Malus CWR habitat distribution modeling
+Canadian Malus spp. CWR Species Distribution Modeling
 
 Terrell Roulston, M.Sc., B.Sc. Hons.
 
