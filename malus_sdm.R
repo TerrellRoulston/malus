@@ -444,8 +444,8 @@ setwd('./sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_pr
 
 # Historical 
 terra::writeRaster(cor_pred_high_hist_crop, "cor_pred_high_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
-terra::writeRaster(cor_pred_mod_hist_crop, "cor_pred_high_mod_crop.tif", filetype = "GTiff", overwrite = TRUE)
-terra::writeRaster(cor_pred_low_hist_crop, "cor_pred_high_low_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_hist_crop, "cor_pred_mod_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_hist_crop, "cor_pred_low_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
 # SSP245 
 terra::writeRaster(cor_pred_high_ssp245_30_crop, "cor_pred_high_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
@@ -770,8 +770,8 @@ setwd('./cropped_predictions')
 
 # Historical 
 terra::writeRaster(fus_pred_high_hist_crop, "fus_pred_high_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
-terra::writeRaster(fus_pred_mod_hist_crop, "fus_pred_high_mod_crop.tif", filetype = "GTiff", overwrite = TRUE)
-terra::writeRaster(fus_pred_low_hist_crop, "fus_pred_high_low_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_hist_crop, "fus_pred_mod_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_hist_crop, "fus_pred_low_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
 # SSP245 
 terra::writeRaster(fus_pred_high_ssp245_30_crop, "fus_pred_high_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
