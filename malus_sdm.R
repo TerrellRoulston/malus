@@ -436,40 +436,42 @@ cor_pred_high_ssp585_70_crop <- crop(cor_pred_high_ssp585_70, cor_ext)
 cor_pred_mod_ssp585_70_crop <- crop(cor_pred_mod_ssp585_70, cor_ext)
 cor_pred_low_ssp585_70_crop <- crop(cor_pred_low_ssp585_70, cor_ext)
 
-# Save
+
+# Save Cropped rasters as Tiffs -------------------------------------------
+setwd('../..')
 getwd()
-setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_predictions')
+setwd('./sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_predictions')
 
-# Historical
-saveRDS(cor_pred_high_hist_crop, file = 'cor_pred_high_hist_crop.Rdata')
-saveRDS(cor_pred_mod_hist_crop, file = 'cor_pred_mod_hist_crop.Rdata')
-saveRDS(cor_pred_low_hist_crop, file = 'cor_pred_low_hist_crop.Rdata')
+# Historical 
+terra::writeRaster(cor_pred_high_hist_crop, "cor_pred_high_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_hist_crop, "cor_pred_high_mod_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_hist_crop, "cor_pred_high_low_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-# SSP245
-saveRDS(cor_pred_high_ssp245_30_crop, file = 'cor_pred_high_ssp245_30_crop.Rdata')
-saveRDS(cor_pred_mod_ssp245_30_crop, file = 'cor_pred_mod_ssp245_30_crop.Rdata')
-saveRDS(cor_pred_low_ssp245_30_crop, file = 'cor_pred_low_ssp245_30_crop.Rdata')
+# SSP245 
+terra::writeRaster(cor_pred_high_ssp245_30_crop, "cor_pred_high_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp245_30_crop, "cor_pred_mod_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp245_30_crop, "cor_pred_low_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(cor_pred_high_ssp245_50_crop, file = 'cor_pred_high_ssp245_50_crop.Rdata')
-saveRDS(cor_pred_mod_ssp245_50_crop, file = 'cor_pred_mod_ssp245_50_crop.Rdata')
-saveRDS(cor_pred_low_ssp245_50_crop, file = 'cor_pred_low_ssp245_50_crop.Rdata')
+terra::writeRaster(cor_pred_high_ssp245_50_crop, "cor_pred_high_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp245_50_crop, "cor_pred_mod_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp245_50_crop, "cor_pred_low_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(cor_pred_high_ssp245_70_crop, file = 'cor_pred_high_ssp245_70_crop.Rdata')
-saveRDS(cor_pred_mod_ssp245_70_crop, file = 'cor_pred_mod_ssp245_70_crop.Rdata')
-saveRDS(cor_pred_low_ssp245_70_crop, file = 'cor_pred_low_ssp245_70_crop.Rdata')
+terra::writeRaster(cor_pred_high_ssp245_70_crop, "cor_pred_high_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp245_70_crop, "cor_pred_mod_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp245_70_crop, "cor_pred_low_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-# SSP585
-saveRDS(cor_pred_high_ssp585_30_crop, file = 'cor_pred_high_ssp585_30_crop.Rdata')
-saveRDS(cor_pred_mod_ssp585_30_crop, file = 'cor_pred_mod_ssp585_30_crop.Rdata')
-saveRDS(cor_pred_low_ssp585_30_crop, file = 'cor_pred_low_ssp585_30_crop.Rdata')
+#SSP585
+terra::writeRaster(cor_pred_high_ssp585_30_crop, "cor_pred_high_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp585_30_crop, "cor_pred_mod_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp585_30_crop, "cor_pred_low_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(cor_pred_high_ssp585_50_crop, file = 'cor_pred_high_ssp585_50_crop.Rdata')
-saveRDS(cor_pred_mod_ssp585_50_crop, file = 'cor_pred_mod_ssp585_50_crop.Rdata')
-saveRDS(cor_pred_low_ssp585_50_crop, file = 'cor_pred_low_ssp585_50_crop.Rdata')
+terra::writeRaster(cor_pred_high_ssp585_50_crop, "cor_pred_high_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp585_50_crop, "cor_pred_mod_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp585_50_crop, "cor_pred_low_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(cor_pred_high_ssp585_70_crop, file = 'cor_pred_high_ssp585_70_crop.Rdata')
-saveRDS(cor_pred_mod_ssp585_70_crop, file = 'cor_pred_mod_ssp585_70_crop.Rdata')
-saveRDS(cor_pred_low_ssp585_70_crop, file = 'cor_pred_low_ssp585_70_crop.Rdata')
+terra::writeRaster(cor_pred_high_ssp585_70_crop, "cor_pred_high_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_mod_ssp585_70_crop, "cor_pred_mod_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(cor_pred_low_ssp585_70_crop, "cor_pred_low_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
 
 # Fusca - MaxEnt Model ----------------------------------------------------
@@ -693,7 +695,7 @@ saveRDS(fus_pred_low_ssp585_70, file = 'fus_pred_low_ssp585_70.Rdata')
 
 # Load
 # Load
-setwd('./sdm_output/habitat_predictions/high_moderate_low_predictions')
+setwd('./sdm_output/habitat_predictions/high_moderate_low_predictions/')
 
 # Historical
 fus_pred_high_hist <- readRDS(file = 'fus_pred_high_hist.Rdata')
@@ -762,40 +764,40 @@ fus_pred_high_ssp585_70_crop <- crop(fus_pred_high_ssp585_70, fus_ext)
 fus_pred_mod_ssp585_70_crop <- crop(fus_pred_mod_ssp585_70, fus_ext)
 fus_pred_low_ssp585_70_crop <- crop(fus_pred_low_ssp585_70, fus_ext)
 
-# Save
+# Save Cropped rasters as Tiffs -------------------------------------------
 getwd()
-setwd('../sdm_output/habitat_predictions/high_moderate_low_predictions/cropped_predictions')
+setwd('./cropped_predictions')
 
-# Historical
-saveRDS(fus_pred_high_hist_crop, file = 'fus_pred_high_hist_crop.Rdata')
-saveRDS(fus_pred_mod_hist_crop, file = 'fus_pred_mod_hist_crop.Rdata')
-saveRDS(fus_pred_low_hist_crop, file = 'fus_pred_low_hist_crop.Rdata')
+# Historical 
+terra::writeRaster(fus_pred_high_hist_crop, "fus_pred_high_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_hist_crop, "fus_pred_high_mod_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_hist_crop, "fus_pred_high_low_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-# SSP245
-saveRDS(fus_pred_high_ssp245_30_crop, file = 'fus_pred_high_ssp245_30_crop.Rdata')
-saveRDS(fus_pred_mod_ssp245_30_crop, file = 'fus_pred_mod_ssp245_30_crop.Rdata')
-saveRDS(fus_pred_low_ssp245_30_crop, file = 'fus_pred_low_ssp245_30_crop.Rdata')
+# SSP245 
+terra::writeRaster(fus_pred_high_ssp245_30_crop, "fus_pred_high_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp245_30_crop, "fus_pred_mod_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp245_30_crop, "fus_pred_low_ssp245_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(fus_pred_high_ssp245_50_crop, file = 'fus_pred_high_ssp245_50_crop.Rdata')
-saveRDS(fus_pred_mod_ssp245_50_crop, file = 'fus_pred_mod_ssp245_50_crop.Rdata')
-saveRDS(fus_pred_low_ssp245_50_crop, file = 'fus_pred_low_ssp245_50_crop.Rdata')
+terra::writeRaster(fus_pred_high_ssp245_50_crop, "fus_pred_high_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp245_50_crop, "fus_pred_mod_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp245_50_crop, "fus_pred_low_ssp245_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(fus_pred_high_ssp245_70_crop, file = 'fus_pred_high_ssp245_70_crop.Rdata')
-saveRDS(fus_pred_mod_ssp245_70_crop, file = 'fus_pred_mod_ssp245_70_crop.Rdata')
-saveRDS(fus_pred_low_ssp245_70_crop, file = 'fus_pred_low_ssp245_70_crop.Rdata')
+terra::writeRaster(fus_pred_high_ssp245_70_crop, "fus_pred_high_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp245_70_crop, "fus_pred_mod_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp245_70_crop, "fus_pred_low_ssp245_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-# SSP585
-saveRDS(fus_pred_high_ssp585_30_crop, file = 'fus_pred_high_ssp585_30_crop.Rdata')
-saveRDS(fus_pred_mod_ssp585_30_crop, file = 'fus_pred_mod_ssp585_30_crop.Rdata')
-saveRDS(fus_pred_low_ssp585_30_crop, file = 'fus_pred_low_ssp585_30_crop.Rdata')
+#SSP585
+terra::writeRaster(fus_pred_high_ssp585_30_crop, "fus_pred_high_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp585_30_crop, "fus_pred_mod_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp585_30_crop, "fus_pred_low_ssp585_30_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(fus_pred_high_ssp585_50_crop, file = 'fus_pred_high_ssp585_50_crop.Rdata')
-saveRDS(fus_pred_mod_ssp585_50_crop, file = 'fus_pred_mod_ssp585_50_crop.Rdata')
-saveRDS(fus_pred_low_ssp585_50_crop, file = 'fus_pred_low_ssp585_50_crop.Rdata')
+terra::writeRaster(fus_pred_high_ssp585_50_crop, "fus_pred_high_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp585_50_crop, "fus_pred_mod_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp585_50_crop, "fus_pred_low_ssp585_50_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
-saveRDS(fus_pred_high_ssp585_70_crop, file = 'fus_pred_high_ssp585_70_crop.Rdata')
-saveRDS(fus_pred_mod_ssp585_70_crop, file = 'fus_pred_mod_ssp585_70_crop.Rdata')
-saveRDS(fus_pred_low_ssp585_70_crop, file = 'fus_pred_low_ssp585_70_crop.Rdata')
+terra::writeRaster(fus_pred_high_ssp585_70_crop, "fus_pred_high_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_mod_ssp585_70_crop, "fus_pred_mod_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
+terra::writeRaster(fus_pred_low_ssp585_70_crop, "fus_pred_low_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 
 
 # Binary Thresholds for Gap Analysis --------------------------------------
