@@ -9,7 +9,7 @@ library(terra) # Spatial Data package
 # Load occurrences and  raster/vectors  -----------------------------------
 # Occurrence Points in SpatVectors
 getwd()
-setwd("../occ_data/")
+setwd("./occ_data/")
 occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
 occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
 
@@ -271,7 +271,7 @@ terra::points(occThin_fus.lcc)
 terra::plot(fus_pred_hist.lcc > fusPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, 
             background = 'lightskyblue1',             
             xlim = fus.xlim, ylim = fus.ylim, 
-            main = 'Historical (1970-2000)',
+            main = NULL,
             cex.main = 3,
             axes = F,
             box = T,
