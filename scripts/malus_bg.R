@@ -21,15 +21,15 @@ ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref a
 
 # download/load maps
 getwd()
-setwd('../malus/occ_data/')
+setwd('../malus/maps/')
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
-               path = "../occ_data/base_maps") #USA basemap w. States
+               path = "../maps/base_maps") #USA basemap w. States
 
 ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
-               path = '../occ_data/base_maps') #Canada basemap w. Provinces
+               path = '../maps/base_maps') #Canada basemap w. Provinces
 
 mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
-               path = '../occ_data/base_maps') # Mexico basemap w. States
+               path = '../maps/base_maps') # Mexico basemap w. States
 
 canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
 
@@ -85,7 +85,7 @@ ecoNA_fus <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_fus_code)
 plot(ecoNA_fus)
 points(occThin_fus, pch = 3, col = 'red') # plot M. coronaria points
 
-setwd('../occ_data/eco_regions')
+setwd('../maps/eco_regions')
 saveRDS(ecoNA_cor, file = 'ecoNA_cor.Rdata')
 saveRDS(ecoNA_fus, file = 'ecoNA_fus.Rdata')
 
