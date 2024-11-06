@@ -5,7 +5,7 @@ Last Updated: Nov 2024
 
 This repo contains code and data to produce species distribution models (SDM) for *M. coronaria* and *M. fusca*; two native *Malus* crop wild relatives (CWR) of domesticated apples (*Malus domestica*). 
 
-# Workflow
+## Workflow
 Visit <https://terrellroulston.github.io/malus/> for a detailed reproducible workflow to reproduce the development of species distribution models (SDMs) using the Maxent machine learning algorithm within the `predicts` package, using presence/background occurrence data.
 
 Also see a Shiny webtool to access the results of the SDM developed by Jens Ulrich at <https://julrich.shinyapps.io/CWR_SDM_Shiny/>.
@@ -16,6 +16,7 @@ This work is associated with a *in-prep* manuscript on *Malus* crop wild relativ
 
 Roulston, T. T., Armstrong, C., Batstone, M., Bunsha, D., Ciotir, C., Borda, S. G., Husband, B., Manning, P., Moreau, T., Singh, A., Smith, T. W., Ulrich, J., & Migicovsky, Z. (*in prep*). *Conservation Challenges and Opportunities for Native Malus Species in Canada*.
 
+## Background and funding
 This work was funded in part by the UBC Botanical Garden, who is advancing action for adaptation through the development of community-based adaptation plans with the Sustainable Communities Field School. 
 
 Ensuring the long-term preservation and sustainable utilization of apple genetic diversity across Canada is of paramount importance. This collaborative initiative aims to inventory and understand existing apple genetic diversity within the country. Additionally, it seeks to investigate how the suitability of habitats for apples may be affected by changing climatic conditions and emerging challenges. In response to these potential impacts, the project aims to identify urgent and longer-term adaptation strategies necessary for the continued resilience of apple populations in Canada.
