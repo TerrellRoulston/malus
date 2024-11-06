@@ -8,6 +8,8 @@ This repo contains code and data to produce species distribution models (SDM) fo
 # Workflow
 Visit <https://terrellroulston.github.io/malus/> for a detailed reproducible workflow to reproduce the development of species distribution models (SDMs) using the Maxent machine learning algorithm within the `predicts` package, using presence/background occurrence data.
 
+Also see a Shiny webtool to access the results of the SDM developed by Jens Ulrich at <https://julrich.shinyapps.io/CWR_SDM_Shiny/>.
+
 ## Citation (In Preparation)
 This work is associated with a *in-prep* manuscript on *Malus* crop wild relatives (CWR) that are native to Canada, including *M. coronaria* (Sweet Crabapple) and *M. fusca* (Pacific Crabapple).
 
