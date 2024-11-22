@@ -15,8 +15,8 @@ setwd("../occ_data/")
 
 
 # load occurrence csv files ------------------------------------------------
-gbif_cor <- read.csv(file = "occ_coronaria.csv") # load coronaria data
-gbif_fusca <- read.csv(file = "occ_fusca.csv") # load fusca data
+gbif_cor <- read.csv(file = "./occ_data/occ_coronaria.csv") # load coronaria data
+gbif_fusca <- read.csv(file = "./occ_data/occ_fusca.csv") # load fusca data
 
 
 # filter occurrence data in df ---------------------------------------------

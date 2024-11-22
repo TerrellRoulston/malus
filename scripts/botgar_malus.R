@@ -60,7 +60,7 @@ ggplot() +
   scale_fill_gradient(low = "#ccece6", high = "#00441b", na.value = "lightgray") + 
   theme_minimal() +
   labs(title = NULL,
-       fill = "Total Accessions") +
+       fill = "Total\nAccessions") +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
@@ -68,8 +68,8 @@ ggplot() +
     axis.text.y = element_blank(),
     axis.ticks = element_blank(),
     plot.title = element_text(size = 18),
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 30),
+    legend.text = element_text(size = 28),
     legend.key.size = unit(1.5, "cm"),         
     legend.spacing = unit(0.5, "cm")           
   )
@@ -82,8 +82,8 @@ ggplot() +
   geom_text(data = malus_summary, aes(label = Total, group = Class, x = Province, y = Total), 
             position = position_dodge(width = 0.8), 
             vjust = -0.5,  # Adjust vertical position above the bars
-            size = 3) +
-  geom_text(data = total_species_per_province, aes(x = Province, y = total_y, label = Total_Species), vjust = -0.5, size = 4) +
+            size = 8) +
+  geom_text(data = total_species_per_province, aes(x = Province, y = total_y, label = Total_Species), vjust = -0.5, size = 8) +
   geom_segment(data = total_species_per_province, aes(x = Province_numeric - 0.4, xend = Province_numeric + 0.4, y = total_y - 5, yend = total_y - 5), color = "black", linewidth = 1) +
   theme_minimal() +
   labs(title = NULL,
@@ -92,13 +92,13 @@ ggplot() +
   scale_fill_manual(values = c('#e6f5d0', '#a1d99b', '#41ab5d', '#006d2c'))+
   theme(
     legend.key.size = unit(1.5, "cm"),         
-    legend.text = element_text(size = 12),     
-    legend.title = element_text(size = 14,),
-    legend.position = c(0.25, 0.9),
+    legend.text = element_text(size = 24, color = 'black'),     
+    legend.title = element_text(size = 26, color = 'black'),
+    legend.position = c(0.25, 0.85),
     legend.background = element_rect(color = "black", fill = NA, linewidth = 0.5),
-    axis.text.x = element_text(size = 12),     
-    axis.text.y = element_text(size = 12),     
-    axis.title.y = element_text(size = 14)
+    axis.text.x = element_text(size = 24, color = 'black'),     
+    axis.text.y = element_text(size = 24, color = 'black'),     
+    axis.title.y = element_text(size = 24, color = 'black')
   ) 
 
   
