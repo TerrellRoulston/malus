@@ -34,56 +34,47 @@ terra::plot(pro_area)
 # Could also load pre-categorized layers as well
 
 # M. coronaria
-getwd()
-setwd('../sdm_output/')
+cor_pred_hist <- readRDS(file = './sdm_output/cor_pred_hist.Rdata')
 
-cor_pred_hist <- readRDS(file = 'cor_pred_hist.Rdata')
+cor_pred_ssp245_30 <- readRDS(file = './sdm_output/cor_pred_ssp245_30.Rdata')
+cor_pred_ssp245_50 <- readRDS(file = './sdm_output/cor_pred_ssp245_50.Rdata')
+cor_pred_ssp245_70 <- readRDS(file = './sdm_output/cor_pred_ssp245_70.Rdata')
 
-cor_pred_ssp245_30 <- readRDS(file = 'cor_pred_ssp245_30.Rdata')
-cor_pred_ssp245_50 <- readRDS(file = 'cor_pred_ssp245_50.Rdata')
-cor_pred_ssp245_70 <- readRDS(file = 'cor_pred_ssp245_70.Rdata')
-
-cor_pred_ssp585_30 <- readRDS(file = 'cor_pred_ssp585_30.Rdata')
-cor_pred_ssp585_50 <- readRDS(file = 'cor_pred_ssp585_50.Rdata')
-cor_pred_ssp585_70 <- readRDS(file = 'cor_pred_ssp585_70.Rdata')
+cor_pred_ssp585_30 <- readRDS(file = './sdm_output/cor_pred_ssp585_30.Rdata')
+cor_pred_ssp585_50 <- readRDS(file = './sdm_output/cor_pred_ssp585_50.Rdata')
+cor_pred_ssp585_70 <- readRDS(file = './sdm_output/cor_pred_ssp585_70.Rdata')
 
 #M. fusca
-fus_pred_hist <- readRDS(file = 'fus_pred_hist.Rdata')
+fus_pred_hist <- readRDS(file = './sdm_output/fus_pred_hist.Rdata')
 
-fus_pred_ssp245_30 <- readRDS(file = 'fus_pred_ssp245_30.Rdata')
-fus_pred_ssp245_50 <- readRDS(file = 'fus_pred_ssp245_50.Rdata')
-fus_pred_ssp245_70 <- readRDS(file = 'fus_pred_ssp245_70.Rdata')
+fus_pred_ssp245_30 <- readRDS(file = './sdm_output/fus_pred_ssp245_30.Rdata')
+fus_pred_ssp245_50 <- readRDS(file = './sdm_output/fus_pred_ssp245_50.Rdata')
+fus_pred_ssp245_70 <- readRDS(file = './sdm_output/fus_pred_ssp245_70.Rdata')
 
-fus_pred_ssp585_30 <- readRDS(file = 'fus_pred_ssp585_30.Rdata')
-fus_pred_ssp585_50 <- readRDS(file = 'fus_pred_ssp585_50.Rdata')
-fus_pred_ssp585_70 <- readRDS(file = 'fus_pred_ssp585_70.Rdata')
+fus_pred_ssp585_30 <- readRDS(file = './sdm_output/fus_pred_ssp585_30.Rdata')
+fus_pred_ssp585_50 <- readRDS(file = './sdm_output/fus_pred_ssp585_50.Rdata')
+fus_pred_ssp585_70 <- readRDS(file = './sdm_output/fus_pred_ssp585_70.Rdata')
 
 # Thresholds
 # M. coronaria
-setwd('../sdm_output/thresholds')
-corPred_threshold_1 <- readRDS(file = 'corPred_threshold_1.Rdata')
-corPred_threshold_10 <- readRDS(file = 'corPred_threshold_10.Rdata')
-corPred_threshold_50 <- readRDS(file = 'corPred_threshold_50.Rdata')
+corPred_threshold_1 <- readRDS(file = './sdm_output/thresholds/corPred_threshold_1.Rdata')
+corPred_threshold_10 <- readRDS(file = './sdm_output/thresholds/corPred_threshold_10.Rdata')
+corPred_threshold_50 <- readRDS(file = './sdm_output/thresholds/corPred_threshold_50.Rdata')
 
 #M. fusca
-fusPred_threshold_1 <- readRDS(file = 'fusPred_threshold_1.Rdata')
-fusPred_threshold_10 <- readRDS(file = 'fusPred_threshold_10.Rdata')
-fusPred_threshold_50 <- readRDS(file = 'fusPred_threshold_50.Rdata')
+fusPred_threshold_1 <- readRDS(file = './sdm_output/thresholds/fusPred_threshold_1.Rdata')
+fusPred_threshold_10 <- readRDS(file = './sdm_output/thresholds/fusPred_threshold_10.Rdata')
+fusPred_threshold_50 <- readRDS(file = './sdm_output/thresholds/fusPred_threshold_50.Rdata')
 
 # Load occurrence points
-getwd()
-setwd('../../')
-setwd("./occ_data/")
-occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
+occThin_cor <- readRDS(file = './occ_data/occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = './occ_data/occThin_fus.Rdata') # M. fusca
 
 
 # Crop suitable habitat data to Canada ONLY -------------------------------
 # Load a Canada Admin boundary
-getwd()
-setwd('../occ_data')
 ca_bound <- gadm(country = 'CA', level = 0, resolution = 1,
-               path = '../occ_data/base_maps')  
+               path = './maps/base_maps')  
 
 # Mask and crop SDM layer to Canada
 
@@ -578,16 +569,13 @@ print( Sys.time() - start )
 
 
 # SAVE/LOAD eco regiion results 
-getwd()
-setwd('../gap_analysis')
-saveRDS(suitable_area_eco, file = 'suitable_area_eco.Rdata')
-saveRDS(pa_area_eco, file = 'pa_area_eco.Rdata')
+
+saveRDS(suitable_area_eco, file = './gap_analysis/suitable_area_eco.Rdata')
+saveRDS(pa_area_eco, file = './gap_analysis/pa_area_eco.Rdata')
 
 
-getwd()
-setwd('../gap_analysis')
-suitable_area_eco <- readRDS(file = 'suitable_area_eco.Rdata')
-pa_area_eco <- readRDS('pa_area_eco.Rdata')
+suitable_area_eco <- readRDS(file = './gap_analysis/suitable_area_eco.Rdata')
+pa_area_eco <- readRDS('./gap_analysis/pa_area_eco.Rdata')
 
 # return unique names and number of eco regions
 
@@ -645,7 +633,7 @@ cor_srs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitabilit
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),
                      expand = c(0,0)) +
@@ -663,7 +651,7 @@ cor_grs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitabilit
   geom_col(position = position_dodge(15), width = 15) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                      
                      expand = c(0,0)) +
@@ -681,7 +669,7 @@ cor_ers_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitabilit
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                     
                      expand = c(0,0)) +
@@ -699,7 +687,7 @@ cor_fcs_combined <- in_situ %>% filter(species == 'Malus coronaria' & suitabilit
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                      
                      expand = c(0,0)) +
@@ -723,7 +711,7 @@ fus_srs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability ==
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),
                      expand = c(0,0)) +
@@ -741,7 +729,7 @@ fus_grs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability ==
   geom_col(position = position_dodge(15), width = 15) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                      
                      expand = c(0,0)) +
@@ -759,7 +747,7 @@ fus_ers_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability ==
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                     
                      expand = c(0,0)) +
@@ -777,7 +765,7 @@ fus_fcs_combined <- in_situ %>% filter(species == 'Malus fusca' & suitability ==
   geom_col(position = position_dodge()) +
   scale_x_continuous(limits = c(1990, 2080),
                      breaks = c(2000, 2030, 2050, 2070),
-                     labels = c("Historical", 2030, 2050, 2070)) +
+                     labels = c("Recent\n(1970-2000)", 2030, 2050, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = c(0, 20, 40, 60, 80, 100),                      
                      expand = c(0,0)) +
@@ -815,7 +803,7 @@ cor_in_situ_plot <- in_situ %>% filter(species == 'Malus coronaria')%>%
 ggplot(aes(x = period, y = value, fill = metric)) +
   geom_col(position = position_dodge()) +
   scale_x_discrete(breaks = c(2000, 2030, 2070),
-                     labels = c("Historical", 2030, 2070)) +
+                     labels = c("Recent (1970-2000)", 2030, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = seq(0, 100, by = 25),                      
                      expand = c(0,0)) +
@@ -849,7 +837,7 @@ fus_in_situ_plot <- in_situ %>% filter(species == 'Malus fusca')%>%
   ggplot(aes(x = period, y = value, fill = metric)) +
   geom_col(position = position_dodge()) +
   scale_x_discrete(breaks = c(2000, 2030, 2070),
-                   labels = c("Historical", 2030, 2070)) +
+                   labels = c("Recent (1970-2000)", 2030, 2070)) +
   scale_y_continuous(limits = c(0, 105),
                      breaks = seq(0, 100, by = 25),                      
                      expand = c(0,0)) +
