@@ -46,6 +46,23 @@ occ_cor <- gbif_cor %>%
 # Save M. coronaria occurrence dataframe ----------------------------------
 saveRDS(occ_cor, file = "occ_cor.Rdata") 
 
+
+## Brian's verified Ontario records
+husband <- read.table("occ_data/malus_coronaria_husband.csv",
+                      header = TRUE, sep = "\t")
+
+## remove records that don't have valid coordinates
+husband <- husband[substr(husband$tree.location, 0, 1) == "4", ]
+
+husband$tmp <- strsplit(husband$tree.location, "°|'|\"| ")
+husband$lat <- sapply(husband$tmp, FUN = function(x) (as.numeric(x[1])
+  + as.numeric(x[2])/60 + as.numeric(x[3])/3600))
+
+husband$lon <- sapply(husband$tmp, FUN = function(x) (-1 * as.numeric(x[5])
+  - as.numeric(x[6])/60 - as.numeric(x[7])/3600))
+
+husband$tmp <- NULL
+
 # compare pre/post 1970 occurrence data
 # if no points between pre/post are drastically different then keep all data
 # consider removing if different from post-1970
@@ -173,3 +190,16 @@ points(occ_fus$decimalLongitude, occ_fus$decimalLatitude, pch = 16,
        col = alpha("blue", 0.2))
 
 
+## Swap in Brian Husband's records for Ontario:
+
+occ_husband <- vect(occ_cor, geom = c("decimalLongitude",
+                                      "decimalLatitude"))
+ont <- ca_map[ca_map$NAME_1 == "Ontario"]
+
+occ_husband <- occ_husband[!relate(occ_husband, ont, "intersects")]
+
+husband <- vect(husband, geom = c("lon", "lat"))
+
+occ_husband <- rbind(occ_husband, husband)
+
+saveRDS(occ_husband, file = "occ_data/occ_husband.Rdata")
