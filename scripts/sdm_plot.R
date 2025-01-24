@@ -1,5 +1,6 @@
 # Top ---------------------------------------------------------------------
 # SDM plotting and map making
+# Terrell Roulston 
 # Started May 7th, 2024
 
 library(tidyverse) # Grammar and data management
