@@ -16,17 +16,14 @@ library(doParallel) # added functionality to parallel
 
 
 # Load occurrence data and basemaps -------------------------------------------------------
-getwd() # check you directory location
 
 # Background points in SpatVectors
-setwd("../occ_data/")
-cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
-fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
+cor_bg_vec <- readRDS(file = './occ_data/cor_bg_vec.Rdata')
+fus_bg_vec <- readRDS(file = './occ_data/fus_bg_vec.Rdata')
 
 # Occurrence Points in SpatVectors
-setwd("../occ_data/")
-occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
+occThin_cor <- readRDS(file = './occ_data/occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = './occ_data/occThin_fus.Rdata') # M. fusca
 
 # Great Lakes shapefiles for making pretty maps and cropping
 great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
@@ -35,12 +32,11 @@ NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Wester
 
 # Download/load WorldClim data under future climate scenarios -------------
 # WARNING DO NOT PUSH WORLDCLIM DATA
-setwd('../wclim_data/')
 # Historical climate 1970-2000
 wclim <- geodata::worldclim_global(var = 'bio',
                                    res = 2.5, 
                                    version = '2.1', 
-                                   path = "../wclim_data/") %>% 
+                                   path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -51,7 +47,7 @@ ssp245_2030 <- cmip6_world(model = "CanESM5",
                            time = "2021-2040",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/") %>% 
+                           path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -60,7 +56,7 @@ ssp245_2050 <- cmip6_world(model = "CanESM5",
                            time = "2041-2060",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/") %>% 
+                           path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -69,7 +65,7 @@ ssp245_2070 <- cmip6_world(model = "CanESM5",
                            time = "2061-2080",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/") %>% 
+                           path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -80,7 +76,7 @@ ssp585_2030 <- cmip6_world(model = "CanESM5",
                            time = "2021-2040",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/") %>% 
+                           path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -89,7 +85,7 @@ ssp585_2050 <- cmip6_world(model = "CanESM5",
                            time = "2041-2060",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/") %>% 
+                           path = "./wclim_data/") %>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
@@ -98,20 +94,18 @@ ssp585_2070 <- cmip6_world(model = "CanESM5",
                            time = "2061-2080",
                            var = "bioc",
                            res = 2.5,
-                           path = "../wclim_data/")%>% 
+                           path = "./wclim_data/")%>% 
   crop(NA_ext) %>% #crop raster to NA 
   mask(great_lakes, inverse = T) # cut out the great lakes
 
 # Load cropped climate Rasters --------------------------------------------
 # These Rasters are useful for sampling spatial checkerboards 
 # and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
-
-setwd('../wclim_data')
 # Historical (1970-2000)
-wclim_cor <- readRDS(file = 'wclim_cor.Rdata') 
+wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
 #wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
-wclim_fus <- readRDS(file = 'wclim_fus.Rdata')
+wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
 #wclim_fus_stack <- raster::stack(wclim_fus) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
 climate_predictors <- names(wclim_cor) # extract climate predictor names, to rename layers in the rasters below
@@ -138,8 +132,6 @@ names(ssp585_2070) <- climate_predictors
 occ_cor_coords <- as.data.frame(geom(occThin_cor)[,3:4]) # extract longitude, lattitude from occurence points
 bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
-occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
-bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 # Build Species Distribution Model using MaxEnt from the <ENMeval> package
 
@@ -476,6 +468,9 @@ terra::writeRaster(cor_pred_low_ssp585_70_crop, "cor_pred_low_ssp585_70_crop.tif
 
 # Fusca - MaxEnt Model ----------------------------------------------------
 
+occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
+bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+
 # Build Species Distribution Model using MaxEnt from the <ENMeval> package
 
 # Run prediction in a parallel using 'socket' clusters to help speed up computation
@@ -488,7 +483,7 @@ fus_maxent <- ENMevaluate(occ_fus_coords, # occurrence records
                           envs = wclim_fus, # environment from background training area
                           n.bg = 20000, # 20000 bg points
                           tune.args =
-                            list(rm = seq(0.5, 8, 0.5),
+                            list(rm = seq(0.5, 4, 0.5),
                                  fc = c("L", "LQ", "H",
                                         "LQH", "LQHP", "LQHPT")),
                           partition.settings =
@@ -500,19 +495,18 @@ fus_maxent <- ENMevaluate(occ_fus_coords, # occurrence records
                           algorithm = 'maxent.jar')
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
-setwd('../sdm_output')
-saveRDS(fus_maxent, file = 'fus_maxent.Rdata') # save
-fus_maxent <- readRDS(file = 'fus_maxent.Rdata') # load 
+saveRDS(fus_maxent, file = './sdm_output/fus_maxent_2025_Jan_14.Rdata') # save
+fus_maxent <- readRDS(file = './sdm_output/fus_maxent.Rdata') # load 
 
 
 
 # M. fusca Model Selection ------------------------------------------------
 # Note that maxent results provide Continuous Boyce Index (cbi)
-best_fus_maxent <- subset(fus_maxent@results, delta.AICc < 2) # selects the best performing model based on delta AICc - returns data frame object
+best_fus_maxent <- subset(fus_maxent@results, delta.AICc == 0) # selects the best performing model based on delta AICc - returns data frame object
 mod.best_fus_maxent <- eval.models(fus_maxent)[[best_fus_maxent$tune.args]] # extracts the best model - returns MaxEnt object
 # Best = rm.2_fc.LQHPT
 
-eval.variable.importance(fus_maxent)
+eval.variable.importance(fus_maxent)[best_fus_maxent["tune.args"][1, 1]]
 # BIO19 = Precipitation of Coldest Quarter - 41.73% Contribution
 # BIO7 = Temperature Annual Range (BIO5-BIO6) (Max Temp Warmest Month - Min Temp of Coldest Month) - 20.219% Contribution
 # BIO10 = Mean Temperature of Warmest Quarter - 10.782% Contribution
