@@ -16,9 +16,11 @@ Also see a Shiny webtool to access the results of the SDM developed by Jens Ulri
 This repository contains code for two manuscripts on on *Malus* crop wild relatives (CWR) in North America.
 
 The first is associated with a review of conservation challenges and oppurtunities of *Malus* crop wild relatives (CWR) that are native to Canada, including *M. coronaria* (Sweet Crabapple) and *M. fusca* (Pacific Crabapple).
+
 Roulston, T. T., Armstrong, C., Batstone, M., Bobiwash, K., Bunsha, D., Ciotir, C., Borda, S. G., Husband, B., Manning, P., Moreau, T., Singh, A., Smith, T. W., Ulrich, J., & Migicovsky, Z. (*in prep*). *Conservation Challenges and Opportunities for Native Apple (Malus) Species in Canada*.
 
 The second, of which the majority of the repo is dedicated to, is a rearch article on SDMs for all four native North American *Malus*, including: *M. coronaria*, *M. fusca*, *M. angustifolia* and *M. ioensis*.
+
 Roulston, T. T., Migicovsky, Z., Armstrong, C., Husband, B., Moreau, T., Ulrich, J., Smith, T. W. (*in prep*). *Species Distribtion Modeling on North American Malus: Implications for Conservation*
 
 ## Background and funding
@@ -45,17 +47,17 @@ Step| Script| Purpose
 10| `Malus_MESS.R` | An exploratory MESS analysis to  environmental differences between model training and model projection data.
 
 ## Data
-Note that the majority of data used in the analysis is available in this repo. However, due to sensitive nature of some data, such as the botanical garden surveys, this data is not made publically available. Please contact the corresponding author
+Note that the majority of data used in the analysis is available in this repo. However, due to sensitive nature of some data, such as the botanical garden surveys, this data is not made publicly available. Please contact the corresponding author for more information.
 
 ### occ_data
-The `occ_data` folder contains subfolders for the 'raw' CSV files downloaded from GBIF, as well as formated csv files saved as `occ_<species>.csv`, the cleanded occurrences are saved as Rdata files as `occ_xxx.Rdata`. Thinned occurrence points used for the sdm are saved as `occThin_xxx`. Additional files used only for the some background preliminary analysis is `xxx_sdmData` (combining bg points and predictor variables at occurrence points), which includes `xxx_bg` and `xxx_bg_vect`.
+The `occ_data` folder contains subfolders for the 'raw' CSV files downloaded from GBIF, as well as formated csv files saved as `occ_<species>.csv`, the cleanded occurrences are saved as Rdata files as `occ_xxx.Rdata`. Thinned occurrence points used for the SDM are saved as `occThin_xxx`. Additional files used only for the some background preliminary analysis is `xxx_sdmData` (combining bg points and predictor variables at occurrence points), which includes `xxx_bg` and `xxx_bg_vect`.
 
-###maps
+### maps
 The `maps` folder contains a subfolder for GADM raster of admin base maps of Canada, Mexico and U.S., as well as extracted ecoregion rasters for each species.
 
-###sdm_output
+### sdm_output
 The `sdm_output` folder contains Rdata files for SpatRasters for the predictions from the SDMs. There are separate files for 2x species (*M. coronaria*, *M. fusca*) X 2x SSPs (SSP245, SSP585) X 4x time periods (historical, 2030, 2050, 2070). In the subfolder `thresholds` there are Rdata files for 10th, 5th and 1st percentile suitability thresholds. In the subfolder `habitat_predictions/high_moderate_low_predictions` there are thresholded rasters saved as Rdata, and the `cropped_predictions` as .tif for the Webtool.
 
-###mess_data
+### mess_data
 The `mess_data` folder contains objects to compute similarity in the MESS analysis.
 
