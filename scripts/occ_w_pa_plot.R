@@ -60,7 +60,6 @@ wa_basemap <- us_map[us_map$NAME_1 == 'Washington']
 # Lambert projection
 projLam <- "+proj=lcc +lat_1=49 +lat_2=77 +lat_0=49 +lon_0=-95 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs"
 
-base_map.lcc <- project(base_map, projLam)
 us_map_0.lcc <- project(us_map_0, projLam)
 ca_map_0.lcc <- project(ca_map_0, projLam)
 mex_map_0.lcc <- project(mex_map_0, projLam)
@@ -133,14 +132,17 @@ terra::add_box(col = 'grey')
 legend(
   x = 1.8e6,
   y = 2.3e6,
-  title = "",
+  title = c(expression(underline('GBIF Occurrence Data'))),
   legend = c(expression(italic("Malus coronaria")), expression(italic("Malus fusca"))),
   fill = c("magenta", "#228B22"),
   col = "black",
   box.col = "transparent",  # No border around legend
   bg = "transparent",
   text.col = 'black',
-  cex = 3.5
+  cex = 3.5,
+  xjust = 0,              
+  yjust = 1,
+  title.adj = 0.25
 )
 terra::text(533792.2, 1206373.8, labels = "Hudson\nBay", cex = 2.2, col = "steelblue")  
 terra::text(2525623.3, -617100.0, labels = "Atlantic\nOcean", cex = 2.5, col = "steelblue")  
