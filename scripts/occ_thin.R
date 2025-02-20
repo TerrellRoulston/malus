@@ -9,9 +9,9 @@ library(geodata) # basemaps and climate data
 
 
 # Load cleaned occurrence data ---------------------------------------------
-setwd("../occ_data/")
-occ_cor <- readRDS(file = "occ_cor.Rdata")
-occ_fus <- readRDS(file = 'occ_fus.Rdata') 
+
+occ_cor <- readRDS(file = "./occ_data/occ_cor.Rdata")
+occ_fus <- readRDS(file = './occ_data/occ_fus.Rdata') 
 
 # vectorize occurrence df to coordinates for bellow
 occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
