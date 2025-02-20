@@ -43,6 +43,7 @@ Step| Script| Purpose
 6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 7| `malus_gap` | Conservation gap analysis to assess the level of conservation of species
 
+**IMPORTANT NOTE:** This workflow and code differs slightly from the code published to the "https://github.com/TerrellRoulston/malus" repository, and is an example rather than a standard on how to perform species distribibution. One major naunced differeceF
 
 ## GBIF Species Occurrences Download
 
@@ -481,6 +482,8 @@ So we now have successfully defined a study extent using ecoregions that contain
 
 Using these values in a data frame (e.g. `cor_sdmData`) we can complete several colinearity checks. These checks allow us to understand how the climatic variables relate to one another. It is important to note, that in a classical statistical approach it is considered good practice to limit colinear variables, to prevent over fitting of a model. This step is refereed to as **variable selection**. With that said, MaxEnt is not a linear modeling approach, and thus does not need to follow assumptions about predictor colinearity. On top of that, MaxEnt is known to be robust to including many predictors.
 
+**HOWEVER**, in the final versions of SDMs published by Roulston et al., we do subset five bio climatic variables that are mostly likely to be predictive of tree species habitat suitability which includes Bio1 - Tmean, Bio4 - Tvar, Bio11 - Tcoldq, Bio10 - Twarmq, Bio15 - Pvar and, Bio16 - Pwetq. Ultimatelty these differences can and did impact the results of SDMs so it is important to consider when modeling yourself.
+
 See the following for more on background points: Elith, J., Phillips, S. J., Hastie, T., Dudík, M., Chee, Y. E., & Yates, C. J. (2011). A statistical explanation of MaxEnt for ecologists. Diversity and distributions, 17(1), 43-57. <https://doi.org/10.1111/j.1472-4642.2010.00725.x>.
 
 We can start by simply plotting the relationship between all predictor pairs, using the base R `graphics`. Use the function `pairs`. This can get messy quickly with some many variables, so it is a bit hard to read. It may take a minute to plot...
@@ -491,7 +494,7 @@ pairs(cor_sdmData[,-1]) # drop the first column of 0/1
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/colinearity/cor_wclim_colinearity.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/colinearity/cor_wclim_colinearity.jpeg"))
 ```
 
 Let's use a more helpful way to detect colinearity of predictor variables, a dendrogram, which visualizes correlation matrices. **NOTE:** This is only considering two-dimensional covariation, and cannot detect higher dimensional correlations.
@@ -510,7 +513,7 @@ rect.hclust(cor_clust, h = 1 - threshold)
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/colinearity/cor_dendo.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/colinearity/cor_dendo.jpeg"))
 ```
 
 We can also visualize the predictor covariate values to understand how they inform the model about the probability of a true presence. This involves the visualization of the distribution of the values at sampled points, presence and background, which allows us to get a peak into how the model constraints come about. 
@@ -581,11 +584,11 @@ plot_cor.bg_3d
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/kernel plots/cor_3dKernel_presence.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/kernel plots/cor_3dKernel_presence.jpeg"))
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/kernel plots/cor_3dKernel_bg.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/kernel plots/cor_3dKernel_bg.jpeg"))
 ```
 
 In this example I only visualize two of the 19 different bioclimatic variables. You may choose to visualize more for your own purposes. Remember this is only a visual comparison, but is valuable for understanding what the model is 'seeing' - of course it is using multidimensional space of all covariates, not just the two here.
@@ -818,7 +821,7 @@ evalplot.grps(pts = bg_cor_coords, pts.grp = cor_cb$bg.grp, envs = wclim_cor_sta
 First lets look at the species occurrence partitions. But, it is hard to see the checkerboard pattern.
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_pr.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/checkboard_aggregation/cor_cb_pr.jpeg"))
 ```
 
 Now let's look at the background points. As you can see the checkerboarding is much clearer. I also show how adjusting the aggregation factor changes the scale at which the partitions are taken from.
@@ -826,25 +829,25 @@ Now let's look at the background points. As you can see the checkerboarding is m
 **3,3** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_3,3.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/checkboard_aggregation/cor_cb_bg_3,3.jpeg"))
 ```
 
 **6,6** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_6,6.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/checkboard_aggregation/cor_cb_bg_6,6.jpeg"))
 ```
 
 **9,9** aggregation, which I chose to use!
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_9,9.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/checkboard_aggregation/cor_cb_bg_9,9.jpeg"))
 ```
 
 **12,12** aggregation
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '600px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/checkboard_aggregation/cor_cb_bg_12,12.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/checkboard_aggregation/cor_cb_bg_12,12.jpeg"))
 ```
 
 Okay, now that we have played around with the understanding how background point sampling works lets dive into developing our MaxEnt model. We are going to use **parallel processing**, to utilize multiple processors (CPUs) simultaneously. This will increase the amount of available memory and significantly decrease the computational time. If you are using a Windows computer (like me), then you only have one type of parallel processing available to you, known as 'socket' clusters. Read more here: <https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/#:~:text=As%20a%20result%2C%20it%20runs,40%25%20faster%20than%20the%20socket.>
@@ -967,7 +970,7 @@ ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of
 ```
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1000px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/boyce index/cor_pred_hist_cbi.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce index/cor_pred_hist_cbi.jpeg"))
 ```
 
 
@@ -1205,7 +1208,7 @@ knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/
 Now I have repeated the plotting process for all time periods for both the SSPs. I took all those photos and went into PowerPoint and produced the following figure!
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/figures/coronaria_habitat_suitability.jpg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/raw_figures/coronaria_habitat_suitability.jpg"))
 ```
 
 Now let's break down some of the decisions I made when designing the map.
@@ -1736,7 +1739,7 @@ ggarrange(cor_srs_combined, cor_grs_combined, cor_ers_combined, cor_fcs_combined
 And this is the result!
 
 ```{r, eval = TRUE, echo=FALSE, out.width= '1500px'}
-knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/figures/gap_scores/cor_in_situ_bar.jpeg"))
+knitr::include_graphics(rep("C:/Users/terre/Documents/Acadia/Malus Project/maps/raw_figures/gap_scores/cor_in_situ_bar.jpeg"))
 ```
 
 
