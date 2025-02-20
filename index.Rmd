@@ -43,7 +43,7 @@ Step| Script| Purpose
 6| `sdm_plot.R` | Produce publication quality plots of SDM predictions
 7| `malus_gap` | Conservation gap analysis to assess the level of conservation of species
 
-**IMPORTANT NOTE:** This workflow and code differs slightly from the code published to the "https://github.com/TerrellRoulston/malus" repository, and is an example rather than a standard on how to perform species distribibution. One major naunced differeceF
+**IMPORTANT NOTE:** This workflow and code differs slightly from the code published to the "https://github.com/TerrellRoulston/malus" repository, and is an example rather than a standard on how to perform species distribution. One major nuanced difference is Roulston et al., (in prep) limited the number of predictor variables using a list of well performing variables rather than using them all like in this workflow.
 
 ## GBIF Species Occurrences Download
 
