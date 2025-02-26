@@ -9,10 +9,9 @@ library(terra) # Spatial Data package
 
 # Load occurrences and  raster/vectors  -----------------------------------
 # Occurrence Points in SpatVectors
-getwd()
-setwd("./occ_data/")
-occThin_cor <- readRDS(file = 'occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = 'occThin_fus.Rdata') # M. fusca
+
+occThin_cor <- readRDS(file = './occ_data/occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = './occ_data/occThin_fus.Rdata') # M. fusca
 
 # Great Lakes shapefiles for making pretty maps
 # Shape files downloaded from the USGS (https://www.sciencebase.gov/catalog/item/530f8a0ee4b0e7e46bd300dd)
