@@ -7,8 +7,6 @@
 library(tidyverse) # data management, grammar
 library(rgbif) # access GBIF data
 
-  getwd()
-setwd('../malus/')
 
 # Download occurrence data from GBIF
 
@@ -20,6 +18,8 @@ email='REDACTED'
 # Taxon IDs
 # M coronaria = 3001166
 # M fusca = 3001080
+# M. ioensis = 3001596
+# M. angustifolia = 3001548
 
 # Coronaria download ------------------------------------------------------
 
@@ -41,12 +41,11 @@ down_code = occ_download(
   format = "SIMPLE_CSV",
   user=user, pwd=pwd, email=email)
 
-getwd() # check your working directory (wd)
-setwd("./occ_data/") # set wd to a location where you want to save the csv file.
-download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE)
+
+download_coronaria <- occ_download_get(down_code[1], overwrite = TRUE, path = "./occ_data/")
 # extract csv from zipper folder and save as clearly named csv in excel or equivalent.
 
-gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
+gbif_cor <- read.csv(file = "./occ_data/occ_coronaria.csv") # load named csv data
 
 
 
@@ -55,8 +54,6 @@ gbif_cor <- read.csv(file = "occ_coronaria.csv") # load named csv data
 taxonKey <- 3001080
 basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLE', 'LIVING_SPECIMEN')
 hasCoordinates <- TRUE # limit to records with coordinates
-# years <- seq(1970, 2024, 1) # 1970 to modern day - this is baseline
-# see comments above about years of occurrence
 
 # Download data
 # Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
@@ -69,8 +66,53 @@ down_code = occ_download(
   user=user, pwd=pwd, email=email)
 
 
-download_fusca <- occ_download_get(down_code[1], overwrite = TRUE)
+download_fusca <- occ_download_get(down_code[1], overwrite = TRUE, path = "./occ_data/")
 # extract and save as csv
 
-gbif_fusca <- read.csv(file = "occ_fusca.csv") # load csv data
+gbif_fusca <- read.csv(file = "./occ_data/occ_fusca.csv") # load csv data
 
+
+# Ioensis download --------------------------------------------------------
+
+taxonKey <- 3001596
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLE', 'LIVING_SPECIMEN')
+hasCoordinates <- TRUE # limit to records with coordinates
+
+# Download data
+# Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
+down_code = occ_download(
+  rgbif::pred("taxonKey", taxonKey),
+  pred_in("basisOfRecord", basisOfRecord),
+  pred("hasCoordinate", hasCoordinates),
+  #pred_in("year", years),
+  format = "SIMPLE_CSV",
+  user=user, pwd=pwd, email=email)
+
+
+download_ioensis <- occ_download_get(down_code[1], overwrite = TRUE, path = "./occ_data/")
+# extract and save as csv
+
+gbif_ioensis <- read.csv(file = "./occ_data/occ_ioensis.csv") # load csv data
+
+
+# Angustifolia download ---------------------------------------------------
+
+taxonKey <- 3001548
+basisOfRecord <- c('PRESERVED_SPECIMEN', 'HUMAN_OBSERVATION', 'OCCURRENCE', 'MATERIAL_SAMPLE', 'LIVING_SPECIMEN')
+hasCoordinates <- TRUE # limit to records with coordinates
+
+# Download data
+# Use 'pred()' if there is a single argument, or 'pred_in()' if there are multiple
+down_code = occ_download(
+  rgbif::pred("taxonKey", taxonKey),
+  pred_in("basisOfRecord", basisOfRecord),
+  pred("hasCoordinate", hasCoordinates),
+  #pred_in("year", years),
+  format = "SIMPLE_CSV",
+  user=user, pwd=pwd, email=email)
+
+
+download_angustifolia <- occ_download_get(down_code[1], overwrite = TRUE, path = "./occ_data/")
+# extract and save as csv
+
+gbif_angustifolia <- read.csv(file = "./occ_data/occ_angustifolia.csv") # load csv data
