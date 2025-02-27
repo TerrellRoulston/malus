@@ -244,7 +244,6 @@ terra::plot(cor_pred_hist > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), 
             background = 'lightskyblue1', box = 'black')
 terra::plot(cor_pred_hist > corPred_threshold_10, add = T, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
 terra::plot(cor_pred_hist > corPred_threshold_50, add = T, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
-#terra::plot(canUSMex_map, add = T, cex = .1)
 #points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
 legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -259,7 +258,6 @@ terra::plot(cor_pred_hist_subs > corPred_threshold_1_subs, col = c('#E8E8E8', '#
             background = 'lightskyblue1', box = 'black')
 terra::plot(cor_pred_hist_subs > corPred_threshold_10_subs, add = T, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
 terra::plot(cor_pred_hist_subs > corPred_threshold_50_subs, add = T, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
-#terra::plot(canUSMex_map, add = T, cex = .1)
 #points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
 legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -286,7 +284,6 @@ par(mar = c(4, 4, 4, 4), mfcol = c(1, 2))
 terra::plot(cor_pred_ssp585_70 > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-100, -50), ylim = c(30, 60), main = expression(atop(italic('Malus coronaria'), " SSP5-8.5 Prediction: Late Century (2060-2080)")), background = 'lightskyblue1')
 terra::plot(cor_pred_ssp585_70 > corPred_threshold_10, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), add = T, legend = F)
 terra::plot(cor_pred_ssp585_70 > corPred_threshold_50, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), add = T, legend = F)
-#terra::plot(canUSMex_map, add = T)
 legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
        legend = legend_labs,
@@ -627,7 +624,6 @@ par(mar = c(4, 4, 4, 4), mfcol = c(1, 2))
 terra::plot(fus_pred_hist > fusPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus fusca'), " Historical Suitability (1970-2000)")), background = 'lightskyblue1')
 terra::plot(fus_pred_hist > fusPred_threshold_10, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), add = T, legend = F)
 terra::plot(fus_pred_hist > fusPred_threshold_50, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), add = T, legend = F)
-#terra::plot(canUSMex_map, add = T)
 #points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
 legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -637,7 +633,6 @@ legend(x = -165, y = 45, xpd = NA, inset = c(5, 0),
 terra::plot(fus_pred_hist_subs > fusPred_threshold_1_subs, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus fusca'), " Historical Suitability (1970-2000) (SUBSETTED MODEL)")), background = 'lightskyblue1')
 terra::plot(fus_pred_hist_subs > fusPred_threshold_10_subs, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), add = T, legend = F)
 terra::plot(fus_pred_hist_subs > fusPred_threshold_50_subs, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), add = T, legend = F)
-#terra::plot(canUSMex_map, add = T)
 #points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
 legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -664,7 +659,6 @@ par(mar = c(4, 4, 4, 4), mfcol = c(1, 2))
 terra::plot(fus_pred_ssp585_30 > fusPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus fusca'), " SSP5-8.5 Prediction: Early Century (2020-2040)")), background = 'lightskyblue1')
 terra::plot(fus_pred_ssp585_30 > fusPred_threshold_10, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), add = T, legend = F)
 terra::plot(fus_pred_ssp585_30 > fusPred_threshold_50, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), add = T, legend = F)
-#terra::plot(canUSMex_map, add = T)
 #points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
 legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
@@ -674,7 +668,6 @@ legend(x = -165, y = 45, xpd = NA, inset = c(5, 0),
 terra::plot(fus_pred_ssp585_30_subs > fusPred_threshold_1_subs, col = c('#E8E8E8', '#FFF7BC'), legend = F, xlim = c(-170, -110), ylim = c(30, 65), main = expression(atop(italic('Malus fusca'), " SSP5-8.5 Prediction: Early Century (2020-2040) (SUBSETTED MODEL)")), background = 'lightskyblue1')
 terra::plot(fus_pred_ssp585_30_subs > fusPred_threshold_10_subs, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), add = T, legend = F)
 terra::plot(fus_pred_ssp585_30_subs > fusPred_threshold_50_subs, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), add = T, legend = F)
-#terra::plot(canUSMex_map, add = T)
 #points(occThin_fus, col = 'black', cex = 0.75, pch = 4)
 legend(x = -165, y = 45, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
