@@ -10,8 +10,8 @@ library(geodata)
 # Load occurrence data ----------------------------------------------------
 #NOTE: This is not the thinned occurrence data
 
-occ_cor <- readRDS(file = "./occ_data/occ_cor.Rdata")
-occ_fus <- readRDS(file = './occ_data/occ_fus.Rdata') 
+occ_cor <- readRDS(file = "./occ_data/cor/occ_cor.Rdata")
+occ_fus <- readRDS(file = './occ_data/fus/occ_fus.Rdata') 
 
 occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'), crs = "+proj=longlat +datum=WGS84")
 occ_fus <- vect(occ_fus, geom = c('decimalLongitude', 'decimalLatitude'), crs = "+proj=longlat +datum=WGS84")
