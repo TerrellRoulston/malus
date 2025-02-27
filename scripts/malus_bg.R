@@ -20,16 +20,14 @@ ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref a
 
 
 # download/load maps
-getwd()
-setwd('../malus/maps/')
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
-               path = "../maps/base_maps") #USA basemap w. States
+               path = "./maps/base_maps") #USA basemap w. States
 
 ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
-               path = '../maps/base_maps') #Canada basemap w. Provinces
+               path = './maps/base_maps') #Canada basemap w. Provinces
 
 mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
-               path = '../maps/base_maps') # Mexico basemap w. States
+               path = './maps/base_maps') # Mexico basemap w. States
 
 canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
 
