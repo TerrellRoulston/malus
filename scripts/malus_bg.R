@@ -43,19 +43,22 @@ points(occThin_cor, col = 'red')
 dev.off()
 
 # load occurrence data
-setwd("../occ_data/")
-occThin_cor <- readRDS(file = 'occThin_cor.Rdata')
-occThin_fus <- readRDS(file = 'occThin_fus.Rdata')
+occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
+occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata')
+occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
+occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
 
 # Load WorldClim data
-setwd("../wclim_data/")
 # Note DO NOT PUSH wclim data**
-wclim <- geodata::worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "../wclim_data/")
-plot(wclim$wc2.1_2.5m_bio_1, main = expression(atop('WorldClim Bioclimatic Predictor 1', 'Mean Annual Tempature (1970-2000)')))
+wclim <- geodata::worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "./wclim_data/")
+#plot(wclim$wc2.1_2.5m_bio_1, main = expression(atop('WorldClim Bioclimatic Predictor 1', 'Mean Annual Tempature (1970-2000)')))
 
 # M. coronaria ecoregions -------------------------------------------------
 # extract ecoregion polygon that contain M. coronaria occurrence points
-eco_cor <- extract(ecoNA, occThin_cor) # extract what polygons contained points 
+eco_cor <- intersect(occThin_cor, ecoNA) %>% # extract ecoregion names from points
+  as.data.frame() %>% # convert to df
+  group_by(NA_L2CODE) %>% # sample 1 point of each eco region
+  sample_n(1)
 
 # return vector of eco region codes of the polygons that contain occurrences
 eco_cor_code <- eco_cor$NA_L2CODE %>% unique() 
@@ -70,35 +73,105 @@ points(occThin_cor, pch = 3, col = 'red') # plot M. coronaria points
 
 # M. fusca eco regions ----------------------------------------------------
 # # extract eco region polygon that contain M. fusca occurrence points
-eco_fus <- extract(ecoNA, occThin_fus) # extract what polygons contained points
+eco_fus <- intersect(occThin_fus, ecoNA) %>% # extract ecoregion names from points
+  as.data.frame() %>% # convert to df
+  group_by(NA_L2CODE) %>% # sample 1 point of each eco region
+  sample_n(1)
 
 # return vector of eco region codes of the polygons that contain occurrences
 eco_fus_code <- eco_fus$NA_L2CODE %>% unique() 
 eco_fus_code <- eco_fus_code[eco_fus_code != '0.0'] # remove NA value
 
-#CODES "7.1""6.2"  "10.1" "11.1" "10.2" "3.1" 
+#CODES "7.1""6.2"  "10.1" "11.1" "10.2"
 
 ecoNA_fus <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_fus_code)
 
 plot(ecoNA_fus)
 points(occThin_fus, pch = 3, col = 'red') # plot M. coronaria points
 
-setwd('../maps/eco_regions')
-saveRDS(ecoNA_cor, file = 'ecoNA_cor.Rdata')
-saveRDS(ecoNA_fus, file = 'ecoNA_fus.Rdata')
 
+# M. ionesis eco regions --------------------------------------------------
+# # extract eco region polygon that contain M. ionesis occurrence points
+eco_ion <- intersect(occThin_ion, ecoNA) %>% # extract ecoregion names from points
+  as.data.frame() %>% # convert to df
+  group_by(NA_L2CODE) %>% # sample 1 point of each eco region
+  sample_n(1)
+
+# return vector of eco region codes of the polygons that contain occurrences
+eco_ion_code <- eco_ion$NA_L2CODE %>% unique() 
+eco_ion_code <- eco_ion_code[eco_ion_code != '0.0'] # remove NA value
+
+#CODES "5.2" "8.1" "8.2" "8.3" "8.4" "8.5" "9.2" "9.4"
+
+ecoNA_ion <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_ion_code)
+
+plot(ecoNA_ion)
+points(occThin_ion, pch = 3, col = 'red') 
+
+
+# M. angustifolia eco regions ---------------------------------------------
+# extract eco region polygon that contain M. angustifolia occurrence points
+eco_ang <- intersect(occThin_ang, ecoNA) %>% # extract ecoregion names from points
+  as.data.frame() %>% # convert to df
+  group_by(NA_L2CODE) %>% # sample 1 point of each eco region
+  sample_n(1)
+
+# return vector of eco region codes of the polygons that contain occurrences
+eco_ang_code <- eco_ang$NA_L2CODE %>% unique() 
+eco_ang_code <- eco_ang_code[eco_ang_code != '0.0'] # remove NA value
+
+#CODES "5.3" "8.1" "8.2" "8.3" "8.4" "8.5" "9.5"
+
+ecoNA_ang <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_ang_code)
+
+plot(ecoNA_ang)
+points(occThin_ang, pch = 3, col = 'red') 
+
+
+# Sect. Chloromeles eco region --------------------------------------------
+# extract eco region polygon that contain sect. Chloromeles occurrence points
+eco_chl <- intersect(occThin_chl, ecoNA) %>% # extract ecoregion names from points
+  as.data.frame() %>% # convert to df
+  group_by(NA_L2CODE) %>% # sample 1 point of each eco region
+  sample_n(1)
+
+# return vector of eco region codes of the polygons that contain occurrences
+eco_chl_code <- eco_chl$NA_L2CODE %>% unique() 
+eco_chl_code <- eco_chl_code[eco_chl_code != '0.0'] # remove NA value
+
+#CODES "5.3" "8.1" "8.2" "8.3" "8.4" "8.5" "9.5"
+
+ecoNA_chl <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_chl_code)
+
+plot(ecoNA_chl)
+points(occThin_chl, pch = 3, col = 'red') 
+
+# SAVE
+saveRDS(ecoNA_cor, file = './maps/eco_regions/ecoNA_cor.Rdata')
+saveRDS(ecoNA_fus, file = './maps/eco_regions/ecoNA_fus.Rdata')
+saveRDS(ecoNA_ion, file = './maps/eco_regions/ecoNA_ion.Rdata')
+saveRDS(ecoNA_ang, file = './maps/eco_regions/ecoNA_ang.Rdata')
+saveRDS(ecoNA_chl, file = './maps/eco_regions/ecoNA_chl.Rdata')
 
 # Crop WorldClim to Ecoregions and Create Background ----------------------
 
 # crop+mask extent of WorldClim data to the Malus ecoregions
 wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
 wclim_fus <- terra::crop(wclim, ecoNA_fus, mask = T)
+wclim_ion <- terra::crop(wclim, ecoNA_ion, mask = T)
+wclim_ang <- terra::crop(wclim, ecoNA_ang, mask = T)
+wclim_chl <- terra::crop(wclim, ecoNA_chl, mask = T)
 
 # Save cropped wclim data for downsteam SDM workflow
-getwd()
-setwd('../wclim_data/..')
-saveRDS(wclim_cor, file = 'wclim_cor.Rdata')
-saveRDS(wclim_fus, file = 'wclim_fus.Rdata')
+
+saveRDS(wclim_cor, file = './wclim_data/wclim_cor.Rdata')
+saveRDS(wclim_fus, file = './wclim_data/wclim_fus.Rdata')
+saveRDS(wclim_ion, file = './wclim_data/wclim_ion.Rdata')
+saveRDS(wclim_ang, file = './wclim_data/wclim_ang.Rdata')
+saveRDS(wclim_chl, file = './wclim_data/wclim_chl.Rdata')
+
+
+# Sample background points ------------------------------------------------
 
 
 set.seed(1337) # set a seed to ensure reproducible results
@@ -109,8 +182,7 @@ set.seed(1337) # set a seed to ensure reproducible results
 # M. coronaria background
 # SpatVector
 
-# Note upped bg points from 5000 to 20000 to be more suitable to better reflect a mean probability of presence 1 - a/2
-
+# Note upped bg points from 5000 to 20000
 cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 plot(wclim_cor[[1]])
 points(cor_bg_vec, cex = 0.01)
@@ -130,18 +202,46 @@ expanse(wclim_fus[[1]], unit = 'km') # total area of raster in km^2
 # 4659175 km^2
 # 5000/4659175 = 0.00107 samples/km
 
-# Save background SpatVectors
-setwd("../occ_data/")
-saveRDS(cor_bg_vec, file = 'cor_bg_vec.Rdata')
-saveRDS(fus_bg_vec, file = 'fus_bg_vec.Rdata')
+# M. ionesis background
+# SpatVector
+ion_bg_vec <- spatSample(wclim_ion, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+plot(wclim_ion[[1]])
+points(ion_bg_vec, cex = 0.01)
 
+expanse(wclim_ion[[1]], unit = 'km') # total area of raster in km^2
+
+# M. angustifolia background
+# SpatVector
+ang_bg_vec <- spatSample(wclim_ang, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+plot(wclim_ang[[1]])
+points(ang_bg_vec, cex = 0.01)
+
+expanse(wclim_ang[[1]], unit = 'km') # total area of raster in km^2
+
+
+# Sect. Chloromeles background
+# SpatVector
+chl_bg_vec <- spatSample(wclim_chl, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+plot(wclim_chl[[1]])
+points(chl_bg_vec, cex = 0.01)
+
+expanse(wclim_chl[[1]], unit = 'km') # total area of raster in km^2
+
+
+# Save background SpatVectors
+saveRDS(cor_bg_vec, file = './occ_data/cor/cor_bg_vec.Rdata')
+saveRDS(fus_bg_vec, file = './occ_data/fus/fus_bg_vec.Rdata')
+saveRDS(ion_bg_vec, file = './occ_data/ion/ion_bg_vec.Rdata')
+saveRDS(ang_bg_vec, file = './occ_data/ang/ang_bg_vec.Rdata')
+saveRDS(chl_bg_vec, file = './occ_data/chl/chl_bg_vec.Rdata')
 
 # Load background SpatVectors
-setwd("../occ_data/")
-cor_bg_vec <- readRDS(file = 'cor_bg_vec.Rdata')
-fus_bg_vec <- readRDS(file = 'fus_bg_vec.Rdata')
 
-
+cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
+fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
+ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
+ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
+chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
 
 # Extracting presence-background raster values ----------------------------
 
@@ -151,24 +251,45 @@ cor_predvals <- cor_predvals[-1] # drop ID column
 fus_predvals <- extract(wclim_fus, occThin_fus) # M. fusca
 fus_predvals <- fus_predvals[-1] # drop ID column
 
+ion_predvals <- extract(wclim_ion, occThin_ion) # M. fusca
+ion_predvals <- ion_predvals[-1] # drop ID column
+
+ang_predvals <- extract(wclim_ang, occThin_ang) # M. fusca
+ang_predvals <- ang_predvals[-1] # drop ID column
+
+chl_predvals <- extract(wclim_chl, occThin_chl) # M. fusca
+chl_predvals <- chl_predvals[-1] # drop ID column
+
 cor_bgvals <- values(cor_bg_vec) # Extract raster values for bg points
 fus_bgvals <- values(fus_bg_vec) # Extract raster values for bg points
+ion_bgvals <- values(ion_bg_vec) # Extract raster values for bg points
+ang_bgvals <- values(ang_bg_vec) # Extract raster values for bg points
+chl_bgvals <- values(chl_bg_vec) # Extract raster values for bg points
 
 
 # Create a df for presence-background raster values for SDM ---------------
 
 cor_pb <- c(rep(1, nrow(cor_predvals)), rep(0, nrow(cor_bgvals))) #T/F presence or background string
 fus_pb <- c(rep(1, nrow(fus_predvals)), rep(0, nrow(fus_bgvals))) #T/F presence or background string
+ion_pb <- c(rep(1, nrow(ion_predvals)), rep(0, nrow(ion_bgvals))) #T/F presence or background string
+ang_pb <- c(rep(1, nrow(ang_predvals)), rep(0, nrow(ang_bgvals))) #T/F presence or background string
+chl_pb <- c(rep(1, nrow(chl_predvals)), rep(0, nrow(chl_bgvals))) #T/F presence or background string
 
 # combine presence and background dataframes for SDM
 
 cor_sdmData <- data.frame(cbind(cor_pb, rbind(cor_predvals, cor_bgvals)))
 fus_sdmData <- data.frame(cbind(fus_pb, rbind(fus_predvals, cor_bgvals)))
+ion_sdmData <- data.frame(cbind(ion_pb, rbind(ion_predvals, cor_bgvals)))
+ang_sdmData <- data.frame(cbind(ang_pb, rbind(ang_predvals, cor_bgvals)))
+chl_sdmData <- data.frame(cbind(chl_pb, rbind(chl_predvals, cor_bgvals)))
 
 #Save df for downstream SDM work
-setwd("../occ_data/")
-saveRDS(cor_sdmData, file = 'cor_sdmData.Rdata')
-saveRDS(fus_sdmData, file = 'fus_sdmData.Rdata')
+
+saveRDS(cor_sdmData, file = './occ_data/cor/cor_sdmData.Rdata')
+saveRDS(fus_sdmData, file = './occ_data/fus/fus_sdmData.Rdata')
+saveRDS(ion_sdmData, file = './occ_data/ion/ion_sdmData.Rdata')
+saveRDS(ang_sdmData, file = './occ_data/ang/ang_sdmData.Rdata')
+saveRDS(chl_sdmData, file = './occ_data/chl/chl_sdmData.Rdata')
 
 cor_sdmData <- readRDS(file = 'cor_sdmData.Rdata')
 
