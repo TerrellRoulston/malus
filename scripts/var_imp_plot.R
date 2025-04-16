@@ -61,7 +61,7 @@ p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color =
                linetype = "dashed", linewidth = 1.25) +
   geom_point(size = 5) +
   geom_text(aes(label = Rank), 
-            nudge_x = 1,
+            nudge_x = 2,
             size = 5, 
             color = "black",
             fontface = "bold") +
@@ -72,7 +72,7 @@ p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color =
   scale_y_reordered(labels = italicize_species) +
   # Also apply the same style to the legend labels
   scale_color_discrete(labels = italicize_species) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 16) +
   labs(
     x = "Variable's Permutational Importance (%)",
     y = "Taxon"
@@ -82,8 +82,8 @@ p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color =
     legend.title = element_blank()
   ) +
   theme(text = element_text(family = "Arial")) +
-  theme(axis.text = element_text(size = 14, colour = 'black'),
-        legend.text = element_text(size = 14),
+  theme(axis.text = element_text(size = 16, colour = 'black'),
+        legend.text = element_text(size = 16),
         axis.title  = element_text(size = 18),
         axis.title.y = element_text(margin = margin(r = 20), size = 20),
         strip.text.x = element_text(size = 18))
@@ -91,9 +91,9 @@ p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color =
 
 # Export to PNG -----------------------------------------------------------
 
-# Open png device 
+# Open png device with your settings
 png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot.png", 
-     width = 6666, height = 4444, res = 300)
+     width = 4000, height = 3333, res = 300)
 
 # Print your plot (if using ggplot, make sure the plot object is printed)
 print(p)
@@ -110,7 +110,7 @@ p_tagged <- ggdraw(p) +
                   fontfamily = "Arial")
 
 png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot_v2.png", 
-   width = 6666, height = 4444, res = 300)
+   width = 4000, height = 3333, res = 300)
 
 print(p_tagged)
 
