@@ -1,0 +1,117 @@
+# Top ---------------------------------------------------------------------
+# Plotting SDM Variable Permutation Importance
+# Converting table of data into a figure to increase ease of comparison
+# Terrell Roulston
+# Started April 15 2025
+
+library(tidyverse)
+library(readxl)
+library(tidytext) # for custom labeling of facets with italics
+library(cowplot)
+
+# Import data -------------------------------------------------------------
+importance_df <- read_xlsx("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/sdm_vars_R_import.xlsx")
+
+# Pivoting from wide to long format
+importance_long <- importance_df %>%
+  pivot_longer(
+    cols = starts_with("Bio"), 
+    names_to = "Variable", 
+    values_to = "Importance"
+  ) %>%
+  # Reverse the factor order for a top-down ordering of variables
+  mutate(Variable = factor(Variable, levels = rev(unique(Variable))))
+
+# Facet by Variables ------------------------------------------------------
+
+# Function for species that italicizes the entire name unless it's "Sect. Chloromeles"
+italicize_species <- function(x) {
+  # Remove the suffix that reorder_within() attaches (e.g., "___Bio_1")
+  x_clean <- gsub("___.*$", "", x)
+  
+  sapply(x_clean, function(spec) {
+    if (spec == "Sect. Chloromeles") {
+      spec  # Leave unchanged
+    } else {
+      # Add an extra trailing space inside the quotes so that the italicized text has some padding.
+      parse(text = paste0('italic("', spec, ' ")'))
+    }
+  }, USE.NAMES = FALSE)
+}
+
+
+
+# Factor order or variables for plotting
+importance_long_reorder <- importance_long %>%
+  mutate(Variable = factor(Variable, levels = c("BIO1", "BIO4", "BIO10", "BIO11", "BIO15", "BIO16")))
+
+importance_ranked <- importance_long_reorder %>%
+  group_by(Species) %>%
+  # "min_rank(desc())" sets the biggest Importance to rank=1, next biggest=2, etc.
+  mutate(Rank = min_rank(desc(Importance))) %>%
+  ungroup()
+
+# Reorder species within each variable facet using tidytext's reorder_within():
+plot_data_by_var <- importance_ranked %>%
+  mutate(Species_reordered = reorder_within(Species, Importance, Variable))
+
+p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color = Species)) +
+  geom_segment(aes(x = 0, xend = Importance, 
+                   y = Species_reordered, yend = Species_reordered),
+               linetype = "dashed", linewidth = 1.25) +
+  geom_point(size = 5) +
+  geom_text(aes(label = Rank), 
+            nudge_x = 1,
+            size = 5, 
+            color = "black",
+            fontface = "bold") +
+  # Facet by Variable in a single column, free y to allow separate ordering per facet
+  facet_wrap2(~ Variable, ncol = 1, scales = "free_y",
+              strip = strip_themed(tag = TRUE, tag_pool = paste0("(", letters, ")"))) +
+  # Remove reorder_within's suffix from the y-axis labels AND italicize
+  scale_y_reordered(labels = italicize_species) +
+  # Also apply the same style to the legend labels
+  scale_color_discrete(labels = italicize_species) +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Variable's Permutational Importance (%)",
+    y = "Taxon"
+  ) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank()
+  ) +
+  theme(text = element_text(family = "Arial")) +
+  theme(axis.text = element_text(size = 14, colour = 'black'),
+        legend.text = element_text(size = 14),
+        axis.title  = element_text(size = 18),
+        axis.title.y = element_text(margin = margin(r = 20), size = 20),
+        strip.text.x = element_text(size = 18))
+
+
+# Export to PNG -----------------------------------------------------------
+
+# Open png device 
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot.png", 
+     width = 6666, height = 4444, res = 300)
+
+# Print your plot (if using ggplot, make sure the plot object is printed)
+print(p)
+
+# Close the device
+dev.off()
+
+# Plot with labels
+p_tagged <- ggdraw(p) +
+  draw_plot_label(label = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"),
+                  x = c(0.95, 0.95, 0.95, 0.95, 0.95, 0.95),  # adjust x-coordinates as needed
+                  y = c(0.99, 0.85, 0.69, 0.54, 0.39, 0.235),  # adjust y-coordinates for each facet
+                  size = 22,  # adjust the size
+                  fontfamily = "Arial")
+
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot_v2.png", 
+   width = 6666, height = 4444, res = 300)
+
+print(p_tagged)
+
+dev.off()
