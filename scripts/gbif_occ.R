@@ -11,7 +11,7 @@ library(rgbif) # access GBIF data
 # Download occurrence data from GBIF
 
 # GBIF user info
-user='RE'
+user='REDACTED'
 pwd='REDACTED'
 email='REDACTED'
 
