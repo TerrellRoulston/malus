@@ -11,9 +11,9 @@ library(rgbif) # access GBIF data
 # Download occurrence data from GBIF
 
 # GBIF user info
-user='RE'
-pwd='Malus123!'
-email='terrellroulston@gmail.com'
+user='REDACTED'
+pwd='REDACTED'
+email='REDACTED'
 
 # Taxon IDs
 # M coronaria = 3001166
