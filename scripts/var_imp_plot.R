@@ -11,7 +11,7 @@ library(cowplot)
 library(ggh4x)
 
 # Import data -------------------------------------------------------------
-importance_df <- read_xlsx("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/sdm_vars_R_import.xlsx")
+importance_df <- read_xlsx("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/sdm_vars_R_import.xlsx")
 
 # Pivoting from wide to long format
 importance_long <- importance_df %>%
@@ -95,7 +95,7 @@ p <- ggplot(plot_data_by_var, aes(x = Importance, y = Species_reordered, color =
 # Export to PNG -----------------------------------------------------------
 
 # Open png device with your settings
-png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot.png", 
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_draft_plot.png", 
      width = 4000, height = 3333, res = 300)
 
 # Print your plot (if using ggplot, make sure the plot object is printed)
@@ -112,7 +112,7 @@ p_tagged <- ggdraw(p) +
                   size = 22,  # adjust the size
                   fontfamily = "Arial")
 
-png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_draft_plot_v2.png", 
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_draft_plot_v2.png", 
    width = 4000, height = 3333, res = 300)
 
 print(p_tagged)
@@ -202,7 +202,7 @@ p_sp <- ggplot(plot_data_by_sp, aes(x = Importance, y = Variable_reordered, colo
 # Print or save
 print(p_sp)
 
-png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/var_important_species.png", 
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_species.png", 
     width = 4000, height = 3333, res = 300)
 
 # Print your plot (if using ggplot, make sure the plot object is printed)
