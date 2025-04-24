@@ -86,7 +86,7 @@ occ_cor <- occ_cor %>%  mutate(source = 'GBIF') # add source for tracking and ma
 occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
 # Save M. coronaria occurrence dataframe
-write.csv(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
+write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
 
 ##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
@@ -141,7 +141,7 @@ occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "de
 ## the data you want to use downstream!                            ##
 #####################################################################
 
-write.csv(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
 ##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 # Clean Ioensis -----------------------------------------------------------
