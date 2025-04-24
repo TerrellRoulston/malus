@@ -6,7 +6,8 @@ output:
   html_document:
     toc: TRUE
     toc_float: TRUE
-email_adress: "REDACTED"
+
+email_adress: "terrellroulston@gmail.com"
 github_repo: "https://github.com/TerrellRoulston/malus"
 ---
 
