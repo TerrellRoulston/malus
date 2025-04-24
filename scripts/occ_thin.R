@@ -10,10 +10,40 @@ library(geodata) # basemaps and climate data
 
 # Load cleaned occurrence data ---------------------------------------------
 
-occ_cor <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
-occ_fus <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
-occ_ion <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
-occ_ang <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
+## occ_cor <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
+## occ_fus <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
+## occ_ion <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
+## occ_ang <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
+
+occ_cor_orig <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
+occ_fus_orig <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
+occ_ion_orig <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
+occ_ang_orig <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
+
+occ_cor <- read.table(file = "./occ_data/cor/occ_cor.csv") # GBIF + Husband
+occ_fus <- read.table(file = './occ_data/fus/occ_fus.csv') # GBIF + Armstrong + Wickham + Obr. + Fit
+occ_ion <- read.table(file = './occ_data/ion/occ_ion.csv') # GBIF
+occ_ang <- read.table(file = './occ_data/ang/occ_ang.csv') # GBIF
+
+## M. coronaria: note one coastal record from New York is excluded in the
+## new version:
+
+dim(occ_cor)
+dim(occ_cor_orig) 
+
+## M. fusca: 226 fewer records in the latest version. Looks like duplicate
+## records from the Wickham, Obrits and Fitsp datasets:
+
+dim(occ_fus)
+dim(occ_fus_orig)
+
+## M. ioensis and M. angustifolia unchanged between previous and current
+## version: 
+dim(occ_ion)
+dim(occ_ion_orig)
+
+dim(occ_ang)
+dim(occ_ang_orig)
 
 # Combine occ data for the 3 Chloromeles species
 occ_chl <- occ_cor %>% 
@@ -21,7 +51,7 @@ occ_chl <- occ_cor %>%
   full_join(occ_ang, by = c('species', 'source', 'decimalLongitude', 'decimalLatitude')) %>% 
   dplyr::select('species', 'source', 'decimalLongitude', 'decimalLatitude')
 
-# vectorize occurrence df to coordinates for bellow
+# vectorize occurrence df to coordinates for below
 occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 
@@ -49,7 +79,7 @@ wclim <- worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "./wcl
 set.seed(1337) # set random generator seed to get reproducible results
 # M. coronaria thinning
 occThin_cor <- spatSample(occ_cor, size = 1, 
-                      strata = regular_grid, #sample one occurrence from each climatic cell
+                      strata = wclim, #sample one occurrence from each climatic cell
                       method = "random") 
 
 # M. fusca thinning
@@ -72,11 +102,17 @@ occThin_chl <- spatSample(occ_chl, size = 1,
                           method = "random")
 # Save thinned occurrence points for further analysis ----------------------
 
-saveRDS(occThin_cor, file = './occ_data/cor/occThin_cor.Rdata')
-saveRDS(occThin_fus, file = './occ_data/fus/occThin_fus.Rdata')
-saveRDS(occThin_ion, file = './occ_data/ion/occThin_ion.Rdata')
-saveRDS(occThin_ang, file = './occ_data/ang/occThin_ang.Rdata')
-saveRDS(occThin_chl, file = './occ_data/chl/occThin_chl.Rdata')
+##saveRDS(occThin_cor, file = './occ_data/cor/occThin_cor.Rdata')
+##saveRDS(occThin_fus, file = './occ_data/fus/occThin_fus.Rdata')
+##saveRDS(occThin_ion, file = './occ_data/ion/occThin_ion.Rdata')
+##saveRDS(occThin_ang, file = './occ_data/ang/occThin_ang.Rdata')
+##saveRDS(occThin_chl, file = './occ_data/chl/occThin_chl.Rdata')
+
+write.table(occThin_cor, file = './occ_data/cor/occThin_cor.csv')
+write.table(occThin_fus, file = './occ_data/fus/occThin_fus.csv')
+write.table(occThin_ion, file = './occ_data/ion/occThin_ion.csv')
+write.table(occThin_ang, file = './occ_data/ang/occThin_ang.csv')
+write.table(occThin_chl, file = './occ_data/chl/occThin_chl.csv')
 
 # Extract environmental data from wclim ------------------------------------
 # Extract and add wclim raster data to spatial occurrence data
@@ -102,12 +138,27 @@ gadm_list <- gadm_list[!sapply(gadm_list, is.null)]
 car_map_0 <- do.call(rbind, gadm_list) # Spatvertor of Caribbean Islands
 
 # Shape file for Canada/US/Mexico borders
-can_us_mex_border <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/can_us_mex_border')
+
+###########################################
+## TERRELL: this path is not accessible! ##
+###########################################
+
+## can_us_mex_border <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/can_us_mex_border')
+
+can_us_mex_border <- rbind(us_map_0, ca_map_0, mex_map_0)
 
 # Shape files downloaded from the USGS (https://www.sciencebase.gov/catalog/item/530f8a0ee4b0e7e46bd300dd)
-great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+erie <- vect("~/data/maps/hydro_p_LakeErie.shp")
+ontario <- vect("~/data/maps/hydro_p_LakeOntario.shp")
+michigan <- vect("~/data/maps/hydro_p_LakeMichigan.shp")
+huron <- vect("~/data/maps/hydro_p_LakeHuron.shp")
+superior <- vect("~/data/maps/hydro_p_LakeSuperior.shp")
+stclair <- vect("~/data/maps/hydro_p_LakeStClair.shp")
+great_lakes <- rbind(erie, ontario, michigan, huron, superior, stclair)
 
-# seperate GBIF from other data sources
+## great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+
+# separate GBIF from other data sources
 occThin_cor_gbif <- subset(occThin_cor,occThin_cor$source == 'GBIF')
 occThin_cor_hus <- subset(occThin_cor,occThin_cor$source == 'Husband')
 
@@ -160,7 +211,7 @@ terra::plot(mex_map_0.lcc, col = 'white', add = T, border = 'transparent')
 terra::plot(gl_map_0.lcc, col = '#E8E8E8', add = T, border = 'transparent')
 terra::plot(car_map_0.lcc, col = 'white', add = T, border = 'transparent')
 terra::plot(great_lakes.lcc, box = F, add = T, col = 'lightblue', border = 'grey')
-terra::plot(can_us_mex_border.lcc, box = F,  add = T, col = 'grey')
+terra::plot(can_us_mex_border.lcc, box = F,  add = T, border = 'grey')
 terra::points(occThin_cor_gbif.lcc, pch = 16, col = alpha("magenta", 1), cex = 1.3) # COR GBIF
 terra::points(occThin_fus_gbif.lcc, pch = 16, col = alpha("#228B22", 1), cex = 1.3) # FUS GBIF
 terra::points(occThin_cor_hus.lcc, pch = 16, col = alpha("#C90076", 1), cex = 1.3) # COR HUSBAND
@@ -222,7 +273,7 @@ terra::plot(mex_map_0.lcc, col = 'white', add = T, border = 'transparent')
 terra::plot(gl_map_0.lcc, col = '#E8E8E8', add = T, border = 'transparent')
 terra::plot(car_map_0.lcc, col = 'white', add = T, border = 'transparent')
 terra::plot(great_lakes.lcc, box = F, add = T, col = 'lightblue', border = 'grey')
-terra::plot(can_us_mex_border.lcc, box = F,  add = T, col = 'grey')
+terra::plot(can_us_mex_border.lcc, box = F,  add = T, border = 'grey')
 terra::points(occThin_chl.lcc, pch = 16, col = alpha("magenta", 1), cex = 1.3) # Sect. Chloromeles
 terra::add_box(col = 'grey')
 legend( # legend for data
