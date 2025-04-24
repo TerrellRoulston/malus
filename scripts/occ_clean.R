@@ -37,7 +37,8 @@ occ_cor <- gbif_cor %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
-saveRDS(occ_cor, file = "./occ_data/cor/occ_cor_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
+write.table(occ_cor, file = "./occ_data/cor/occ_cor_gbif.csv")
+##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
 # Pay special attention to points at the edge of the range of occurrences, as these are most likely to be suspicious
@@ -85,7 +86,9 @@ occ_cor <- occ_cor %>%  mutate(source = 'GBIF') # add source for tracking and ma
 occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
 # Save M. coronaria occurrence dataframe
-saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+write.csv(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
+
+##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 
 # Clean Fusca -------------------------------------------------------------
@@ -108,7 +111,8 @@ occ_fus <- gbif_fus %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
+write.table(occ_fus, file = "./occ_data/fus/occ_fus_gbif.csv") # Note that this copy of 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # load cleaned fusca data from CG Amrstrong
 occ_armstrong <- read.csv(file = "./occ_data/fus/malus_fusca_armstrong.csv") %>% #Note that this is only Armstrong data (not a combination of GBIF data)
@@ -121,7 +125,8 @@ occ_fus <- occ_fus %>% mutate(source = 'GBIF')
 
 occ_fus <- occ_fus %>% full_join(occ_armstrong, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 #load data from Wickham and Obrits and Fitsp
 occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_titzpatrick.csv") %>% 
@@ -130,7 +135,14 @@ occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_t
 
 occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+#####################################################################
+## TERRELL: this over-writes the previous occ_fus.Rdata. I think   ##
+## that is ok, but double check that this is the actual version of ##
+## the data you want to use downstream!                            ##
+#####################################################################
+
+write.csv(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 # Clean Ioensis -----------------------------------------------------------
 occ_ion <- gbif_ion %>% 
@@ -150,7 +162,8 @@ occ_ion <- gbif_ion %>%
 
 occ_ion <- occ_ion %>% mutate(source = 'GBIF')
 
-saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
+write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
+##saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
 
 
 # Clean Angustifolia ------------------------------------------------------
@@ -169,6 +182,5 @@ occ_ang <- gbif_ang %>%
   )
 occ_ang <- occ_ang %>% mutate(source = 'GBIF')
 
-saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
-
-
+write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
+##saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
