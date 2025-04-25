@@ -10,6 +10,8 @@ library(geodata) #download basemaps
 library(scales) #alpha adjust colours
 library(oce)
 
+source("scripts/load_maps.R")
+message("Loading & Cleaning Occurrence Data")
 
 # load occurrence csv files ------------------------------------------------
 gbif_cor <- read.csv(file = "./occ_data/cor/occ_coronaria.csv") # load coronaria data
@@ -25,7 +27,7 @@ occ_cor <- gbif_cor %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
   filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens
   filter(!(decimalLatitude < 35 & decimalLongitude < -86)) %>% # remove records from Texas, Oklahoma, Louisiana
@@ -100,7 +102,7 @@ occ_fus <- gbif_fus %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(!(decimalLongitude > -113)) %>%  # remove record from Idaho herbarium 
   filter(!(decimalLatitude > 64)) %>% # remove record from Interior Alaska
@@ -152,7 +154,7 @@ occ_ion <- gbif_ion %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(!(decimalLongitude < -99)) %>%  # remove records from west of Kansas/Texas occ
   filter(!(gbifID %in% c('1899381516', '5067955163'))) %>% #remove questionable GBIF records
@@ -174,7 +176,7 @@ occ_ang <- gbif_ang %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(decimalLatitude <= 41.99575 | decimalLongitude <= -72.60754) %>% #filter occ northeast of Connecticut
   filter(!(gbifID %in% c('3865090173', '4919535276', '1302641832', '3091187987', '4855490969', '4854957347'))) %>%  #remove a record from greenland (???) and bad inat obs
