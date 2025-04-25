@@ -85,19 +85,18 @@ set.seed(1337)
 # current version of maxent.jar =  v3.4.4
 
 cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
-                            envs = wclim_cor_subs, # NOTE CHANGE THE ENVS inputed, environment from background training area
-                            n.bg = 20000, # 20000 bg points
-                            tune.args =
-                              list(rm = seq(0.5, 4, 0.5), # Regularization 0.5-4
-                                   fc = c("L", "LQ", "H",
-                                          "LQH", "LQHP")),
-                            partition.settings =
-                              list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                            partitions = 'checkerboard2',
+                          envs = wclim_cor_subs, # NOTE CHANGE THE ENVS inputed, environment from background training area
+                          n.bg = 10000, # 20000 bg points
+                          tune.args =
+                            list(rm = seq(0.5, 4, 0.5), # Regularization 0.5-4
+                                 fc = c("L", "LQ", "H",
+                                        "LQH", "LQHP")),
+                          partition.settings =
+                            list(aggregation.factor = c(9, 9), gridSampleN = 10000), # 9,9 agg
+                            partitions = 'checkerboard',
                             parallel = TRUE,
                             numCores = cn - 1, # leave one core available for other apps
-                            parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
-                            algorithm = 'maxent.jar')
+                          algorithm = 'maxent.jar')
 
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
