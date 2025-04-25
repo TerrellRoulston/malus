@@ -1051,3 +1051,131 @@ final_grid <- image_append(c(header_row, row1, row2, row3), stack = TRUE)
 out_path <- "C:/Users/terre/Documents/Acadia/Malus Project/sdm_plot/habitat/SDM_final_labeled_correct_order.jpeg"
 
 image_write(final_grid, path = out_path, format = "jpeg")
+
+
+
+# Supplemental SDM Figure.  -----------------------------------------------
+# Function for automating the plotting 
+plot_sdm_greyscale <- function(r, threshold1, threshold10, threshold50, xlim, ylim, out_path) {
+  jpeg(filename = out_path, width = 1600, height = 1200, res = 300)
+  terra::plot(r > threshold1, col = c("#F2F2F2", "#CCCCCC"), 
+              legend = FALSE, background = "white",
+              xlim = xlim, ylim = ylim, main = "", axes = FALSE,
+              box = FALSE, mar = c(1, 1, 1, 1))
+  terra::plot(r > threshold10, col = c("#FFFFFF00", "#999999"), add = TRUE, legend = FALSE)
+  terra::plot(r > threshold50, col = c("#FFFFFF00", "#333333"), add = TRUE, legend = FALSE)
+  terra::plot(can_us_mex_border.lcc, add = TRUE, col = "black", lwd = 0.6)
+  dev.off()
+}
+
+# Plot limits
+cor.xlim <- c(-0.9*10^6, 3.1*10^6)  
+cor.ylim <- c(-2.7*10^6, 2.5*10^6) 
+
+fus.xlim <- c(-4*10^6, -1*10^6)
+fus.ylim <- c(-2*10^6, 3.2*10^6)
+
+ion.xlim <- c(-0.9*10^6, 3.1*10^6)  
+ion.ylim <- c(-2.7*10^6, 2.5*10^6) 
+
+ang.xlim <- c(-0.9*10^6, 3.1*10^6) 
+ang.ylim <- c(-2.7*10^6, 2.5*10^6) 
+
+chl.xlim <- c(-0.9*10^6, 3.1*10^6)  
+chl.ylim <- c(-2.7*10^6, 2.5*10^6) 
+
+
+
+
+# Setup a meta list for all the SDM layers
+species_info <- list(
+  cor = list(name = "coronaria", rasters = list(
+    hist = cor_pred_hist.lcc,
+    ssp245_2030 = cor_pred_ssp245_30.lcc,
+    ssp245_2050 = cor_pred_ssp245_50.lcc,
+    ssp245_2070 = cor_pred_ssp245_70.lcc,
+    ssp585_2030 = cor_pred_ssp585_30.lcc,
+    ssp585_2050 = cor_pred_ssp585_50.lcc,
+    ssp585_2070 = cor_pred_ssp585_70.lcc
+  ), thresholds = list(
+    t1 = corPred_threshold_1,
+    t10 = corPred_threshold_10,
+    t50 = corPred_threshold_50
+  ), xlim = cor.xlim, ylim = cor.ylim),
+  
+  fus = list(name = "fusca", rasters = list(
+    hist = fus_pred_hist.lcc,
+    ssp245_2030 = fus_pred_ssp245_30.lcc,
+    ssp245_2050 = fus_pred_ssp245_50.lcc,
+    ssp245_2070 = fus_pred_ssp245_70.lcc,
+    ssp585_2030 = fus_pred_ssp585_30.lcc,
+    ssp585_2050 = fus_pred_ssp585_50.lcc,
+    ssp585_2070 = fus_pred_ssp585_70.lcc
+  ), thresholds = list(
+    t1 = fusPred_threshold_1,
+    t10 = fusPred_threshold_10,
+    t50 = fusPred_threshold_50
+  ), xlim = fus.xlim, ylim = fus.ylim),
+  
+  ion = list(name = "ioensis", rasters = list(
+    hist = ion_pred_hist.lcc,
+    ssp245_2030 = ion_pred_ssp245_30.lcc,
+    ssp245_2050 = ion_pred_ssp245_50.lcc,
+    ssp245_2070 = ion_pred_ssp245_70.lcc,
+    ssp585_2030 = ion_pred_ssp585_30.lcc,
+    ssp585_2050 = ion_pred_ssp585_50.lcc,
+    ssp585_2070 = ion_pred_ssp585_70.lcc
+  ), thresholds = list(
+    t1 = ionPred_threshold_1,
+    t10 = ionPred_threshold_10,
+    t50 = ionPred_threshold_50
+  ), xlim = ion.xlim, ylim = ion.ylim),
+  
+  ang = list(name = "angustifolia", rasters = list(
+    hist = ang_pred_hist.lcc,
+    ssp245_2030 = ang_pred_ssp245_30.lcc,
+    ssp245_2050 = ang_pred_ssp245_50.lcc,
+    ssp245_2070 = ang_pred_ssp245_70.lcc,
+    ssp585_2030 = ang_pred_ssp585_30.lcc,
+    ssp585_2050 = ang_pred_ssp585_50.lcc,
+    ssp585_2070 = ang_pred_ssp585_70.lcc
+  ), thresholds = list(
+    t1 = angPred_threshold_1,
+    t10 = angPred_threshold_10,
+    t50 = angPred_threshold_50
+  ), xlim = ang.xlim, ylim = ang.ylim),
+  
+  chl = list(name = "chloromeles", rasters = list(
+    hist = chl_pred_hist.lcc,
+    ssp245_2030 = chl_pred_ssp245_30.lcc,
+    ssp245_2050 = chl_pred_ssp245_50.lcc,
+    ssp245_2070 = chl_pred_ssp245_70.lcc,
+    ssp585_2030 = chl_pred_ssp585_30.lcc,
+    ssp585_2050 = chl_pred_ssp585_50.lcc,
+    ssp585_2070 = chl_pred_ssp585_70.lcc
+  ), thresholds = list(
+    t1 = chlPred_threshold_1,
+    t10 = chlPred_threshold_10,
+    t50 = chlPred_threshold_50
+  ), xlim = chl.xlim, ylim = chl.ylim)
+)
+
+# Loop through plots
+scenarios <- c("hist", "ssp245_2030", "ssp245_2050", "ssp245_2070", 
+               "ssp585_2030", "ssp585_2050", "ssp585_2070")
+
+for (sp in names(species_info)) {
+  s <- species_info[[sp]]
+  for (scen in scenarios) {
+    out_file <- paste0("C:/Users/terre/Documents/Acadia/Malus Project/sdm_plot/supplement/", sp, "_", scen, "_grey.jpeg")
+    plot_sdm_greyscale(
+      r = s$rasters[[scen]],
+      threshold1 = s$thresholds$t1,
+      threshold10 = s$thresholds$t10,
+      threshold50 = s$thresholds$t50,
+      xlim = s$xlim,
+      ylim = s$ylim,
+      out_path = out_file
+    )
+  }
+}
