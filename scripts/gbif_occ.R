@@ -3,10 +3,6 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
-
-library(tidyverse) # data management, grammar
-library(rgbif) # access GBIF data
-
 ## Reload GBIF data (after it was downloaded using the code below)
 
 gbif_cor <- read.csv(file = "./occ_data/cor/occ_coronaria.csv") # load named csv data
@@ -17,6 +13,9 @@ gbif_angustifolia <- read.csv(file = "./occ_data/ang/occ_angustifolia.csv") # lo
 ## The following is needed only the first time the data is downloaded from
 ## GBIF. If you get the data from this repository, you don't need to run
 ## this at all.
+
+## library(tidyverse) # data management, grammar
+## library(rgbif) # access GBIF data
 
 # GBIF user info
 ## user='REDACTED'
