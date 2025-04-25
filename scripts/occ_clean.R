@@ -77,7 +77,8 @@ husband$tmp <- NULL
 
 # Keep all GBIF records but add Brian's data
 
-husband_coords <- husband %>% select(Accession, lat, lon) %>% mutate(source = 'Husband') %>% 
+husband_coords <- husband %>% dplyr::select(Accession, lat, lon) %>%
+                              mutate(source = 'Husband') %>%  
                               mutate(species = 'Malus coronaria') %>% 
                               rename(decimalLatitude = lat, decimalLongitude = lon) #rename lat lon to match for inner join
                 
@@ -118,7 +119,7 @@ write.table(occ_fus, file = "./occ_data/fus/occ_fus_gbif.csv") # Note that this 
 occ_armstrong <- read.csv(file = "./occ_data/fus/malus_fusca_armstrong.csv") %>% #Note that this is only Armstrong data (not a combination of GBIF data)
                   mutate(species = 'Malus fusca') %>% # add species
                   mutate(source = 'Armstrong') %>% # add source
-                  select(Latitude, Longitude, source, species) %>% 
+                  dplyr::select(Latitude, Longitude, source, species) %>% 
                   rename(decimalLatitude = Latitude, decimalLongitude = Longitude)
                   
 occ_fus <- occ_fus %>% mutate(source = 'GBIF')
@@ -130,7 +131,7 @@ write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv")
 
 #load data from Wickham and Obrits and Fitsp
 occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_titzpatrick.csv") %>% 
-  select(latitude, longitude, source, species) %>% 
+  dplyr::select(latitude, longitude, source, species) %>% 
   rename(decimalLatitude = latitude, decimalLongitude = longitude)
 
 occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
