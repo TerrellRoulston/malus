@@ -3,47 +3,58 @@
 # Terrell Roulston
 # Started Feb 20, 2024
 
-library(tidyverse) # grammar and data management 
-library(terra) # working with spatial data
-library(geodata) # basemaps and climate data
+## make sure the data is in sync:
+source("scripts/occ_clean.R") ## this loads the maps as well
+message("** Thinning Records")
+
+#########################################################################
+## The code below will load the saved data. This may be problematic if ##
+## the saved data is no longer in sync with the code, although it will ##
+## save a 20 seconds over re-cleaning the data via the `source` line   ##
+## above.                                                              ##
+#########################################################################
+
+## library(tidyverse) # grammar and data management 
+## library(terra) # working with spatial data
+## library(geodata) # basemaps and climate data
 
 
-# Load cleaned occurrence data ---------------------------------------------
+## # Load cleaned occurrence data ---------------------------------------------
 
-## occ_cor <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
-## occ_fus <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
-## occ_ion <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
-## occ_ang <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
+## ## occ_cor <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
+## ## occ_fus <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
+## ## occ_ion <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
+## ## occ_ang <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
 
-occ_cor_orig <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
-occ_fus_orig <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
-occ_ion_orig <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
-occ_ang_orig <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
+## occ_cor_orig <- readRDS(file = "./occ_data/cor/occ_cor.Rdata") # GBIF + Husband
+## occ_fus_orig <- readRDS(file = './occ_data/fus/occ_fus.Rdata') # GBIF + Armstrong + Wickham + Obr. + Fit
+## occ_ion_orig <- readRDS(file = './occ_data/ion/occ_ion.Rdata') # GBIF
+## occ_ang_orig <- readRDS(file = './occ_data/ang/occ_ang.Rdata') # GBIF
 
-occ_cor <- read.table(file = "./occ_data/cor/occ_cor.csv") # GBIF + Husband
-occ_fus <- read.table(file = './occ_data/fus/occ_fus.csv') # GBIF + Armstrong + Wickham + Obr. + Fit
-occ_ion <- read.table(file = './occ_data/ion/occ_ion.csv') # GBIF
-occ_ang <- read.table(file = './occ_data/ang/occ_ang.csv') # GBIF
+## occ_cor <- read.table(file = "./occ_data/cor/occ_cor.csv") # GBIF + Husband
+## occ_fus <- read.table(file = './occ_data/fus/occ_fus.csv') # GBIF + Armstrong + Wickham + Obr. + Fit
+## occ_ion <- read.table(file = './occ_data/ion/occ_ion.csv') # GBIF
+## occ_ang <- read.table(file = './occ_data/ang/occ_ang.csv') # GBIF
 
-## M. coronaria: note one coastal record from New York is excluded in the
-## new version:
+## ## M. coronaria: note one coastal record from New York is excluded in the
+## ## new version:
 
-dim(occ_cor)
-dim(occ_cor_orig) 
+## dim(occ_cor)
+## dim(occ_cor_orig) 
 
-## M. fusca: 226 fewer records in the latest version. Looks like duplicate
-## records from the Wickham, Obrits and Fitsp datasets:
+## ## M. fusca: 226 fewer records in the latest version. Looks like duplicate
+## ## records from the Wickham, Obrits and Fitsp datasets:
 
-dim(occ_fus)
-dim(occ_fus_orig)
+## dim(occ_fus)
+## dim(occ_fus_orig)
 
-## M. ioensis and M. angustifolia unchanged between previous and current
-## version: 
-dim(occ_ion)
-dim(occ_ion_orig)
+## ## M. ioensis and M. angustifolia unchanged between previous and current
+## ## version: 
+## dim(occ_ion)
+## dim(occ_ion_orig)
 
-dim(occ_ang)
-dim(occ_ang_orig)
+## dim(occ_ang)
+## dim(occ_ang_orig)
 
 # Combine occ data for the 3 Chloromeles species
 occ_chl <- occ_cor %>% 
