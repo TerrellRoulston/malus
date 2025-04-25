@@ -11,47 +11,18 @@ library(ENMTools)
 library(plotly) # 3D surface Kernel bivariate plots
 library(MASS)
 
+source("scripts/occ_thin.R") ## also loads data, maps; takes about 20 seconds
 
-# Ecoregion prep ----------------------------------------------------------
-# Download NA Ecoregion shapefile from: https://www.epa.gov/eco-research/ecoregions-north-america
-# Load shapefile from local files
-ecoNA <- vect(x = "C:/Users/terre/Documents/Acadia/Malus Project/maps/eco regions/na_cec_eco_l2/", layer = 'NA_CEC_Eco_Level2')
-ecoNA <- project(ecoNA, 'WGS84') # project ecoregion vector to same coords ref as basemap
+message("** Calculating Background Data")
+## # plot basemap
+## plot(canUSMex_map, xlim = c(-180, -50))
+## # plot ecoregions 
+## lines(ecoNA, col = 'red')
 
+## plot(ecoNA)
+## points(occThin_cor, col = 'red')
 
-# download/load maps
-us_map <- gadm(country = 'USA', level = 1, resolution = 2,
-               path = "./maps/base_maps") #USA basemap w. States
-
-ca_map <- gadm(country = 'CA', level = 1, resolution = 2,
-               path = './maps/base_maps') #Canada basemap w. Provinces
-
-mex_map <-gadm(country = 'MX', level = 1, resolution = 2,
-               path = './maps/base_maps') # Mexico basemap w. States
-
-canUSMex_map <- rbind(us_map, ca_map, mex_map) # Combine Mexico, US and Canada vector map
-
-
-# plot basemap
-plot(canUSMex_map, xlim = c(-180, -50))
-# plot ecoregions 
-lines(ecoNA, col = 'red')
-
-plot(ecoNA)
-points(occThin_cor, col = 'red')
-
-dev.off()
-
-# load occurrence data
-occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
-occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata')
-occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
-occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
-
-# Load WorldClim data
-# Note DO NOT PUSH wclim data**
-wclim <- geodata::worldclim_global(var = 'bio', res = 2.5, version = '2.1', path = "./wclim_data/")
-#plot(wclim$wc2.1_2.5m_bio_1, main = expression(atop('WorldClim Bioclimatic Predictor 1', 'Mean Annual Tempature (1970-2000)')))
+## dev.off()
 
 # M. coronaria ecoregions -------------------------------------------------
 # extract ecoregion polygon that contain M. coronaria occurrence points

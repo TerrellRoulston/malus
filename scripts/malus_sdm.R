@@ -14,141 +14,57 @@ library(ecospat) # Useful spatial ecology tools
 library(parallel) # speed up computation by running in parallel
 library(doParallel) # added functionality to parallel
 
+source("scripts/malus_bg.R")
 
 # Load occurrence data and basemaps -------------------------------------------------------
 
-# Background points in SpatVectors
-cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
-fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
-ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
-ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
-chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
+## # Background points in SpatVectors
+## cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
+## fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
+## ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
+## ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
+## chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
 
-# Occurrence Points in SpatVectors
-occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
-occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
-occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
-occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
+## # Occurrence Points in SpatVectors
+## occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
+## occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
+## occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
+## occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
+## occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
 
-# Great Lakes shapefiles for making pretty maps and cropping
-great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+## # Great Lakes shapefiles for making pretty maps and cropping
+## great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
 
-NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
-
-# Download/load WorldClim data under future climate scenarios -------------
-# WARNING DO NOT PUSH WORLDCLIM DATA
-# Historical climate 1970-2000
-wclim <- geodata::worldclim_global(var = 'bio',
-                                   res = 2.5, 
-                                   version = '2.1', 
-                                  path = "./wclim_data/") %>% 
-  terra::crop(NA_ext)  %>% #crop raster to NA 
-  terra::mask(great_lakes, inverse = T) # cut out the great lakes
-
-# SSP (Shared social-economic pathway) 2.45 
-# middle of the road projection, high climate adaptation, low climate mitigation
-ssp245_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp245_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp245_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-# SPP 5.85 
-# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
-ssp585_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp585_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp585_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/")%>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
 
 # Load cropped climate Rasters --------------------------------------------
 # These Rasters are useful for sampling spatial checkerboards 
 # and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
 #wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
-wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
-wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
-wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
-wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
-wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
-
-
-climate_predictors <- names(wclim_cor) # extract climate predictor names, to rename layers in the rasters below
-# This is important to do for making predictions once the SDMs have been made on future climate data
-# Note that the names of the layers still correspond to the same environmental variables
-
-# Future SSPs
-# Do not need to create RasterStacks
-# SSP 245
-names(wclim) <- climate_predictors
-names(ssp245_2030) <- climate_predictors #rename raster layers for downsteam analysis
-names(ssp245_2050) <- climate_predictors 
-names(ssp245_2070) <- climate_predictors 
-
-# SSP 585
-names(ssp585_2030) <- climate_predictors #rename raster layers for downsteam analysis
-names(ssp585_2050) <- climate_predictors 
-names(ssp585_2070) <- climate_predictors 
-
+## wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
+## wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
+## wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
+## wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
+## wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
 
 # Subset climate variables for SDM analysis -------------------------------
-wclim_subs <- wclim %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2030_subs <- ssp245_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2050_subs <- ssp245_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2070_subs <- ssp245_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+climateLayers <- c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4',
+                   'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11',
+                   'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16') 
+wclim_subs <- wclim[[climateLayers]]
+ssp245_2030_subs <- ssp245_2030[[climateLayers]]
+ssp245_2050_subs <- ssp245_2050[[climateLayers]]
+ssp245_2070_subs <- ssp245_2070[[climateLayers]]
 
-ssp585_2030_subs <- ssp585_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp585_2050_subs <- ssp585_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp585_2070_subs <- ssp585_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp585_2030_subs <- ssp585_2030[[climateLayers]]
+ssp585_2050_subs <- ssp585_2050[[climateLayers]]
+ssp585_2070_subs <- ssp585_2070[[climateLayers]]
 
-wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_fus_subs <- wclim_fus %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_cor_subs <- wclim_cor[[climateLayers]]
+wclim_fus_subs <- wclim_fus[[climateLayers]]
+wclim_ion_subs <- wclim_ion[[climateLayers]]
+wclim_ang_subs <- wclim_ang[[climateLayers]]
+wclim_chl_subs <- wclim_chl[[climateLayers]]
 
 
 # M. coronaria - MaxEnt Model ---------------------------------------------
