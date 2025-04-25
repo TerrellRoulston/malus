@@ -174,7 +174,7 @@ p_sp <- ggplot(plot_data_by_sp, aes(x = Importance, y = Variable_reordered, colo
   #geom_text(aes(label = VarRank), nudge_x = 1, fontface = "bold", size = 5, color = "black") +
   geom_text(aes(x = 0, label = VarRank),
             hjust = 4, vjust = 0.5,
-            fontface = "bold", size = 4,
+            fontface = "bold", size = 5,
             color = "black") +
   # facet by Species
   facet_wrap(~ Species, 
