@@ -218,32 +218,24 @@ dev.off()
 # By species with varaible ranked -----------------------------------------
 
 p_sp_ranked <- p_sp +
-  # 1) expand x so we have ~20% extra room on the right
-  scale_x_continuous(
-    expand = expansion(mult = c(0, 0.2))
-  ) +
-  # 2) draw each VarRank at the far right (x = Inf), just outside the panel
-  geom_text(
-    data    = plot_data,                    # use your data frame with VarRank etc.
-    mapping = aes(x = Inf, y = Variable_reordered, label = VarRank),
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) + # add ~10% extra width on the right
+  geom_text( # draw each VarRank in a column at the right panel edge
+    data        = plot_data_by_sp,
     inherit.aes = FALSE,
-    hjust   = -0.1,   # push it just to the right of the panel
-    vjust   = 0.5,
-    size    = 5,
-    fontface= "bold",
-    color   = "black"
-  ) +
-  # 3) add a “Global Rank” header at the top‐right:
-  annotate(
-    "text",
-    x      = Inf, 
-    y      = Inf,
-    label  = "Global\nRank",
-    hjust  = 1.05,      # just outside the strip
-    vjust  = 2,         # above the top row
-    size   = 6,
-    fontface = "bold"
+    aes(x = 65, y = Variable_reordered, label = VarRank),
+    hjust       = -0.1,    # nudge out just past the panel
+    vjust       = 0.5,
+    size        = 5,
+    fontface    = "bold",
+    color       = "black"
   )
 
-# print or save
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_species_ranked.png", 
+    width = 4000, height = 3333, res = 300)
+
+# Print your plot (if using ggplot, make sure the plot object is printed)
 print(p_sp_ranked)
+
+# Close the device
+dev.off()
+
