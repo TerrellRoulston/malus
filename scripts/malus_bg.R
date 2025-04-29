@@ -3,17 +3,9 @@
 # Terrell Roulston
 # Started Feb 29, 2024
 
-library(tidyverse)
-library(terra) 
-library(predicts)
-library(geodata)
-library(ENMTools)
-library(plotly) # 3D surface Kernel bivariate plots
-library(MASS)
-
 source("scripts/occ_thin.R") ## also loads data, maps; takes about 20 seconds
 
-message("** Calculating Background Data")
+message("** Calculating Background Data: ", date())
 ## # plot basemap
 ## plot(canUSMex_map, xlim = c(-180, -50))
 ## # plot ecoregions 
@@ -129,20 +121,20 @@ ecoNA_chl <- subset(ecoNA, ecoNA$NA_L2CODE %in% eco_chl_code)
 # Crop WorldClim to Ecoregions and Create Background ----------------------
 
 # crop+mask extent of WorldClim data to the Malus ecoregions
-wclim_cor <- terra::crop(wclim, ecoNA_cor, mask = T)
-wclim_fus <- terra::crop(wclim, ecoNA_fus, mask = T)
-wclim_ion <- terra::crop(wclim, ecoNA_ion, mask = T)
-wclim_ang <- terra::crop(wclim, ecoNA_ang, mask = T)
-wclim_chl <- terra::crop(wclim, ecoNA_chl, mask = T)
+
+wclim_cor_subs <- terra::crop(wclim_subs, ecoNA_cor, mask = T) ##
+wclim_fus_subs <- terra::crop(wclim_subs, ecoNA_fus, mask = T) ##
+wclim_ion_subs <- terra::crop(wclim_subs, ecoNA_ion, mask = T) ##
+wclim_ang_subs <- terra::crop(wclim_subs, ecoNA_ang, mask = T) ##
+wclim_chl_subs <- terra::crop(wclim_subs, ecoNA_chl, mask = T) ##
 
 # Save cropped wclim data for downsteam SDM workflow
 
-## saveRDS(wclim_cor, file = './wclim_data/wclim_cor.Rdata')
-## saveRDS(wclim_fus, file = './wclim_data/wclim_fus.Rdata')
-## saveRDS(wclim_ion, file = './wclim_data/wclim_ion.Rdata')
-## saveRDS(wclim_ang, file = './wclim_data/wclim_ang.Rdata')
-## saveRDS(wclim_chl, file = './wclim_data/wclim_chl.Rdata')
-
+## writeRaster(wclim_cor, file = './wclim_data/wclim_cor.tif')
+## writeRaster(wclim_fus, file = './wclim_data/wclim_fus.tif')
+## writeRaster(wclim_ion, file = './wclim_data/wclim_ion.tif')
+## writeRaster(wclim_ang, file = './wclim_data/wclim_ang.tif')
+## writeRaster(wclim_chl, file = './wclim_data/wclim_chl.tif')
 
 # Sample background points ------------------------------------------------
 
@@ -156,8 +148,18 @@ set.seed(1337) # set a seed to ensure reproducible results
 # SpatVector
 
 # Note upped bg points from 5000 to 20000
-cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+
+########################################################################
+## TERRELL: You are not using any of the objects created past here, I ##
+## think this code is redundant? Maybe useful for inspecting data,    ##
+## but used in the actual analysis anywhere                           ##
+########################################################################
+
+## cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T,
+##                          as.points = T) #ignore NA values      
+
 ## plot(wclim_cor[[1]])
+
 ## points(cor_bg_vec, cex = 0.01)
 
 ## expanse(wclim_cor[[1]], unit = 'km') # total area of raster in km^2
@@ -167,7 +169,7 @@ cor_bg_vec <- spatSample(wclim_cor, 20000, 'random', na.rm = T, as.points = T) #
 
 # M. fusca background
 # SpatVector
-fus_bg_vec <- spatSample(wclim_fus, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+##fus_bg_vec <- spatSample(wclim_fus, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 ## plot(wclim_fus[[1]])
 ## points(fus_bg_vec, cex = 0.01)
 
@@ -177,7 +179,7 @@ fus_bg_vec <- spatSample(wclim_fus, 20000, 'random', na.rm = T, as.points = T) #
 
 # M. ionesis background
 # SpatVector
-ion_bg_vec <- spatSample(wclim_ion, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+##ion_bg_vec <- spatSample(wclim_ion, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 ## plot(wclim_ion[[1]])
 ## points(ion_bg_vec, cex = 0.01)
 
@@ -185,7 +187,7 @@ ion_bg_vec <- spatSample(wclim_ion, 20000, 'random', na.rm = T, as.points = T) #
 
 # M. angustifolia background
 # SpatVector
-ang_bg_vec <- spatSample(wclim_ang, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+##ang_bg_vec <- spatSample(wclim_ang, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 ## plot(wclim_ang[[1]])
 ## points(ang_bg_vec, cex = 0.01)
 
@@ -194,7 +196,7 @@ ang_bg_vec <- spatSample(wclim_ang, 20000, 'random', na.rm = T, as.points = T) #
 
 # Sect. Chloromeles background
 # SpatVector
-chl_bg_vec <- spatSample(wclim_chl, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
+##chl_bg_vec <- spatSample(wclim_chl, 20000, 'random', na.rm = T, as.points = T) #ignore NA values
 ## plot(wclim_chl[[1]])
 ## points(chl_bg_vec, cex = 0.01)
 
@@ -218,38 +220,38 @@ chl_bg_vec <- spatSample(wclim_chl, 20000, 'random', na.rm = T, as.points = T) #
 
 # Extracting presence-background raster values ----------------------------
 
-cor_predvals <- extract(wclim_cor, occThin_cor, ID = FALSE) # M. coronaria
+## cor_predvals <- extract(wclim_cor, occThin_cor, ID = FALSE) # M. coronaria
 
-fus_predvals <- extract(wclim_fus, occThin_fus, ID = FALSE) # M. fusca
+## fus_predvals <- extract(wclim_fus, occThin_fus, ID = FALSE) # M. fusca
 
-ion_predvals <- extract(wclim_ion, occThin_ion, ID = FALSE) # M. fusca
+## ion_predvals <- extract(wclim_ion, occThin_ion, ID = FALSE) # M. fusca
 
-ang_predvals <- extract(wclim_ang, occThin_ang, ID = FALSE) # M. fusca
+## ang_predvals <- extract(wclim_ang, occThin_ang, ID = FALSE) # M. fusca
 
-chl_predvals <- extract(wclim_chl, occThin_chl, ID = FALSE) # M. fusca
+## chl_predvals <- extract(wclim_chl, occThin_chl, ID = FALSE) # M. fusca
 
-cor_bgvals <- values(cor_bg_vec) # Extract raster values for bg points
-fus_bgvals <- values(fus_bg_vec) # Extract raster values for bg points
-ion_bgvals <- values(ion_bg_vec) # Extract raster values for bg points
-ang_bgvals <- values(ang_bg_vec) # Extract raster values for bg points
-chl_bgvals <- values(chl_bg_vec) # Extract raster values for bg points
+## cor_bgvals <- values(cor_bg_vec) # Extract raster values for bg points
+## fus_bgvals <- values(fus_bg_vec) # Extract raster values for bg points
+## ion_bgvals <- values(ion_bg_vec) # Extract raster values for bg points
+## ang_bgvals <- values(ang_bg_vec) # Extract raster values for bg points
+## chl_bgvals <- values(chl_bg_vec) # Extract raster values for bg points
 
 
 # Create a df for presence-background raster values for SDM ---------------
 
-cor_pb <- c(rep(1, nrow(cor_predvals)), rep(0, nrow(cor_bgvals))) #T/F presence or background string
-fus_pb <- c(rep(1, nrow(fus_predvals)), rep(0, nrow(fus_bgvals))) #T/F presence or background string
-ion_pb <- c(rep(1, nrow(ion_predvals)), rep(0, nrow(ion_bgvals))) #T/F presence or background string
-ang_pb <- c(rep(1, nrow(ang_predvals)), rep(0, nrow(ang_bgvals))) #T/F presence or background string
-chl_pb <- c(rep(1, nrow(chl_predvals)), rep(0, nrow(chl_bgvals))) #T/F presence or background string
+## cor_pb <- c(rep(1, nrow(cor_predvals)), rep(0, nrow(cor_bgvals))) #T/F presence or background string
+## fus_pb <- c(rep(1, nrow(fus_predvals)), rep(0, nrow(fus_bgvals))) #T/F presence or background string
+## ion_pb <- c(rep(1, nrow(ion_predvals)), rep(0, nrow(ion_bgvals))) #T/F presence or background string
+## ang_pb <- c(rep(1, nrow(ang_predvals)), rep(0, nrow(ang_bgvals))) #T/F presence or background string
+## chl_pb <- c(rep(1, nrow(chl_predvals)), rep(0, nrow(chl_bgvals))) #T/F presence or background string
 
 # combine presence and background dataframes for SDM
 
-cor_sdmData <- data.frame(cbind(cor_pb, rbind(cor_predvals, cor_bgvals)))
-fus_sdmData <- data.frame(cbind(fus_pb, rbind(fus_predvals, cor_bgvals)))
-ion_sdmData <- data.frame(cbind(ion_pb, rbind(ion_predvals, cor_bgvals)))
-ang_sdmData <- data.frame(cbind(ang_pb, rbind(ang_predvals, cor_bgvals)))
-chl_sdmData <- data.frame(cbind(chl_pb, rbind(chl_predvals, cor_bgvals)))
+## cor_sdmData <- data.frame(cbind(cor_pb, rbind(cor_predvals, cor_bgvals)))
+## fus_sdmData <- data.frame(cbind(fus_pb, rbind(fus_predvals, cor_bgvals)))
+## ion_sdmData <- data.frame(cbind(ion_pb, rbind(ion_predvals, cor_bgvals)))
+## ang_sdmData <- data.frame(cbind(ang_pb, rbind(ang_predvals, cor_bgvals)))
+## chl_sdmData <- data.frame(cbind(chl_pb, rbind(chl_predvals, cor_bgvals)))
 
 #Save df for downstream SDM work
 
@@ -357,5 +359,5 @@ chl_sdmData <- data.frame(cbind(chl_pb, rbind(chl_predvals, cor_bgvals)))
 
 ## plot_cor.bg_3d
 
-message("** Background Data Calculated")
+message("** Background Data Calculated: ", date())
 
