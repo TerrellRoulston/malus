@@ -1,8 +1,16 @@
-library(sf)
-library(rnaturalearth)
-library(terra)
+source("scripts/libraries.R")
 
-message("**  Loading Maps")
+message("**  Loading Maps: ", date())
+
+###########################################################################
+## This takes two minutes to run, most of which is loading and masking   ##
+## the rasters. We can cut that in half by saving the masked rasters and ##
+## reloading them from disk next time. These layers                      ##
+## won't be modified further, and shouldn't require any additional       ##
+## changes at all, so this should be a low-risk for producing data out   ##
+## of sync.                                                              ##
+###########################################################################
+
 # download/load maps
 ## with provinces and states:
 us_map <- gadm(country = 'USA', level = 1, resolution = 2,
@@ -75,91 +83,123 @@ if(file.exists("./maps/seaRef/ne_110m_land.shp")){
 # Note DO NOT PUSH wclim data**
 NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
 
+wclim_subs <- rast("wclim_data/wclim_subs.tif")
+ssp245_2030_subs <- rast("wclim_data/ssp245_2030.tif")
+ssp245_2050_subs <- rast("wclim_data/ssp245_2050.tif")
+ssp245_2070_subs <- rast("wclim_data/ssp245_2070.tif")
+ssp585_2030_subs <- rast("wclim_data/ssp585_2030.tif")
+ssp585_2050_subs <- rast("wclim_data/ssp585_2050.tif")
+ssp585_2070_subs <- rast("wclim_data/ssp585_2070.tif")
+
 # Download/load WorldClim data under future climate scenarios -------------
 # WARNING DO NOT PUSH WORLDCLIM DATA
 # Historical climate 1970-2000
-wclim <- geodata::worldclim_global(var = 'bio',
-                                   res = 2.5, 
-                                   version = '2.1', 
-                                  path = "./wclim_data/") %>% terra::crop(NA_ext)
-wclim <- mask(wclim, great_lakes, inverse = T,
-                    wopt = list(names = names(wclim)))
 
-# SSP (Shared social-economic pathway) 2.45 
-# middle of the road projection, high climate adaptation, low climate mitigation
-ssp245_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext)
+## wclim <- geodata::worldclim_global(var = 'bio',
+##                                    res = 2.5, 
+##                                    version = '2.1', 
+##                                   path = "./wclim_data/") %>% terra::crop(NA_ext)
+## wclim <- mask(wclim, great_lakes, inverse = T,
+##                     wopt = list(names = names(wclim)))
 
-ssp245_2030 <- mask(ssp245_2030, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp245_2030)))) 
+## # SSP (Shared social-economic pathway) 2.45 
+## # middle of the road projection, high climate adaptation, low climate mitigation
+## ssp245_2030 <- cmip6_world(model = "CanESM5",
+##                            ssp = "245",
+##                            time = "2021-2040",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext)
 
-ssp245_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext)
+## ssp245_2030 <- mask(ssp245_2030, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp245_2030)))) 
 
-ssp245_2050 <- mask(ssp245_2050, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp245_2050)))) 
+## ssp245_2050 <- cmip6_world(model = "CanESM5",
+##                            ssp = "245",
+##                            time = "2041-2060",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext)
 
-ssp245_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext)
+## ssp245_2050 <- mask(ssp245_2050, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp245_2050)))) 
 
-ssp245_2070 <- mask(ssp245_2070, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp245_2070)))) 
+## ssp245_2070 <- cmip6_world(model = "CanESM5",
+##                            ssp = "245",
+##                            time = "2061-2080",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext)
 
-# SPP 5.85 
-# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
-ssp585_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext) 
+## ssp245_2070 <- mask(ssp245_2070, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp245_2070)))) 
 
-ssp585_2030 <- mask(ssp585_2030, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp585_2030)))) 
+## # SPP 5.85 
+## # low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
+## ssp585_2030 <- cmip6_world(model = "CanESM5",
+##                            ssp = "585",
+##                            time = "2021-2040",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext) 
 
-ssp585_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext)
+## ssp585_2030 <- mask(ssp585_2030, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp585_2030)))) 
 
-ssp585_2050 <- mask(ssp585_2050, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp585_2050)))) 
+## ssp585_2050 <- cmip6_world(model = "CanESM5",
+##                            ssp = "585",
+##                            time = "2041-2060",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext)
+
+## ssp585_2050 <- mask(ssp585_2050, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp585_2050)))) 
 
 
-ssp585_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% crop(NA_ext)
+## ssp585_2070 <- cmip6_world(model = "CanESM5",
+##                            ssp = "585",
+##                            time = "2061-2080",
+##                            var = "bioc",
+##                            res = 2.5,
+##                            path = "./wclim_data/") %>% crop(NA_ext)
 
-ssp585_2070 <- mask(ssp585_2070, great_lakes, inverse = T,
-                    wopt = list(names =
-                                  gsub("bioc_.*(_.*)", "bio\\1",
-                                       names(ssp585_2070)))) 
+## ssp585_2070 <- mask(ssp585_2070, great_lakes, inverse = T,
+##                     wopt = list(names =
+##                                   gsub("bioc_.*(_.*)", "bio\\1",
+##                                        names(ssp585_2070)))) 
 
-message("**  Maps Loaded")
+## # Subset climate variables for SDM analysis -------------------------------
+## climateLayers <- c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4',
+##                    'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11',
+##                    'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16') 
+## wclim_subs <- wclim[[climateLayers]]
+## ssp245_2030_subs <- ssp245_2030[[climateLayers]]
+## ssp245_2050_subs <- ssp245_2050[[climateLayers]]
+## ssp245_2070_subs <- ssp245_2070[[climateLayers]]
+## ssp585_2030_subs <- ssp585_2030[[climateLayers]]
+## ssp585_2050_subs <- ssp585_2050[[climateLayers]]
+## ssp585_2070_subs <- ssp585_2070[[climateLayers]]
+
+## rm(wclim, ssp245_2030, ssp245_2050, ssp245_2070, ssp585_2030, ssp585_2050,
+##    ssp585_2070) 
+
+## writeRaster(wclim_subs, "wclim_data/wclim_subs.tif")
+## writeRaster(ssp245_2030_subs, "wclim_data/ssp245_2030.tif")
+## writeRaster(ssp245_2050_subs, "wclim_data/ssp245_2050.tif")
+## writeRaster(ssp245_2070_subs, "wclim_data/ssp245_2070.tif")
+## writeRaster(ssp585_2030_subs, "wclim_data/ssp585_2030.tif")
+## writeRaster(ssp585_2050_subs, "wclim_data/ssp585_2050.tif")
+## writeRaster(ssp585_2070_subs, "wclim_data/ssp585_2070.tif")
+
+message("**  Maps Loaded: ", date())
