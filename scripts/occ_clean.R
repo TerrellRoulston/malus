@@ -3,15 +3,8 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
-library(tidyverse) #grammar, data management
-library(CoordinateCleaner) #helpful functions to clean data
-library(terra) #working with vector/raster data
-library(geodata) #download basemaps
-library(scales) #alpha adjust colours
-library(oce)
-
 source("scripts/load_maps.R")
-message("Loading & Cleaning Occurrence Data")
+message("** Loading & Cleaning Occurrence Data ", date())
 
 # load occurrence csv files ------------------------------------------------
 gbif_cor <- read.csv(file = "./occ_data/cor/occ_coronaria.csv") # load coronaria data
@@ -39,7 +32,7 @@ occ_cor <- gbif_cor %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
-write.table(occ_cor, file = "./occ_data/cor/occ_cor_gbif.csv")
+#write.table(occ_cor, file = "./occ_data/cor/occ_cor_gbif.csv")
 ##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
@@ -89,7 +82,7 @@ occ_cor <- occ_cor %>%  mutate(source = 'GBIF') # add source for tracking and ma
 occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
 # Save M. coronaria occurrence dataframe
-write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
+#write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
 
 ##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
@@ -114,7 +107,7 @@ occ_fus <- gbif_fus %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
-write.table(occ_fus, file = "./occ_data/fus/occ_fus_gbif.csv") # Note that this copy of 
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus_gbif.csv") # Note that this copy of 
 ##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # load cleaned fusca data from CG Amrstrong
@@ -128,7 +121,7 @@ occ_fus <- occ_fus %>% mutate(source = 'GBIF')
 
 occ_fus <- occ_fus %>% full_join(occ_armstrong, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
 ##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 #load data from Wickham and Obrits and Fitsp
@@ -144,7 +137,7 @@ occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "de
 ## the data you want to use downstream!                            ##
 #####################################################################
 
-write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
 ##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 # Clean Ioensis -----------------------------------------------------------
@@ -185,5 +178,7 @@ occ_ang <- gbif_ang %>%
   )
 occ_ang <- occ_ang %>% mutate(source = 'GBIF')
 
-write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
+##write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
 ##saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
+
+message("** Data Cleaned ", date())
