@@ -5,7 +5,8 @@
 
 ## make sure the data is in sync:
 source("scripts/occ_clean.R") ## this loads the maps as well
-message("** Thinning Records")
+
+message("** Thinning Records: ", date())
 
 #########################################################################
 ## The code below will load the saved data. This may be problematic if ##
@@ -83,26 +84,26 @@ occ_chl <- vect(occ_chl, geom = c('decimalLongitude', 'decimalLatitude'),
 set.seed(1337) # set random generator seed to get reproducible results
 # M. coronaria thinning
 occThin_cor <- spatSample(occ_cor, size = 1, 
-                      strata = wclim, #sample one occurrence from each climatic cell
+                      strata = wclim_subs, #sample one occurrence from each climatic cell
                       method = "random") 
 
 # M. fusca thinning
 occThin_fus <- spatSample(occ_fus, size = 1,
-                      strata = wclim,
+                      strata = wclim_subs,
                       method = "random")
 
 #M. ionesis thinning
 occThin_ion <- spatSample(occ_ion, size = 1,
-                          strata = wclim,
+                          strata = wclim_subs,
                           method = "random")
 
 #M. angustifolia thinning
 occThin_ang <- spatSample(occ_ang, size = 1,
-                          strata = wclim,
+                          strata = wclim_subs,
                           method = "random")
 #Sect. Chloromeles thinning
 occThin_chl <- spatSample(occ_chl, size = 1,
-                          strata = wclim,
+                          strata = wclim_subs,
                           method = "random")
 # Save thinned occurrence points for further analysis ----------------------
 
@@ -112,11 +113,11 @@ occThin_chl <- spatSample(occ_chl, size = 1,
 ##saveRDS(occThin_ang, file = './occ_data/ang/occThin_ang.Rdata')
 ##saveRDS(occThin_chl, file = './occ_data/chl/occThin_chl.Rdata')
 
-write.table(occThin_cor, file = './occ_data/cor/occThin_cor.csv')
-write.table(occThin_fus, file = './occ_data/fus/occThin_fus.csv')
-write.table(occThin_ion, file = './occ_data/ion/occThin_ion.csv')
-write.table(occThin_ang, file = './occ_data/ang/occThin_ang.csv')
-write.table(occThin_chl, file = './occ_data/chl/occThin_chl.csv')
+## write.table(occThin_cor, file = './occ_data/cor/occThin_cor.csv')
+## write.table(occThin_fus, file = './occ_data/fus/occThin_fus.csv')
+## write.table(occThin_ion, file = './occ_data/ion/occThin_ion.csv')
+## write.table(occThin_ang, file = './occ_data/ang/occThin_ang.csv')
+## write.table(occThin_chl, file = './occ_data/chl/occThin_chl.csv')
 
 # Extract environmental data from wclim ------------------------------------
 # Extract and add wclim raster data to spatial occurrence data
@@ -125,4 +126,4 @@ write.table(occThin_chl, file = './occ_data/chl/occThin_chl.csv')
 #occ_fus <- cbind(occ_fus, extract(wclim, occ_fus)) # M. fusca
 
 ## moved actual plots to occ_plots.R
-message("** Records Thinned")
+message("** Records Thinned: ", date())
