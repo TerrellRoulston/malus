@@ -127,7 +127,6 @@ wclim_fus_subs <- terra::crop(wclim_subs, ecoNA_fus, mask = T) ##
 wclim_ion_subs <- terra::crop(wclim_subs, ecoNA_ion, mask = T) ##
 wclim_ang_subs <- terra::crop(wclim_subs, ecoNA_ang, mask = T) ##
 wclim_chl_subs <- terra::crop(wclim_subs, ecoNA_chl, mask = T) ##
-
 # Save cropped wclim data for downsteam SDM workflow
 
 ## writeRaster(wclim_cor, file = './wclim_data/wclim_cor.tif')
