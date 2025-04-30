@@ -15,6 +15,8 @@ library(ENMeval) # Another modeling package, useful for data partitioning (Check
 library(ecospat) # Useful spatial ecology tools
 library(parallel) # speed up computation by running in parallel
 library(doParallel) # added functionality to parallel
+library(ade4)
+library(grid)
 
 
 
