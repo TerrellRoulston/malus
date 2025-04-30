@@ -6,7 +6,7 @@ START <- date()
 source("scripts/malus_bg.R") 
 END <- date()
 
-source("functions.R") ## for twsBoyce
+source("scripts/functions.R") ## for twsBoyce
 
 message("Loaded & prepped all data, starting at:\n     ", START,
         "\n and ending at: \n     ", END) 
@@ -82,8 +82,8 @@ date()
 # Save the MaxEnt model so you do not have to waste time re-running the model
 ##saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # save
 # Load Maxent model
-saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_max_2025-04-29.Rdata')
-cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_max_2025-04-29.Rdata')
+saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
+cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
 
 ##cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # load #subsetted model
 
@@ -119,8 +119,8 @@ corPredWclim <- crop(wclim_subs, corPredExt)
 cor_pred_hist <- terra::predict(corPredWclim, mod.best_cor_maxent,
                                 cores = cn - 1, na.rm = T)
 
-saveRDS(cor_pred_hist, file = './sdm_output/cor/subs/cor_pred_hist_2025-04-29.Rdata')
-cor_pred_hist <- readRDS(file = './sdm_output/cor/subs/cor_pred_hist_2025-04-29.Rdata')
+saveRDS(cor_pred_hist, file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
+cor_pred_hist <- readRDS(file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
 
 plot(cor_pred_hist)
 points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
@@ -140,9 +140,10 @@ points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 corBoyce <- twsBoyce(fit = cor_pred_hist, # suitability raster
                      obs = occ_cor_coords, 
                      PEplot = TRUE, method = 'spearman')
-corBoyce$cor
 
-## title(main = expression(italic("Malus coronaria")))
+title(main = bquote(italic("Malus coronaria") ~ ", Boyce Cor." ==
+                      .(corBoyce$cor))) 
+
 ## dev.off()
 
 
