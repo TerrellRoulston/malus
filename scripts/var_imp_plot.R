@@ -174,7 +174,7 @@ p_sp <- ggplot(plot_data_by_sp, aes(x = Importance, y = Variable_reordered, colo
   #geom_text(aes(label = VarRank), nudge_x = 1, fontface = "bold", size = 5, color = "black") +
   geom_text(aes(x = 0, label = VarRank),
             hjust = 4, vjust = 0.5,
-            fontface = "bold", size = 4,
+            fontface = "bold", size = 5,
             color = "black") +
   # facet by Species
   facet_wrap(~ Species, 
@@ -204,7 +204,6 @@ p_sp <- ggplot(plot_data_by_sp, aes(x = Importance, y = Variable_reordered, colo
         strip.text.x = element_text(size = 18))
 
 # Print or save
-print(p_sp)
 
 png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_species.png", 
     width = 4000, height = 3333, res = 300)
@@ -214,3 +213,29 @@ print(p_sp)
 
 # Close the device
 dev.off()
+
+
+# By species with varaible ranked -----------------------------------------
+
+p_sp_ranked <- p_sp +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.1))) + # add ~10% extra width on the right
+  geom_text( # draw each VarRank in a column at the right panel edge
+    data        = plot_data_by_sp,
+    inherit.aes = FALSE,
+    aes(x = 65, y = Variable_reordered, label = VarRank),
+    hjust       = -0.1,    # nudge out just past the panel
+    vjust       = 0.5,
+    size        = 5,
+    fontface    = "bold",
+    color       = "black"
+  )
+
+png(filename = "C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_important_species_ranked.png", 
+    width = 4000, height = 3333, res = 300)
+
+# Print your plot (if using ggplot, make sure the plot object is printed)
+print(p_sp_ranked)
+
+# Close the device
+dev.off()
+

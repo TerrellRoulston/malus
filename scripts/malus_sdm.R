@@ -134,10 +134,18 @@ points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 ## see https://github.com/ecospat/ecospat/issues/99
 ## Until it is fixed, use my own corrected version, in functions.R:
 
+# Evaluate predictions using Boyce Index
+## png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_coronaria.png', width = 1600, height = 1200, res = 300)
+
 corBoyce <- twsBoyce(fit = cor_pred_hist, # suitability raster
                      obs = occ_cor_coords, 
                      PEplot = TRUE, method = 'spearman')
 corBoyce$cor
+
+## title(main = expression(italic("Malus coronaria")))
+## dev.off()
+
+
 
 # M. coronaria - Thresholds -----------------------------------------------
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
@@ -487,11 +495,15 @@ fusPred_val_na <- terra::extract(fus_pred_hist, occ_fus_coords)$lyr1 %>%
 
 # M. fusca Boyce Index ----------------------------------------------------
 # Evaluate predictions using Boyce Index
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_fusca.png', width = 1600, height = 1200, res = 300)
 ecospat.boyce(fit = fusPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = fusPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
+
+title(main = expression(italic("Malus fusca")))
+dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
 fusPred_val <- terra::extract(fus_pred_hist, occ_fus_coords)$lyr1
@@ -802,13 +814,16 @@ ionPred_val_na <- terra::extract(ion_pred_hist, occ_ion_coords)$lyr1 %>%
 
 
 # M. ioensis Boyce Index --------------------------------------------------
-
 # Evaluate predictions using Boyce Index
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_ioensis.png', width = 1600, height = 1200, res = 300)
 ecospat.boyce(fit = ionPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = ionPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
+
+title(main = expression(italic("Malus ioensis")))
+dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
 ionPred_val <- terra::extract(ion_pred_hist, occ_ion_coords)$lyr1
@@ -1125,11 +1140,15 @@ angPred_val_na <- terra::extract(ang_pred_hist, occ_ang_coords)$lyr1 %>%
 # M. angustifolia Boyce Index ---------------------------------------------
 
 # Evaluate predictangs using Boyce Index
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/boyce_plot_malus_angustifolia.png', width = 1600, height = 1200, res = 300)
 ecospat.boyce(fit = angPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = angPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
+
+title(main = expression(italic("Malus angustifolia")))
+dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
 angPred_val <- terra::extract(ang_pred_hist, occ_ang_coords)$lyr1
@@ -1391,7 +1410,7 @@ saveRDS(chl_maxent, file = './sdm_output/chl/subs/chl_maxent_subs.Rdata') # save
 
 
 chl_maxent <- readRDS(file = './sdm_output/chl/subs/chl_maxent_subs.Rdata') # load subset model 
-# M. chlustifolia Model Selecting -----------------------------------------
+# Sect. Chloromeles Model Selecting -----------------------------------------
 
 # Note that maxent results provide Continuous Boyce Index (cbi)
 best_chl_maxent <- subset(chl_maxent@results, delta.AICc == 0) # selects the best performing model based on delta AICc - returns data frame object
@@ -1402,7 +1421,7 @@ eval.variable.importance(chl_maxent)[best_chl_maxent["tune.args"][1, 1]]
 
 
 
-# M. chlustifolia historical prediction -----------------------------------
+# Sect. Chloromeles historical prediction -----------------------------------
 
 # Now use the <terra> package to plot the SDM predictchl.
 # Wclim is the historical climatic conditchls (1970-2000)
@@ -1421,14 +1440,18 @@ chlPred_bg_val <- terra::extract(chl_pred_hist, bg_chl_coords)$lyr1 %>%
 chlPred_val_na <- terra::extract(chl_pred_hist, occ_chl_coords)$lyr1 %>% 
   na.omit()
 
-# M. chlustifolia Boyce Index ---------------------------------------------
+# Sect. Chloromeles Boyce Index ---------------------------------------------
 
 # Evaluate predictchls using Boyce Index
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_sect_chloromeles.png', width = 1600, height = 1200, res = 300)
 ecospat.boyce(fit = chlPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = chlPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
+
+title(main = 'Sect. Chloromeles')
+dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
 chlPred_val <- terra::extract(chl_pred_hist, occ_chl_coords)$lyr1
@@ -1436,7 +1459,7 @@ chlPred_threshold_1 <- quantile(chlPred_val, 0.01, na.rm = T) # Low suitability
 chlPred_threshold_10 <- quantile(chlPred_val, 0.1, na.rm = T) # Moderate suitability
 chlPred_threshold_50 <- quantile(chlPred_val, 0.5, na.rm = T) # High suitability
 
-# M. chlustifolia - Climate Predictions -----------------------------------
+# Sect. Chloromeles - Climate Predictions -----------------------------------
 
 
 # Future Climate predictchls
@@ -1451,7 +1474,7 @@ chl_pred_ssp585_50 <- terra::predict(ssp585_2050_subs, mod.best_chl_maxent, core
 chl_pred_ssp585_70 <- terra::predict(ssp585_2070_subs, mod.best_chl_maxent, cores = cn - 1, na.rm = T)
 
 
-# Save/Load M chl. SDM predictchls ----------------------------------------
+# Save/Load Sect. Chloromeles SDM predictions ----------------------------------------
 
 # Save
 saveRDS(chl_pred_hist, file = './sdm_output/chl/subs/chl_pred_hist_subs.Rdata')
@@ -1478,7 +1501,7 @@ chl_pred_ssp585_70 <- readRDS(file = './sdm_output/chl/subs/chl_pred_ssp585_70_s
 
 
 
-# Save M. chlustifolia thresholds -----------------------------------------
+# Save Sect. Chloromeles thresholds -----------------------------------------
 
 
 saveRDS(chlPred_threshold_1, file = './sdm_output/chl/subs/threshold/chlPred_threshold_1_subs.Rdata')
@@ -1492,7 +1515,7 @@ chlPred_threshold_10 <- readRDS(file = './sdm_output/chl/subs/threshold/chlPred_
 chlPred_threshold_50 <- readRDS(file = './sdm_output/chl/subs/threshold/chlPred_threshold_50_subs.Rdata')
 
 
-# M chlustifolia Habitat predictions --------------------------------------
+# Sect. Chloromeles Habitat predictions --------------------------------------
 # Categorical habitat suitability
 # Historical
 chl_pred_high_hist <- chl_pred_hist > chlPred_threshold_50
@@ -1628,7 +1651,7 @@ chl_pred_mod_ssp585_70_crop <- crop(chl_pred_mod_ssp585_70, chl_ext)
 chl_pred_low_ssp585_70_crop <- crop(chl_pred_low_ssp585_70, chl_ext)
 
 
-#  M. chlustifolia - Crop rasters - TIFF  ---------------------------------
+# Sect. Chloromeles. chlustifolia - Crop rasters - TIFF  ---------------------------------
 
 # Historical 
 terra::writeRaster(chl_pred_high_hist_crop, "./sdm_output/chl/subs/cropped/hist/chl_pred_high_hist_crop.tif", filetype = "GTiff", overwrite = TRUE)
