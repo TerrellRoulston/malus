@@ -2,161 +2,55 @@
 # MaxEnt Species Distribution Modeling (SDM) for Malus CWR (M. cornistica, M. fusca)
 # Terrell Roulston
 # Started Feb 29, 2024
+START <- date()
+source("scripts/malus_bg.R") 
+END <- date()
 
-library(tidyverse) # Grammar and data management
-library(terra) # Spatial Data package
-library(predicts) # SDM package
-library(geodata) # basemaps
-library(rJava) # MaxEnt models are dependant on JDK
-library(ENMeval) # Another modeling package, useful for data partitioning (Checkerboarding)
-library(raster) # RasterStack dependancy (a now deprecated function)
-library(ecospat) # Useful spatial ecology tools
-library(parallel) # speed up computation by running in parallel
-library(doParallel) # added functionality to parallel
+source("scripts/functions.R") ## for twsBoyce
 
-
+message("Loaded & prepped all data, starting at:\n     ", START,
+        "\n and ending at: \n     ", END) 
 # Load occurrence data and basemaps -------------------------------------------------------
 
-# Background points in SpatVectors
-cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
-fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
-ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
-ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
-chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
+## # Background points in SpatVectors
+## cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
+## fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
+## ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
+## ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
+## chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
 
-# Occurrence Points in SpatVectors
-occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
-occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
-occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
-occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
+## # Occurrence Points in SpatVectors
+## occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
+## occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
+## occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
+## occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
+## occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
 
-# Great Lakes shapefiles for making pretty maps and cropping
-great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+## # Great Lakes shapefiles for making pretty maps and cropping
+## great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
 
-NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
-
-# Download/load WorldClim data under future climate scenarios -------------
-# WARNING DO NOT PUSH WORLDCLIM DATA
-# Historical climate 1970-2000
-wclim <- geodata::worldclim_global(var = 'bio',
-                                   res = 2.5, 
-                                   version = '2.1', 
-                                  path = "./wclim_data/") %>% 
-  terra::crop(NA_ext)  %>% #crop raster to NA 
-  terra::mask(great_lakes, inverse = T) # cut out the great lakes
-
-# SSP (Shared social-economic pathway) 2.45 
-# middle of the road projection, high climate adaptation, low climate mitigation
-ssp245_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp245_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp245_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "245",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-# SPP 5.85 
-# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
-ssp585_2030 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2021-2040",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp585_2050 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2041-2060",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/") %>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
-
-ssp585_2070 <- cmip6_world(model = "CanESM5",
-                           ssp = "585",
-                           time = "2061-2080",
-                           var = "bioc",
-                           res = 2.5,
-                           path = "./wclim_data/")%>% 
-  crop(NA_ext) %>% #crop raster to NA 
-  mask(great_lakes, inverse = T) # cut out the great lakes
 
 # Load cropped climate Rasters --------------------------------------------
 # These Rasters are useful for sampling spatial checkerboards 
 # and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
 #wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
-wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
-wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
-wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
-wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
-wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
-
-
-climate_predictors <- names(wclim_cor) # extract climate predictor names, to rename layers in the rasters below
-# This is important to do for making predictions once the SDMs have been made on future climate data
-# Note that the names of the layers still correspond to the same environmental variables
-
-# Future SSPs
-# Do not need to create RasterStacks
-# SSP 245
-names(wclim) <- climate_predictors
-names(ssp245_2030) <- climate_predictors #rename raster layers for downsteam analysis
-names(ssp245_2050) <- climate_predictors 
-names(ssp245_2070) <- climate_predictors 
-
-# SSP 585
-names(ssp585_2030) <- climate_predictors #rename raster layers for downsteam analysis
-names(ssp585_2050) <- climate_predictors 
-names(ssp585_2070) <- climate_predictors 
-
-
-# Subset climate variables for SDM analysis -------------------------------
-wclim_subs <- wclim %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2030_subs <- ssp245_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2050_subs <- ssp245_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp245_2070_subs <- ssp245_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-
-ssp585_2030_subs <- ssp585_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp585_2050_subs <- ssp585_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-ssp585_2070_subs <- ssp585_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-
-wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_fus_subs <- wclim_fus %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-
+## wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
+## wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
+## wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
+## wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
+## wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
 
 # M. coronaria - MaxEnt Model ---------------------------------------------
 
 # Spatial partitioning preparation
 occ_cor_coords <- as.data.frame(geom(occThin_cor)[,3:4]) # extract longitude, lattitude from occurence points
-bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
+
+################################################
+## TWS: note that this object is never used!! ##
+################################################
+## bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 # Build Species Distribution Model using MaxEnt from the <ENMeval> package
 
@@ -168,26 +62,30 @@ set.seed(1337)
 
 # current version of maxent.jar =  v3.4.4
 
+date()
 cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
-                            envs = wclim_cor_subs, # NOTE CHANGE THE ENVS inputed, environment from background training area
-                            n.bg = 20000, # 20000 bg points
-                            tune.args =
-                              list(rm = seq(0.5, 4, 0.5), # Regularization 0.5-4
-                                   fc = c("L", "LQ", "H",
-                                          "LQH", "LQHP")),
-                            partition.settings =
-                              list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                            partitions = 'checkerboard2',
+                          envs = wclim_cor_subs, # NOTE CHANGE THE ENVS
+                                        # inputed, environment from background training area
+                          n.bg = 10000, # 10000 bg points should be plenty!
+                          tune.args =
+                            list(rm = seq(0.5, 4, 0.5), # Regularization 0.5-4
+                                 fc = c("L", "LQ", "H",
+                                        "LQH", "LQHP")),
+                          partition.settings =
+                            list(aggregation.factor = c(9, 9), gridSampleN = 10000), # 9,9 agg
+                            partitions = 'checkerboard',
                             parallel = TRUE,
                             numCores = cn - 1, # leave one core available for other apps
-                            parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
-                            algorithm = 'maxent.jar')
-
+                          algorithm = 'maxent.jar')
+date()
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
-saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # save
+##saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # save
 # Load Maxent model
-cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # load #subsetted model
+saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
+cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
+
+##cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # load #subsetted model
 
 
 # M. coronaria Model Selection --------------------------------------------
@@ -199,44 +97,54 @@ mod.best_cor_maxent <- eval.models(cor_maxent)[[best_cor_maxent$tune.args]] # ex
 
 eval.variable.importance(cor_maxent)[best_cor_maxent["tune.args"][1, 1]]
 
-cor_maxent@results[order(cor_maxent@results$delta.AICc), c("rm", "fc", "delta.AICc")]
+cor_maxent@results[order(cor_maxent@results$delta.AICc),
+                   c("rm", "fc", "delta.AICc")] 
 
-plot(mod.best_cor_maxent, type = 'response')
+plot(mod.best_cor_maxent)
 
-library(dismo)
-response(mod.best_cor_maxent)
-title(xlab = 'Bio 1')
+partialResponse(model = mod.best_cor_maxent, var = "wc2.1_2.5m_bio_10",
+                main = "Bio 10")
 
 # M. coronaria historical prediction --------------------------------------
 # Now use the <terra> package to plot the SDM prediction.
 # Wclim is the historical climatic conditions (1970-2000)
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
-cor_pred_hist <- terra::predict(wclim_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+
+## I thought limiting the prediction to eastern NA might speed it up. If it
+## does, it's not by a lot?
+
+corPredExt <- ext(c(-100, -50, 30, 60))
+corPredWclim <- crop(wclim_subs, corPredExt)
+
+cor_pred_hist <- terra::predict(corPredWclim, mod.best_cor_maxent,
+                                cores = cn - 1, na.rm = T)
+
+saveRDS(cor_pred_hist, file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
+cor_pred_hist <- readRDS(file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
 
 plot(cor_pred_hist)
-points(occThin_cor, cex = 0.05)
+points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 
 
 # M. coronaria Boyce Index ------------------------------------------------
 # Evaluate predictions using Boyce Index
 # the number of true presences should decline with suitability groups 100-91, 90-81, etc. 
-# First extract suitability values for the background and presence points, make sure to omit NA values
-corPred_bg_val <- terra::extract(cor_pred_hist, bg_cor_coords)$lyr1 %>% 
-  na.omit()
 
-corPred_val_na <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1 %>% 
-  na.omit()
+## Note there is a bug in ecospat.boyce,
+## see https://github.com/ecospat/ecospat/issues/99
+## Until it is fixed, use my own corrected version, in functions.R:
 
 # Evaluate predictions using Boyce Index
-png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_coronaria.png', width = 1600, height = 1200, res = 300)
-ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of bg points
-                           obs = corPred_val_na, # vector of 
-                           nclass = 0, 
-                           PEplot = TRUE,
-                           method = 'spearman')
+## png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_coronaria.png', width = 1600, height = 1200, res = 300)
 
-title(main = expression(italic("Malus coronaria")))
-dev.off()
+corBoyce <- twsBoyce(fit = cor_pred_hist, # suitability raster
+                     obs = occ_cor_coords, 
+                     PEplot = TRUE, method = 'spearman')
+
+title(main = bquote(italic("Malus coronaria") ~ ", Boyce Cor." ==
+                      .(corBoyce$cor))) 
+
+## dev.off()
 
 
 
@@ -256,21 +164,35 @@ fill_cols <- c("#FFF7BC", "#FEC44F", "#D95F0E")
 # Subsetted historical
 terra::plot(cor_pred_hist > corPred_threshold_1, col = c('#E8E8E8', '#FFF7BC'), legend = F, 
             xlim = c(-100, -50), ylim = c(30, 60), 
-            main = expression(atop(italic('Malus coronaria'), " Historical Suitability (1970-2000) (SUBSETTED MODEL)")), 
+            main = expression(atop(italic('Malus coronaria'),
+                                   " Historical Suitability (1970-2000) (SUBSETTED MODEL)")), 
             background = 'lightskyblue1', box = 'black')
-terra::plot(cor_pred_hist> corPred_threshold_10, add = T, col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
-terra::plot(cor_pred_hist > corPred_threshold_50, add = T, col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'), legend = F, xlim = c(-100, -50), ylim = c(30, 60))
+terra::plot(cor_pred_hist> corPred_threshold_10, add = T,
+            col = c(rgb(1, 1, 1, alpha=0), '#FEC44F'), legend = F,
+            xlim = c(-100, -50), ylim = c(30, 60))
+terra::plot(cor_pred_hist > corPred_threshold_50, add = T,
+            col = c(rgb(1, 1, 1, alpha=0), '#D95F0E'),
+            legend = F, xlim = c(-100, -50), ylim = c(30, 60)) 
 #points(occThin_cor, col = 'black', cex = 0.75, pch = 4)
 legend(x = -72, y = 40, xpd = NA, inset = c(5, 0), 
        title = 'Habitat Suitability', 
        legend = legend_labs,
        fill = fill_cols)
 
+
+######################################################################
+## Tyler got this far. Moving on to other parts, as the projections ##
+## should not present any new issues?                               ##
+######################################################################
+
 # M. coronaria climate predictions ----------------------------------------
 # SSP 245
-cor_pred_ssp245_30 <- terra::predict(ssp245_2030_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
-cor_pred_ssp245_50 <- terra::predict(ssp245_2050_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
-cor_pred_ssp245_70 <- terra::predict(ssp245_2070_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+cor_pred_ssp245_30 <- terra::predict(ssp245_2030_subs, mod.best_cor_maxent,
+                                     cores = cn - 1, na.rm = T)
+cor_pred_ssp245_50 <- terra::predict(ssp245_2050_subs, mod.best_cor_maxent,
+                                     cores = cn - 1, na.rm = T)
+cor_pred_ssp245_70 <- terra::predict(ssp245_2070_subs, mod.best_cor_maxent,
+                                     cores = cn - 1, na.rm = T)
 
 # SSP 585
 cor_pred_ssp585_30 <- terra::predict(ssp585_2030_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)

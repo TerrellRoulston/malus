@@ -3,35 +3,28 @@
 # Terrell Roulston
 # Started March 2nd 2025
 
-library(tidyverse)
-library(ecospat)
-library(terra)
-library(geodata)
-library(ade4)
-library(grid)
-
-
+source("scripts/malus_bg.R")
 # Load Occurrence data ----------------------------------------------------
-occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
-occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
-occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
-occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata')
+## occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
+## occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
+## occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
+## occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata')
 
 # Load Cropped WClim Data -------------------------------------------------
 # These WorldClim rasters are cropped to the background extend used for the SDMs
 # See script malus_bg for more details
-wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
-wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
-wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
-wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
+## wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
+## wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
+## wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
+## wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
 
 
-# Subset the variables included in modeling
-# See WorldClim 2.1 documents for more details on vars
-wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+## # Subset the variables included in modeling
+## # See WorldClim 2.1 documents for more details on vars
+## wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+## wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+## wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+## wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
 
 
 # Convert BG to Matrix for Analysis ---------------------------------------
@@ -50,10 +43,17 @@ bg_mat_chl <- values(wclim_chl_subs) %>% na.omit()
 # Extract Climate Vars from Points ----------------------------------------
 # Extract the wclim raster values from occurrence points then bind them with the SpatVector points
 # Remove NA values = True
-wclim_cor_occ <- cbind(occThin_cor, extract(wclim_cor, occThin_cor, na.rm = T))
-wclim_ion_occ <- cbind(occThin_ion, extract(wclim_ion, occThin_ion, na.rm = T))
-wclim_ang_occ <- cbind(occThin_ang, extract(wclim_ang, occThin_ang, na.rm = T))
-wclim_chl_occ <- cbind(occThin_chl, extract(wclim_chl, occThin_chl, na.rm = T))
+## NB: na.rm = T is not doing anything here!
+
+wclim_cor_occ <- cbind(crds(occThin_cor), extract(wclim_subs, occThin_cor, ID = FALSE))
+wclim_ion_occ <- cbind(crds(occThin_ion), extract(wclim_subs, occThin_ion, ID = FALSE))
+wclim_ang_occ <- cbind(crds(occThin_ang), extract(wclim_subs, occThin_ang, ID = FALSE))
+wclim_chl_occ <- cbind(crds(occThin_chl), extract(wclim_subs, occThin_chl, ID = FALSE))
+
+wclim_cor_occ <- wclim_cor_occ[complete.cases(wclim_cor_occ), ]
+wclim_ion_occ <- wclim_ion_occ[complete.cases(wclim_ion_occ), ]
+wclim_ang_occ <- wclim_ang_occ[complete.cases(wclim_ang_occ), ]
+wclim_chl_occ <- wclim_chl_occ[complete.cases(wclim_chl_occ), ]
 
 # PCA ---------------------------------------------------------------------
 # Now create a PCA using the FULL BG EXTENT matrix
@@ -87,10 +87,10 @@ print(loadings)
 # Occurrence point PCA scores
 # Not sure why but some are producing NA values
 # The occurrences should match the BG fine and NA values should have been omited above
-cor_occ_score <- suprow(pca_full, data.frame(wclim_cor_occ)[, colnames(bg_mat_full)])$li %>% na.omit() 
-ion_occ_score <- suprow(pca_full, data.frame(wclim_ion_occ)[, colnames(bg_mat_full)])$li %>% na.omit()
-ang_occ_score <- suprow(pca_full, data.frame(wclim_ang_occ)[, colnames(bg_mat_full)])$li %>% na.omit()
-chl_occ_score <- suprow(pca_full, data.frame(wclim_chl_occ)[, colnames(bg_mat_full)])$li %>% na.omit()
+cor_occ_score <- suprow(pca_full, data.frame(wclim_cor_occ)[, colnames(bg_mat_full)])$li
+ion_occ_score <- suprow(pca_full, data.frame(wclim_ion_occ)[, colnames(bg_mat_full)])$li
+ang_occ_score <- suprow(pca_full, data.frame(wclim_ang_occ)[, colnames(bg_mat_full)])$li
+chl_occ_score <- suprow(pca_full, data.frame(wclim_chl_occ)[, colnames(bg_mat_full)])$li
 
 # BG Point PCA scores
 cor_bg_score <- suprow(pca_full, bg_mat_cor)$li
@@ -135,6 +135,21 @@ grids <- list(
   chl = ecospat.grid.clim.dyn(glob = pca_score, glob1 = chl_bg_score, sp = chl_occ_score, R = 100)
 )
 
+## 
+dev.new(height = 10, width = 7)
+par(mfrow = c(3, 2))
+for(i in c(1, 4, 10, 11, 15, 16)){
+  VAR <- paste("wc2.1_2.5m_bio", i, sep = "_")
+  corbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
+                                   glob1 = bg_mat_cor[, VAR],  
+                                   data.frame(wclim_cor_occ)[, VAR],
+                                   R = 100) 
+  ionbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
+                                   glob1 = bg_mat_ion[, VAR], 
+                                   data.frame(wclim_ion_occ)[, VAR], R = 100)
+  tws.plot.niche.dyn(corbio1, ionbio1)
+  title(VAR)
+}
 
 # Modify Ecospat Function -------------------------------------------------
 # Work i PROGRESS. Still not producing what I want 

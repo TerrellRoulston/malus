@@ -3,13 +3,8 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
-library(tidyverse) #grammar, data management
-library(CoordinateCleaner) #helpful functions to clean data
-library(terra) #working with vector/raster data
-library(geodata) #download basemaps
-library(scales) #alpha adjust colours
-library(oce)
-
+source("scripts/load_maps.R")
+message("** Loading & Cleaning Occurrence Data ", date())
 
 # load occurrence csv files ------------------------------------------------
 gbif_cor <- read.csv(file = "./occ_data/cor/occ_coronaria.csv") # load coronaria data
@@ -25,7 +20,7 @@ occ_cor <- gbif_cor %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, botanical gardens, and other institutions 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>%
   filter(decimalLongitude >= -100) %>% # remove some records on west coast, two from bot gardens
   filter(!(decimalLatitude < 35 & decimalLongitude < -86)) %>% # remove records from Texas, Oklahoma, Louisiana
@@ -37,7 +32,8 @@ occ_cor <- gbif_cor %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
-saveRDS(occ_cor, file = "./occ_data/cor/occ_cor_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
+#write.table(occ_cor, file = "./occ_data/cor/occ_cor_gbif.csv")
+##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # Note it is helpful to plot the occurrences bellow, and then add more conditions to clean inaccurate points
 # Pay special attention to points at the edge of the range of occurrences, as these are most likely to be suspicious
@@ -76,7 +72,8 @@ husband$tmp <- NULL
 
 # Keep all GBIF records but add Brian's data
 
-husband_coords <- husband %>% select(Accession, lat, lon) %>% mutate(source = 'Husband') %>% 
+husband_coords <- husband %>% dplyr::select(Accession, lat, lon) %>%
+                              mutate(source = 'Husband') %>%  
                               mutate(species = 'Malus coronaria') %>% 
                               rename(decimalLatitude = lat, decimalLongitude = lon) #rename lat lon to match for inner join
                 
@@ -85,7 +82,9 @@ occ_cor <- occ_cor %>%  mutate(source = 'GBIF') # add source for tracking and ma
 occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
 # Save M. coronaria occurrence dataframe
-saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+#write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
+
+##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 
 # Clean Fusca -------------------------------------------------------------
@@ -96,7 +95,7 @@ occ_fus <- gbif_fus %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(!(decimalLongitude > -113)) %>%  # remove record from Idaho herbarium 
   filter(!(decimalLatitude > 64)) %>% # remove record from Interior Alaska
@@ -108,29 +107,38 @@ occ_fus <- gbif_fus %>%
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus_gbif.csv") # Note that this copy of 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus_gbif.Rdata") # Note that this copy of occurrence data is used for the sythesis paper in figure 3.
 
 # load cleaned fusca data from CG Amrstrong
 occ_armstrong <- read.csv(file = "./occ_data/fus/malus_fusca_armstrong.csv") %>% #Note that this is only Armstrong data (not a combination of GBIF data)
                   mutate(species = 'Malus fusca') %>% # add species
                   mutate(source = 'Armstrong') %>% # add source
-                  select(Latitude, Longitude, source, species) %>% 
+                  dplyr::select(Latitude, Longitude, source, species) %>% 
                   rename(decimalLatitude = Latitude, decimalLongitude = Longitude)
                   
 occ_fus <- occ_fus %>% mutate(source = 'GBIF')
 
 occ_fus <- occ_fus %>% full_join(occ_armstrong, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 #load data from Wickham and Obrits and Fitsp
 occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_titzpatrick.csv") %>% 
-  select(latitude, longitude, source, species) %>% 
+  dplyr::select(latitude, longitude, source, species) %>% 
   rename(decimalLatitude = latitude, decimalLongitude = longitude)
 
 occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+#####################################################################
+## TERRELL: this over-writes the previous occ_fus.Rdata. I think   ##
+## that is ok, but double check that this is the actual version of ##
+## the data you want to use downstream!                            ##
+#####################################################################
+
+#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 # Clean Ioensis -----------------------------------------------------------
 occ_ion <- gbif_ion %>% 
@@ -139,7 +147,7 @@ occ_ion <- gbif_ion %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(!(decimalLongitude < -99)) %>%  # remove records from west of Kansas/Texas occ
   filter(!(gbifID %in% c('1899381516', '5067955163'))) %>% #remove questionable GBIF records
@@ -150,7 +158,8 @@ occ_ion <- gbif_ion %>%
 
 occ_ion <- occ_ion %>% mutate(source = 'GBIF')
 
-saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
+write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
+##saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
 
 
 # Clean Angustifolia ------------------------------------------------------
@@ -160,7 +169,7 @@ occ_ang <- gbif_ang %>%
   filter(coordinateUncertaintyInMeters < 30000 | is.na(coordinateUncertaintyInMeters)) %>% 
   cc_cen(buffer = 2000) %>% # remove records within 2km of country centroids
   cc_inst(buffer = 2000) %>% # remove records within 2km of herbariums, bot cardens 
-  cc_sea() %>% 
+  cc_sea(ref = seaRef) %>% 
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(decimalLatitude <= 41.99575 | decimalLongitude <= -72.60754) %>% #filter occ northeast of Connecticut
   filter(!(gbifID %in% c('3865090173', '4919535276', '1302641832', '3091187987', '4855490969', '4854957347'))) %>%  #remove a record from greenland (???) and bad inat obs
@@ -169,6 +178,7 @@ occ_ang <- gbif_ang %>%
   )
 occ_ang <- occ_ang %>% mutate(source = 'GBIF')
 
-saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
+##write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
+##saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
 
-
+message("** Data Cleaned ", date())
