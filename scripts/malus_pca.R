@@ -3,28 +3,34 @@
 # Terrell Roulston
 # Started March 2nd 2025
 
-source("scripts/malus_bg.R")
+library(tidyverse)
+library(terra)
+library(geodata)
+library(ade4)
+library(ecospat)
+
+#source("scripts/malus_bg.R")
 # Load Occurrence data ----------------------------------------------------
-## occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
-## occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
-## occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
-## occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata')
+occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata')
+occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata')
+occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata')
+occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata')
 
 # Load Cropped WClim Data -------------------------------------------------
 # These WorldClim rasters are cropped to the background extend used for the SDMs
 # See script malus_bg for more details
-## wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
-## wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
-## wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
-## wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
+wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata')
+wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
+wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
+wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
 
 
 ## # Subset the variables included in modeling
 ## # See WorldClim 2.1 documents for more details on vars
-## wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-## wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-## wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
-## wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
 
 
 # Convert BG to Matrix for Analysis ---------------------------------------
@@ -35,7 +41,6 @@ source("scripts/malus_bg.R")
 # Note: Sect. Chloromeles is the full bg of the eastern species
 bg_mat_full <- values(wclim_chl_subs) %>% na.omit() # remove NA Values
 bg_mat_cor <- values(wclim_cor_subs) %>% na.omit()
-bg_mat_fus <- values(wclim_fus_subs) %>% na.omit()
 bg_mat_ion <- values(wclim_ion_subs) %>% na.omit()
 bg_mat_ang <- values(wclim_ang_subs) %>% na.omit()
 bg_mat_chl <- values(wclim_chl_subs) %>% na.omit()
@@ -45,10 +50,10 @@ bg_mat_chl <- values(wclim_chl_subs) %>% na.omit()
 # Remove NA values = True
 ## NB: na.rm = T is not doing anything here!
 
-wclim_cor_occ <- cbind(crds(occThin_cor), extract(wclim_subs, occThin_cor, ID = FALSE))
-wclim_ion_occ <- cbind(crds(occThin_ion), extract(wclim_subs, occThin_ion, ID = FALSE))
-wclim_ang_occ <- cbind(crds(occThin_ang), extract(wclim_subs, occThin_ang, ID = FALSE))
-wclim_chl_occ <- cbind(crds(occThin_chl), extract(wclim_subs, occThin_chl, ID = FALSE))
+wclim_cor_occ <- cbind(crds(occThin_cor), extract(wclim_cor_subs, occThin_cor, ID = FALSE))
+wclim_ion_occ <- cbind(crds(occThin_ion), extract(wclim_ion_subs, occThin_ion, ID = FALSE))
+wclim_ang_occ <- cbind(crds(occThin_ang), extract(wclim_ang_subs, occThin_ang, ID = FALSE))
+wclim_chl_occ <- cbind(crds(occThin_chl), extract(wclim_chl_subs, occThin_chl, ID = FALSE))
 
 wclim_cor_occ <- wclim_cor_occ[complete.cases(wclim_cor_occ), ]
 wclim_ion_occ <- wclim_ion_occ[complete.cases(wclim_ion_occ), ]
@@ -99,27 +104,6 @@ ang_bg_score <- suprow(pca_full, bg_mat_ang)$li
 chl_bg_score <- suprow(pca_full, bg_mat_chl)$li
 
 
-# Pseudo-code for plotting ------------------------------------------------
-# The plotting function for the ecospat plot is a bit limited and I am trying to replicate it from source
-# Below is an example of the data structure that I want the plot density to show.
-
-# Assume D1 and D2 are matrices of density values for species 1 and species 2, respectively.
-# And T1 and T2 are thresholds determined by quantiles of D1 and D2.
-
-# For each cell (i,j) in the grid:
-#   if (D1[i,j] > T1 and D2[i,j] > T2)
-#     then assign cell to category "stability" (shared niche)
-# else if (D1[i,j] <= T1 and D2[i,j] > T2)
-#   then assign cell to category "expansion" (species 2 occupies unique space)
-# else if (D1[i,j] > T1 and D2[i,j] <= T2)
-#   then assign cell to category "unfilling" (species 1 occupies
-# else
-#   assign cell as background or zero
-
-# Optionally, define an "abandoned" niche category for species 2.
-
-
-
 # Plotting Pairwise Matrix ------------------------------------------------
 # Use PCA ordination scores to map the environmental BG and ecological niche in a grid Z of dimension RxR pixels
 # Max 1-2 principal components input
@@ -135,21 +119,143 @@ grids <- list(
   chl = ecospat.grid.clim.dyn(glob = pca_score, glob1 = chl_bg_score, sp = chl_occ_score, R = 100)
 )
 
+
+## TYLERS FUNCTION
 ## 
-dev.new(height = 10, width = 7)
-par(mfrow = c(3, 2))
-for(i in c(1, 4, 10, 11, 15, 16)){
-  VAR <- paste("wc2.1_2.5m_bio", i, sep = "_")
-  corbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
-                                   glob1 = bg_mat_cor[, VAR],  
-                                   data.frame(wclim_cor_occ)[, VAR],
-                                   R = 100) 
-  ionbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
-                                   glob1 = bg_mat_ion[, VAR], 
-                                   data.frame(wclim_ion_occ)[, VAR], R = 100)
-  tws.plot.niche.dyn(corbio1, ionbio1)
-  title(VAR)
+# dev.new(height = 10, width = 7)
+# par(mfrow = c(3, 2))
+# for(i in c(1, 4, 10, 11, 15, 16)){
+#   VAR <- paste("wc2.1_2.5m_bio", i, sep = "_")
+#   corbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
+#                                    glob1 = bg_mat_cor[, VAR],  
+#                                    data.frame(wclim_cor_occ)[, VAR],
+#                                    R = 100) 
+#   ionbio1 <- ecospat.grid.clim.dyn(glob = bg_mat_full[, VAR],
+#                                    glob1 = bg_mat_ion[, VAR], 
+#                                    data.frame(wclim_ion_occ)[, VAR], R = 100)
+#   tws.plot.niche.dyn(corbio1, ionbio1)
+#   title(VAR)
+# }
+
+
+# Niche Overlap Metrics and Permutational Signif. -------------------------
+
+
+# Return A list with observed D/I, null D/I vectors, and p-values
+
+niche_similarity_shift_test <- function(z1, z2,
+                                        quant = 0.05,
+                                        reps = 999,
+                                        parallel = TRUE,
+                                        ncores = 2,
+                                        verbose = TRUE) {
+  require(terra)
+  require(foreach)
+  require(tibble)
+  require(dplyr)
+  if (parallel) {
+    require(doParallel)
+    cl <- makeCluster(ncores)
+    registerDoParallel(cl)
+    on.exit(stopCluster(cl))
+  }
+  
+  # Extract rasters
+  r1 <- z1$z.cor / z1$Z
+  r2 <- z2$z.cor / z2$Z
+  r1[!is.finite(r1)] <- 0
+  r2[!is.finite(r2)] <- 0
+  
+  # Binary occupancy
+  thresh1 <- quantile(values(r1), probs = quant, na.rm = TRUE)
+  thresh2 <- quantile(values(r2), probs = quant, na.rm = TRUE)
+  occ1 <- r1 > thresh1
+  occ2 <- r2 > thresh2
+  
+  # Matrix conversions
+  mat1 <- as.matrix(occ1)
+  mat2 <- as.matrix(occ2)
+  bg_mask <- as.matrix((z1$Z > 0) & (z2$Z > 0))
+  
+  get_DI <- function(m1, m2, mask) {
+    idx <- which(mask & (m1 | m2))
+    v1 <- m1[idx] / sum(m1[idx])
+    v2 <- m2[idx] / sum(m2[idx])
+    D <- 1 - sum(abs(v1 - v2)) / 2
+    I <- 1 - sum((sqrt(v1) - sqrt(v2))^2) / 2
+    c(D = D, I = I)
+  }
+  
+  obs_metrics <- get_DI(mat1, mat2, bg_mask)
+  
+  shift_fun <- function(seed = NULL) {
+    if (!is.null(seed)) set.seed(seed)
+    dx <- sample(-(ncol(mat1) - 1):(ncol(mat1) - 1), 1)
+    dy <- sample(-(nrow(mat1) - 1):(nrow(mat1) - 1), 1)
+    roll_matrix <- function(mat, dx, dy) {
+      out <- matrix(0, nrow = nrow(mat), ncol = ncol(mat))
+      x1 <- max(1, 1 + dx); x2 <- min(ncol(mat), ncol(mat) + dx)
+      y1 <- max(1, 1 + dy); y2 <- min(nrow(mat), nrow(mat) + dy)
+      i1 <- max(1, 1 - dx); i2 <- min(ncol(mat), ncol(mat) - dx)
+      j1 <- max(1, 1 - dy); j2 <- min(nrow(mat), nrow(mat) - dy)
+      out[j1:j2, i1:i2] <- mat[y1:y2, x1:x2]
+      return(out)
+    }
+    roll1 <- roll_matrix(mat1, dx, dy)
+    roll2 <- roll_matrix(mat2, -dx, -dy)
+    tryCatch(get_DI(roll1, roll2, bg_mask), error = function(e) c(D = NA, I = NA))
+  }
+  
+  null_vals <- foreach(i = 1:reps, .combine = rbind, .packages = "terra") %dopar% {
+    shift_fun()
+  }
+  
+  D_null <- null_vals[, "D"]
+  I_null <- null_vals[, "I"]
+  
+  p_D <- mean(D_null >= obs_metrics["D"], na.rm = TRUE)
+  p_I <- mean(I_null >= obs_metrics["I"], na.rm = TRUE)
+  
+  if (verbose) {
+    cat("Observed Schoener's D:", round(obs_metrics["D"], 3), "\n")
+    cat("Observed Warren's I:", round(obs_metrics["I"], 3), "\n")
+    cat("P(D >= observed):", round(p_D, 4), "\n")
+    cat("P(I >= observed):", round(p_I, 4), "\n")
+  }
+  
+  return(tibble(
+    metric = c("Schoener's D", "Warren's I"),
+    observed = c(obs_metrics["D"], obs_metrics["I"]),
+    p_value = c(p_D, p_I),
+    null_mean = c(mean(D_null, na.rm = TRUE), mean(I_null, na.rm = TRUE)),
+    null_sd   = c(sd(D_null, na.rm = TRUE), sd(I_null, na.rm = TRUE)),
+    null_min  = c(min(D_null, na.rm = TRUE), min(I_null, na.rm = TRUE)),
+    null_max  = c(max(D_null, na.rm = TRUE), max(I_null, na.rm = TRUE))
+  ))
 }
+
+
+niche_similarity_shift_test(grids[["cor"]], grids[["ion"]],
+                            quant = 0.1,
+                            reps = 1000,
+                            parallel = TRUE,
+                            ncores = 4,
+                            verbose = TRUE)
+
+
+
+species_pairs <- list(
+  c("cor", "ion"),
+  c("cor", "ang"),
+  c("ion", "ang")
+)
+
+results <- purrr::map_dfr(species_pairs, ~ run_similarity_test(
+  grids[[.x[1]]], grids[[.x[2]]],
+  name_i = .x[1], name_j = .x[2],
+  reps = 1000, cores = 4
+))
+
 
 # Modify Ecospat Function -------------------------------------------------
 # Work i PROGRESS. Still not producing what I want 
@@ -165,10 +271,10 @@ for(i in c(1, 4, 10, 11, 15, 16)){
 
 ecospat.plot.niche.pair <- function(z1, z2,
                                     use.zcor = TRUE,         # Logical, T use the z.cor value, F use z.uncor value
-                                    quant = 0.05,            # Set what percentile to threshold occupancy (z and Z)
+                                    quant = 0.1,             # Set what percentile to threshold occupancy (z and Z)
                                     drawOccLayer = TRUE,     # Draw categorical occurrence layer
                                     show.legendOcc = TRUE,   # Toggle legend for occurrence layer
-                                    legend.pos = "topright", # Legend position
+                                    legend.pos = "topleft",  # Legend position
                                     legend.xpd = NA,         # Allow legend outside plot region (NA = anywhere on device)
                                     legend.inset = 0.02,     # Legend inset (can be negative to push outside)
                                     legend.cex = 1,          # Legend text scaling
@@ -178,15 +284,22 @@ ecospat.plot.niche.pair <- function(z1, z2,
                                     legend.box.col = "black",# Legend box border color
                                     drawKD = TRUE,           # Add occupancy Kernel density 
                                     transparency = 50,       # Set base transparency
-                                    col.shared = "forestgreen",   # Colour shared niche
+                                    col.shared = "forestgreen", # Colour shared niche
                                     col.unique_i = "blue",   # Colour unique i niche
                                     col.unique_j = "orange", # Colour unique j niche
                                     col.bg_i = "blue",       # Colour background boundary i
                                     col.bg_j = "orange",     # Colour background boundary j
                                     name.axis1 = "PC 1",     # X axis title
                                     name.axis2 = "PC 2",     # Y axis title
-                                    title = "")              # Main title
-{
+                                    title = "",              # Main title
+                                    cex.main = 1.2,          # Main title font size
+                                    cex.lab = 1,             # Axis label font size
+                                    cex.axis = 1,            # Axis tick font size
+                                    compute.metrics = TRUE,  # Toggle metric calculation and display
+                                    cex.metrics = 1.2,       # Text size for printed metrics
+                                    metrics.pos = "topright", # Where to print metrics
+                                    metrics.inset = 0.02     # Fine control of inset
+) {
   # Get shared grid dimensions
   common_x <- z1$x
   common_y <- z1$y
@@ -197,7 +310,8 @@ ecospat.plot.niche.pair <- function(z1, z2,
   plot(1, type = "n",
        xlim = range(common_x), ylim = range(common_y),
        xlab = name.axis1, ylab = name.axis2,
-       main = title)
+       main = title, 
+       cex.main = cex.main, cex.lab = cex.lab, cex.axis = cex.axis)
   
   # Choose z layer
   zname <- if (use.zcor) "z.cor" else "z.uncor"
@@ -289,228 +403,94 @@ ecospat.plot.niche.pair <- function(z1, z2,
            cex = legend.cex)
   }
   
-  invisible(NULL)
+  # Compute and optionally display niche overlap metrics
+  if (compute.metrics) {
+    # Flatten binary occupancy layers and restrict to overlapping cells
+    v1 <- as.vector(occ1)
+    v2 <- as.vector(occ2)
+    valid_idx <- which(!is.na(v1) & !is.na(v2) & (v1 | v2))
+    v1 <- v1[valid_idx]
+    v2 <- v2[valid_idx]
+    
+    # Normalize binary occupancy to sum to 1
+    v1 <- v1 / sum(v1)
+    v2 <- v2 / sum(v2)
+    
+    # Overlap metrics
+    D_val <- 1 - sum(abs(v1 - v2)) / 2
+    I_val <- 1 - sum((sqrt(v1) - sqrt(v2))^2) / 2
+    
+    # Display metrics on the plot
+    metrics_text <- paste0("D = ", round(D_val, 2),
+                           "\nI = ", round(I_val, 2))
+    legend(metrics.pos, legend = metrics_text,
+           bty = "n", cex = cex.metrics, inset = metrics.inset,
+           text.col = "black")
+    
+    return(invisible(list(D = D_val, I = I_val)))
+  } else {
+    return(invisible(NULL))
+  }
 }
 
 
-# EXAMPLE PLOT
+
+# PCA Overlap Plot w/ Custom Func. ----------------------------------------
 # Assuming 'grids' is a list of grid objects generated via ecospat.grid.clim.dyn.
-# Here we test the function with species "cor" and "chl".
+# NOTE: Change variables, save file name and legend colours each time before plotting
+
+# There is a bug when plotting the Chloromeles where it takes the aestic of layer i instead of j
+
+#Legend colour
+# Coronaria = magenta
+# Ioensis = #E88E00
+# Angustifolia = #007CBE
+# Shared niche = #009E73
+
+# Open a new high-resolution graphics device
+jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/cor_ion_pair.jpeg',
+     width = 3333, height = 3333, res = 300)
+
+par(mar = c(7, 8, 4, 2), mgp = c(5, 2, 0))
+
 ecospat.plot.niche.pair(
-  z1 = grids[["chl"]], 
-  z2 = grids[["cor"]],
+  z1 = grids[["cor"]], 
+  z2 = grids[["ion"]],
   use.zcor = TRUE,        # Toggle between using z.cor (TRUE) and z.uncor (FALSE)
-  quant = 0.05,           # Quantile threshold for determining occupied cells
+  quant = 0.1,           # Quantile threshold for determining occupied cells
   drawKD = F,          # Draw kernel density shading
   transparency = 50,      # Transparency setting for the density color ramp
-  col.shared = "purple",  # Color for shared niche region
-  col.unique_i = "blue",  # Color for niche unique to species i (z1)
-  col.unique_j = "orange",# Color for niche unique to species j (z2)
-  col.bg_i = "blue",      # Color for background outline from z1's Z component
-  col.bg_j = "orange",    # Color for background outline from z2's Z component
+  col.shared = "#009E73",  # Color for shared niche region
+  col.unique_i = "magenta",  # Color for niche unique to species i (z1)
+  col.unique_j = "#E88E00",# Color for niche unique to species j (z2)
+  col.bg_i = "magenta",      # Color for background outline from z1's Z component
+  col.bg_j = "#E88E00",    # Color for background outline from z2's Z component
   name.axis1 = "PC 1",    # X-axis label
   name.axis2 = "PC 2",    # Y-axis label
-  title = "Niche Plot: cor vs chl",  # Plot title
-  show.legendOcc = F
+  title = "Ang. vs. Chl.",  # Plot title
+  show.legendOcc = F,
+  cex.axis = 2,
+  cex.lab = 2,
+  cex.main = 2,
+  cex.metrics = 2,
+  metrics.inset = 0.05
 )
 
-# Plot Niche Overlap, Schoener's D and Warren et al. I metrics ------------
-
-olaps <- function(sp.i, sp.j, sample_size = 10000, bandwidth = "nrd0", 
-                  xlab = "Envir. Grad.", ylab = "Occupancy",
-                  show.legend = FALSE,
-                  col_i = "blue",  # Default color for species i
-                  col_j = "orange"   # Default color for species j
-) {
-  # Scale occupancy values so they sum to 1
-  sp.i <- sp.i / sum(sp.i)
-  sp.j <- sp.j / sum(sp.j)
-  
-  # Define the environmental gradient (assumes sp.i and sp.j have equal length)
-  env <- seq_along(sp.i)
-  
-  # Calculate overlap metrics:
-  D_val <- 1 - sum(abs(sp.i - sp.j)) / 2
-  I_val <- 1 - sum((sqrt(sp.i) - sqrt(sp.j))^2) / 2
-  cor_val <- cor(sp.i, sp.j, method = "spearman")
-  
-  # Compute kernel density for sp.i
-  sp.i_samples <- sample(env, size = sample_size, replace = TRUE, prob = sp.i)
-  d.i <- density(sp.i_samples, bw = bandwidth, from = min(env), to = max(env))
-  scale_factor.i <- max(sp.i) / max(d.i$y)
-  d.i$y <- d.i$y * scale_factor.i
-  
-  # Compute kernel density for sp.j
-  sp.j_samples <- sample(env, size = sample_size, replace = TRUE, prob = sp.j)
-  d.j <- density(sp.j_samples, bw = bandwidth, from = min(env), to = max(env))
-  scale_factor.j <- max(sp.j) / max(d.j$y)
-  d.j$y <- d.j$y * scale_factor.j
-  
-  # Set up the plot with proper limits and the provided axis labels
-  y_max <- max(max(sp.i), max(sp.j))
-  plot(env, sp.i, type = "n",
-       xlab = xlab, ylab = ylab,
-       ylim = c(0, y_max * 1.1), main = "")
-  
-  # Draw the smoothed kernel density lines using the adjustable colours:
-  lines(d.i, col = col_i, lwd = 3)
-  lines(d.j, col = col_j, lwd = 3)
-  
-  # Optionally add a legend with the adjustable colours
-  if (show.legend) {
-    legend("topleft", legend = c("sp.i", "sp.j"), col = c(col_i, col_j), lwd = 3)
-  }
-  
-  # Annotate the plot with overlap metrics
-  usr <- par("usr")  # returns c(x_min, x_max, y_min, y_max)
-  x_pos <- usr[2] - 0.35 * diff(usr[1:2])
-  y_pos <- usr[4] - 0.05 * diff(usr[3:4])
-  text(x = x_pos, y = y_pos,
-       labels = paste("D =", round(D_val, 2),
-                      "\nI =", round(I_val, 2),
-                      "\nCor =", round(cor_val, 2)),
-       adj = c(0, 1), cex = 1.2)
-  
-  invisible(list(D = D_val, I = I_val, cor = cor_val, d.i = d.i, d.j = d.j))
-}
+dev.off() # Return "Null" to save
 
 
-# Test olaps function
-sp.i_vals <- as.vector(grids[['ion']]$z.cor)
-sp.j_vals <- as.vector(grids[['ang']]$z.cor)
-res <- olaps(sp.i_vals, sp.j_vals)
+# Save Legend for Plot
+legend_labs <- c('M. coronaria', 'M. ioensis', 'M. angustifolia', 'Sect. Chloromeles', 'Shared Niche')
+fill_cols <- c("#6A3D9A", "#E88E00", "#007CBE", "#333f07", "#009E73")
 
-# Start Plotting Matrix ---------------------------------------------------
-# Species codes = SpatRaster obj names
-# Species labs = Full name for plot labels
-# Define your species codes and labels
-species_codes <- names(grids)
-species_labs <- c('Malus coronaria', 'Malus ioensis', 'Malus angustifolia', 'Sect. Chloromeles')
-
-# Close any existing graphics device
-while (!is.null(dev.list())) dev.off()
-
-# Open a new high-resolution graphics device
-jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/pca_grid_pairs.jpeg',
-     width = 3333, height = 3333, res = 300)
-
-# Set up a 5×5 panel with global settings
-par(mfrow = c(5, 5), mar = c(3, 3, 2, 1), oma = c(0, 0, 0, 0),
-    cex.axis = 1.4, cex.lab = 1.6, cex.main = 1.5)
-
-# Loop over species pairs
-for (i in seq_along(species_codes)) {
-  for (j in seq_along(species_codes)) {
-    
-    # Diagonal: species names
-    if (i == j) {
-      plot.new()
-      text(0.5, 0.5, species_labs[i], cex = 1.4, font = 2)
-      
-      # Lower triangle: PCA niche plots (ecospat.plot.niche.dyn)
-    } else if (i > j) {
-      ecospat.plot.niche.dyn(
-        z1 = grids[[species_codes[j]]],
-        z2 = grids[[species_codes[i]]],
-        name.axis1 = 'PC 1',
-        name.axis2 = 'PC 2',
-        col.stab = "#9467bd", 
-        col.unf = "#1f77b4", 
-        col.abn = "#1f77b4", 
-        col.exp = "#ff7f0e", 
-        colZ1 = "#1f77b4", 
-        colZ2 = "#ff7f0e",
-        title = '',
-        th.env = 0.05,
-        sp.env = 0.05,
-        interest = 0  # transparency = 0 for the kernel
-      )
-      
-      # Upper triangle: occupancy kernel plots using the global par settings
-    } else {
-      # Retrieve bias-corrected occupancy (z.cor)
-      sp.i_vals <- as.vector(grids[[species_codes[i]]]$z.cor)
-      sp.j_vals <- as.vector(grids[[species_codes[j]]]$z.cor)
-      
-      olaps(sp.i_vals, sp.j_vals,
-            sample_size = 5000,
-            bandwidth = "nrd0",
-            xlab = "Envir. Grad.",  # shorter label to fit
-            ylab = "Occupancy",
-            show.legend = FALSE)
-    }
-  }
-}
-
+jpeg(filename = "C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/pca_legend.jpeg", width = 9999, height = 6666, res = 300)
+# Plot a legend that can be saved on its own
+plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
+#legend('center', xpd = NA, title = c(as.expression(bquote(bold('Habitat Suitability')))), legend = legend_labs, fill = fill_cols, cex = 3)
+legend('center', xpd = NA, box.lwd = 2, legend = legend_labs, fill = fill_cols, cex = 9, horiz = F, bty = "o", title = 'Taxons Niche')
 dev.off()
 
-
-# Plot with new function --------------------------------------------------
-species_codes <- names(grids)
-species_labs <- c('Malus coronaria', 'Malus ioensis', 'Malus angustifolia', 'Sect. Chloromeles')
-
-# Close any existing graphics device
-while (!is.null(dev.list())) dev.off()
-
-# Open a new high-resolution graphics device
-jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/pca_grid_pairs_new.jpeg',
-     width = 3333, height = 3333, res = 300)
-
-# Set up a 5×5 panel with global settings
-par(mfrow = c(4, 4), mar = c(4.5, 4.5, 2.5, 1.5), oma = c(0, 0, 0, 0), mgp = c(2.5, 0.8, 0),
-    xpd = NA, cex.axis = 1.4, cex.lab = 1.6, cex.main = 1.5)
-
-# Loop over species pairs
-for (i in seq_along(species_codes)) {
-  for (j in seq_along(species_codes)) {
-    
-    # Diagonal: species names
-    if (i == j) {
-      plot.new()
-      text(0.5, 0.5, species_labs[i], cex = 1.4, font = 2)
-      
-      # Lower triangle: PCA niche plots (ecospat.plot.niche.dyn)
-    } else if (i > j) {
-      ecospat.plot.niche.pair(
-        z1 = grids[[i]], 
-        z2 = grids[[j]],
-        use.zcor = TRUE,        # Toggle between using z.cor (TRUE) and z.uncor (FALSE)
-        quant = 0.05,           # Quantile threshold for determining occupied cells
-        drawKD = F,          # Draw kernel density shading
-        transparency = 50,      # Transparency setting for the density color ramp
-        col.shared = "forestgreen",  # Color for shared niche region
-        col.unique_i = "blue",  # Color for niche unique to species i (z1)
-        col.unique_j = "orange",# Color for niche unique to species j (z2)
-        col.bg_i = "blue",      # Color for background outline from z1's Z component
-        col.bg_j = "orange",    # Color for background outline from z2's Z component
-        name.axis1 = "PC 1 (67.8%)",    # X-axis label
-        name.axis2 = "PC 2 (21.9%)",    # Y-axis label
-        title = "",  # Plot title
-        show.legendOcc = FALSE
-      )
-      
-      # Upper triangle: occupancy kernel plots using the global par settings
-    } else {
-      # Retrieve bias-corrected occupancy (z.cor)
-      sp.i_vals <- as.vector(grids[[species_codes[i]]]$z.cor)
-      sp.j_vals <- as.vector(grids[[species_codes[j]]]$z.cor)
-      
-      olaps(sp.i_vals, sp.j_vals,
-            sample_size = 5000,
-            bandwidth = "nrd0",
-            xlab = "Envir. Grad.",  # shorter label to fit
-            ylab = "Occupancy",
-            show.legend = FALSE,
-            col_i = 'blue',
-            col_j = 'orange')
-    }
-  }
-}
-
-dev.off()
-
-
-# PCA Biplot (variable loading) by Species --------------------------------
+# Biplot with each species ------------------------------------------------
 occ_scores_list <- list(
   "Malus coronaria"      = cor_occ_score,
   "Malus ioensis"        = ion_occ_score,
@@ -531,39 +511,126 @@ xlab_text <- paste0("PC 1 (", signif(pca_summary$Proportion[1], 3), "%)")
 ylab_text <- paste0("PC 2 (", signif(pca_summary$Proportion[2], 3), "%)")
 
 # Set up the plotting area (adjust mfrow as needed)
-par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+#par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
 
 # Scale factor for loadings (optional tweak to improve visibility)
 scale_factor <- 1.75
 
-# Loop over each species in occ_scores_list
-for (sp in names(occ_scores_list)) {
-  occ_data <- occ_scores_list[[sp]]
-  
-  # Plot occurrence points using Axis1 and Axis2
-  plot(occ_data$Axis1, occ_data$Axis2,
+jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/bi_plot.jpeg',
+     width = 6666, height = 6666, res = 300)
+
+par(mar = c(7, 8, 4, 2), mgp = c(5, 2, 0))
+# Plot occurrence points using Axis1 and Axis2
+# Plot M. coronaria
+plot(cor_occ_score$Axis1, cor_occ_score$Axis2,
        xlim = c(x_min, x_max), ylim = c(y_min, y_max),
        xlab = xlab_text, ylab = ylab_text,
-       main = paste("PCA Biplot for", sp),
-       pch = 16, col = adjustcolor("darkgray", alpha.f = 0.6))
+       main = "Sect. Chloromeles PCA Biplot",
+       pch = 19, col = adjustcolor("magenta", alpha.f = 0.6),
+       cex.axis = 3, cex.lab = 3, cex.main = 4.5, cex = 2.5)
+
+
+# Plot M. ioensis
+points(ion_occ_score$Axis1, ion_occ_score$Axis2,
+     pch = 19, col = adjustcolor("#E88E00", alpha.f = 0.6), cex = 2.5)
+
+# Plot M. angustifolia
+points(ang_occ_score$Axis1, ang_occ_score$Axis2,
+     pch = 19, col = adjustcolor("#007CBE", alpha.f = 0.6), cex = 2.5)
+
+# Draw reference lines at 0
+abline(h = 0, v = 0, col = "gray60", lty = 2, lwd = 2)
   
-  # Draw reference lines at 0
-  abline(h = 0, v = 0, col = "gray60", lty = 2)
-  
-  # Overlay PCA loadings (from your global PCA stored in pca_full$c1)
-  # Multiply by scale_factor to enhance visibility if needed
-  arrows(0, 0,
+# Overlay PCA loadings (from your global PCA stored in pca_full$c1)
+# Multiply by scale_factor to enhance visibility if needed
+arrows(0, 0,
          pca_full$c1[,1] * scale_factor,
          pca_full$c1[,2] * scale_factor,
-         length = 0.1, col = "red", lwd = 2)
+         length = 0.1, col = "red", lwd = 3)
   
-  # Create simplified labels from the original rownames
-  simplified_labels <- sub("wc2.1_2.5m_bio_", "Bio ", rownames(pca_full$c1))
+# Create simplified labels from the original rownames
+simplified_labels <- sub("wc2.1_2.5m_bio_", "Bio ", rownames(pca_full$c1))
   
-  # Add text labels for each variable loading
-  text(pca_full$c1[,1] * scale_factor,
+# Add text labels for each variable loading
+text(pca_full$c1[,1] * scale_factor,
        pca_full$c1[,2] * scale_factor,
        labels = simplified_labels,
-       col = "blue", pos = 3, cex = 1.2)
-}
+       col = "black", pos = 3, cex = 3, font = 2)
+
+# Add legend
+# legend("topright",
+#   legend = c(expression(italic("M. coronaria")), 
+#              expression(italic("M. ioensis")),
+#              expression(italic("M. angustifolia")),
+#              "Sect. Chloromeles"),
+#   fill = adjustcolor(c("#6A3D9A", "#E88E00", "#007CBE", "#009E73"), alpha.f = 0.6),
+#   box.col = "black",  
+#   bg = "white",
+#   text.col = 'black',
+#   bty = "n",
+#   cex = 1.4
+# )
+
+dev.off() # Save
+
+
+####
+# PCA Biplot faceted by species
+####
+
+# occ_scores_list <- list(
+#   "Malus coronaria"      = cor_occ_score,
+#   "Malus ioensis"        = ion_occ_score,
+#   "Malus angustifolia"   = ang_occ_score,
+#   "Sect. Chloromeles"    = chl_occ_score
+# )
+# 
+# 
+# # Compute global axis limits using "Axis1" and "Axis2" across all species
+# all_scores <- do.call(rbind, occ_scores_list)
+# x_min <- min(all_scores$Axis1, na.rm = TRUE)
+# x_max <- max(all_scores$Axis1, na.rm = TRUE)
+# y_min <- min(all_scores$Axis2, na.rm = TRUE)
+# y_max <- max(all_scores$Axis2, na.rm = TRUE)
+# 
+# # Axis labels
+# xlab_text <- paste0("PC 1 (", signif(pca_summary$Proportion[1], 3), "%)")
+# ylab_text <- paste0("PC 2 (", signif(pca_summary$Proportion[2], 3), "%)")
+# 
+# # Set up the plotting area (adjust mfrow as needed)
+# par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
+# 
+# # Scale factor for loadings (optional tweak to improve visibility)
+# scale_factor <- 1.75
+# 
+# # Loop over each species in occ_scores_list
+# for (sp in names(occ_scores_list)) {
+#   occ_data <- occ_scores_list[[sp]]
+#   
+#   # Plot occurrence points using Axis1 and Axis2
+#   plot(occ_data$Axis1, occ_data$Axis2,
+#        xlim = c(x_min, x_max), ylim = c(y_min, y_max),
+#        xlab = xlab_text, ylab = ylab_text,
+#        main = paste("PCA Biplot for", sp),
+#        pch = 16, col = adjustcolor("darkgray", alpha.f = 0.6))
+#   
+#   # Draw reference lines at 0
+#   abline(h = 0, v = 0, col = "gray60", lty = 2)
+#   
+#   # Overlay PCA loadings (from your global PCA stored in pca_full$c1)
+#   # Multiply by scale_factor to enhance visibility if needed
+#   arrows(0, 0,
+#          pca_full$c1[,1] * scale_factor,
+#          pca_full$c1[,2] * scale_factor,
+#          length = 0.1, col = "red", lwd = 2)
+#   
+#   # Create simplified labels from the original rownames
+#   simplified_labels <- sub("wc2.1_2.5m_bio_", "Bio ", rownames(pca_full$c1))
+#   
+#   # Add text labels for each variable loading
+#   text(pca_full$c1[,1] * scale_factor,
+#        pca_full$c1[,2] * scale_factor,
+#        labels = simplified_labels,
+#        col = "blue", pos = 3, cex = 1.2)
+# }
 
