@@ -139,18 +139,12 @@ grids <- list(
 
 
 # Niche Overlap Metrics and Permutational Signif. -------------------------
+# Niche Equivalency Test (PCA-based)
+# Permutational test of importance
+# Species occurrences are randomized in repeteted runs
 
-# Restarting because I didnt permutate correctly
 
-# Broennimann-style Niche Equivalency Test (PCA-based)
-# Updated Broennimann-style Niche Equivalency Test
-# Updated Broennimann-style Niche Equivalency Test
-# Lightweight test version for 2 species with background scores
-# Lightweight test version for 2 species with background scores
-# Includes robust error handling for observed overlap metrics
-
-# Lightweight test version for 2 species with background scores
-niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
+niche_equivalency_test <- function(sp1_scores, sp2_scores,
                                                sp1_bg_scores, sp2_bg_scores,
                                                bg_scores, R = 100, reps = 999,
                                                quant = 0.1,
@@ -158,6 +152,7 @@ niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
                                                verbose = TRUE) {
   require(ecospat)
   require(foreach)
+  start_time <- Sys.time()  # Start timer
   
   if (parallel) {
     require(doParallel)
@@ -172,7 +167,7 @@ niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
   
   # Try calculating observed overlap safely
   obs_vals <- tryCatch(
-    ecospat.niche.overlap(grid1, grid2, cor = TRUE),
+    ecospat.niche.overlap(grid1, grid2, cor = FALSE),
     error = function(e) return(NULL)
   )
   
@@ -199,7 +194,8 @@ niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
     
     if (is.null(g1) || is.null(g2)) return(c(D = NA, I = NA))
     
-    vals <- tryCatch(ecospat.niche.overlap(g1, g2, cor = TRUE), error = function(e) return(c(D = NA, I = NA)))
+    # Use uncorrected occupancy
+    vals <- tryCatch(ecospat.niche.overlap(g1, g2, cor = FALSE), error = function(e) return(c(D = NA, I = NA)))
     D <- vals$D
     I <- vals$I
     c(D = D, I = I)
@@ -217,11 +213,15 @@ niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
   p_D <- mean(D_null <= obs_D, na.rm = TRUE)
   p_I <- mean(I_null <= obs_I, na.rm = TRUE)
   
+  end_time <- Sys.time()  # End timer
+  duration <- difftime(end_time, start_time, units = "secs")
+  
   if (verbose) {
     cat("Observed Schoener's D:", round(obs_D, 3), "\n")
     cat("Observed Warren's I:", round(obs_I, 3), "\n")
     cat("P(D <= observed):", round(p_D, 4), "\n")
     cat("P(I <= observed):", round(p_I, 4), "\n")
+    cat("Elapsed time:", round(duration, 2), "seconds\n")
   }
   
   return(tibble::tibble(
@@ -230,97 +230,76 @@ niche_equivalency_test_broennimann <- function(sp1_scores, sp2_scores,
     D_null_mean = mean(D_null, na.rm = TRUE),
     I_null_mean = mean(I_null, na.rm = TRUE),
     p_D = p_D,
-    p_I = p_I
+    p_I = p_I,
+    run_time_sec = as.numeric(duration)
   ))
 }
 
-# Test wrapper for two species
 
-test_equivalency_two_species <- function(sp1_occ, sp2_occ,
-                                         sp1_bg, sp2_bg,
-                                         bg, reps = 100, R = 100) {
-  niche_equivalency_test_broennimann(
-    sp1_scores = sp1_occ,
-    sp2_scores = sp2_occ,
-    sp1_bg_scores = sp1_bg,
-    sp2_bg_scores = sp2_bg,
-    bg_scores = bg,
-    reps = reps,
-    R = R,
-    parallel = TRUE,
-    ncores = 15,
-    verbose = TRUE
-  )
-}
+# Test Species Pairs
+# Run on HPC instead
 
-# Run the test using coronaria and ioensis
-test_equivalency_two_species(
-  sp1_occ = cor_occ_score,
-  sp2_occ = ion_occ_score,
-  sp1_bg  = cor_bg_score,
-  sp2_bg  = ion_bg_score,
-  bg      = pca_score
-)
-    
+# cor_ion_test <- niche_equivalency_test_broennimann(
+#                     sp1_scores = cor_occ_score,
+#                     sp2_scores = ion_occ_score,
+#                     sp1_bg_scores = cor_bg_score,
+#                     sp2_bg_scores = ion_bg_score,
+#                     bg_scores = pca_score,
+#                     reps = 999,
+#                     R = 100,
+#                     parallel = TRUE,
+#                     ncores = 15,
+#                     verbose = TRUE
+#                   )
+# 
+# cor_ang_test <- niche_equivalency_test_broennimann(
+#                     sp1_scores = cor_occ_score,
+#                     sp2_scores = ion_occ_score,
+#                     sp1_bg_scores = cor_bg_score,
+#                     sp2_bg_scores = ion_bg_score,
+#                     bg_scores = pca_score,
+#                     reps = 999,
+#                     R = 100,
+#                     parallel = TRUE,
+#                     ncores = 15,
+#                     verbose = TRUE
+#                   )
+# 
+# ion_ang_test <- niche_equivalency_test_broennimann(
+#                   sp1_scores = cor_occ_score,
+#                   sp2_scores = ion_occ_score,
+#                   sp1_bg_scores = cor_bg_score,
+#                   sp2_bg_scores = ion_bg_score,
+#                   bg_scores = pca_score,
+#                   reps = 999,
+#                   R = 100,
+#                   parallel = TRUE,
+#                   ncores = 15,
+#                   verbose = TRUE
+#                 )
 
 
+# Load results from HPC
+files <- list.files("./", pattern = "niche_equiv_.*\\.rds", full.names = TRUE)
 
+results <- map_dfr(files, readRDS, .id = "pair")
+results$pair <- gsub("niche_equiv_|\\.rds", "", basename(results$pair))
 
-niche_equivalency_test_broennimann(
-  sp1_scores = cor_occ_score,
-  sp2_scores = ion_occ_score,
-  sp1_bg_scores = cor_bg_score,
-  sp2_bg_scores = ion_bg_score,
-  bg_scores = pca_score,
-  reps = 100,
-  R = 100,
-  parallel = TRUE,
-  ncores = 15,
-  verbose = TRUE
-)
+print(results)
 
-# RUN FOR ALL SPECIES
-# Run Broennimann-style niche equivalency test for multiple species pairs
-library(dplyr)
-library(purrr)
-
-# Define species occurrence PCA scores
-occ_scores <- list(
-  cor = cor_occ_score,
-  ion = ion_occ_score,
-  ang = ang_occ_score
-)
-
-# Define background PCA scores for each species
-bg_scores <- list(
-  cor = cor_bg_score,
-  ion = ion_bg_score,
-  ang = ang_bg_score
-)
-
-# Common PCA background grid (from full PCA)
-pca_background <- pca_score
-
-# List of species pairs to test
-species_pairs <- list(
-  c("cor", "ion"),
-  c("cor", "ang"),
-  c("ion", "ang")
-)
 
 # Modify Ecospat Function -------------------------------------------------
-# Work i PROGRESS. Still not producing what I want 
-# Under the hood the dyn. fuction plots the kernel density of the occurrence points of species j
-# To prevent this I am going to define a new function, and only select certain arguments from
-# the ecospat.plot.niche.dyn function
+# This is a modification of Ecospat's ecospat.plot.niche.dyn() function
+# Their function is focused on invasion ecology and uses terms and colouring that is not relevant to comparing two species niches
+# My function similfies and makes the plotting more relevant to my research questions
+# Comparing niches of two species with questionanle taxonomy and shared backgrounds
 
-# col.stab = "#9467bd",   # shared niche region (stability)
-# col.unf = "#1f77b4",    # niche exclusive to species 1 (unfilling)
-# col.exp = "#ff7f0e",
 
 ecospat.plot.niche.pair <- function(z1, z2,
-                                    use.zcor = TRUE,
+                                    use.zcor = FALSE,
                                     quant = 0.1,
+                                    quant_occ = 0.1,
+                                    quant_bg = 0.1,
                                     drawOccLayer = TRUE,
                                     show.legendOcc = TRUE,
                                     legend.pos = "topleft",
@@ -331,50 +310,54 @@ ecospat.plot.niche.pair <- function(z1, z2,
                                     legend.bg = "white",
                                     legend.box.lwd = 1,
                                     legend.box.col = "black",
-                                    drawKD = TRUE,
+                                    drawKD = FALSE,
                                     drawBGextent = TRUE,
-                                    transparency = 50,
-                                    col.shared = "forestgreen",
-                                    col.unique_i = "blue",
-                                    col.unique_j = "orange",
-                                    col.bg_i = "blue",
-                                    col.bg_j = "orange",
+                                    drawOccOutline = TRUE,
+                                    col.unique_i = "magenta",
+                                    col.unique_j = "#E88E00",
+                                    col.shared = "#009E73",
+                                    col.bg_i = "magenta",
+                                    col.bg_j = "#E88E00",
                                     name.axis1 = "PC 1",
                                     name.axis2 = "PC 2",
                                     title = "",
                                     cex.main = 1.2,
                                     cex.lab = 1,
-                                    cex.axis = 1) {
+                                    cex.axis = 1,
+                                    max.alpha = 0.5) {
   
-  # Auto-disable binary occupancy if drawKD is on
   if (drawKD) drawOccLayer <- FALSE
   
-  # Extract extent and axes
+  # Shared axis and extent
   common_x <- z1$x
   common_y <- z1$y
   ext_obj <- terra::ext(min(common_x), max(common_x),
                         min(common_y), max(common_y))
   
-  # Plot setup
   plot(1, type = "n",
        xlim = range(common_x), ylim = range(common_y),
        xlab = name.axis1, ylab = name.axis2,
        main = title, cex.main = cex.main, cex.lab = cex.lab, cex.axis = cex.axis)
   
-  # Choose density layer
+  # Choose z layer
   zname <- if (use.zcor) "z.cor" else "z.uncor"
-  
-  # Extract values
   z1_vals <- terra::values(z1[[zname]])
-  Z1_vals <- terra::values(z1$Z)
   z2_vals <- terra::values(z2[[zname]])
+  Z1_vals <- terra::values(z1$Z)
   Z2_vals <- terra::values(z2$Z)
   
-  # Normalize
-  norm1 <- ifelse(Z1_vals != 0, z1_vals / Z1_vals, 0)
-  norm2 <- ifelse(Z2_vals != 0, z2_vals / Z2_vals, 0)
+  # Threshold low background values before computing preference
+  Z1_thresh_mask <- Z1_vals > quantile(Z1_vals, probs = quant_bg, na.rm = TRUE)
+  Z2_thresh_mask <- Z2_vals > quantile(Z2_vals, probs = quant_bg, na.rm = TRUE)
   
-  # Convert to matrices
+  # Apply mask and compute preference
+  if (use.zcor) {
+    norm1 <- ifelse(Z1_thresh_mask, z1_vals / Z1_vals, NA)
+    norm2 <- ifelse(Z2_thresh_mask, z2_vals / Z2_vals, NA)
+  } else {
+    norm1 <- z1_vals
+    norm2 <- z2_vals
+  }
   norm1_mat <- matrix(norm1, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
   norm2_mat <- matrix(norm2, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
   
@@ -384,13 +367,12 @@ ecospat.plot.niche.pair <- function(z1, z2,
   occ1 <- norm1_mat > threshold1
   occ2 <- norm2_mat > threshold2
   
-  # Occupancy category matrix
   occ_cat <- matrix(NA, nrow = length(common_y), ncol = length(common_x))
   occ_cat[occ1 & !occ2] <- 1
   occ_cat[occ2 & !occ1] <- 2
   occ_cat[occ1 & occ2]  <- 3
   
-  # Optional binary occupancy fill (disabled by default)
+  # Draw occupancy raster BEFORE other overlays
   if (drawOccLayer) {
     r_occ_cat <- terra::rast(occ_cat, extent = ext_obj)
     terra::plot(r_occ_cat, add = TRUE,
@@ -398,79 +380,63 @@ ecospat.plot.niche.pair <- function(z1, z2,
                 legend = FALSE)
   }
   
-  # Kernel density plots
+  # Kernel shading
   if (drawKD) {
     z1_mat <- matrix(z1_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
     z2_mat <- matrix(z2_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
     
-    plot_density_layer <- function(density_mat, mask_mat = NULL, col_base, alpha_global) {
-      scaled_vals <- (density_mat - min(density_mat, na.rm = TRUE)) / (max(density_mat, na.rm = TRUE))
+    plot_density_layer <- function(density_mat, col_base) {
+      q_low <- quantile(density_mat, probs = 0.01, na.rm = TRUE)
+      q_high <- quantile(density_mat, probs = 0.99, na.rm = TRUE)
+      scaled_vals <- pmin((density_mat - q_low) / (q_high - q_low), 1)
+      scaled_vals[scaled_vals < 0] <- 0
       scaled_vals[is.na(scaled_vals)] <- 0
-      if (!is.null(mask_mat)) scaled_vals[!mask_mat] <- 0
-      
-      alpha_vec <- as.vector(scaled_vals * (alpha_global / 100))
-      base_col <- rep(col_base, length(alpha_vec))
-      rgba_vec <- mapply(adjustcolor, base_col, alpha.f = alpha_vec, SIMPLIFY = TRUE)
-      color_mat <- matrix(rgba_vec, nrow = nrow(scaled_vals), ncol = ncol(scaled_vals))
-      
+      rgb_base <- grDevices::col2rgb(col_base) / 255
+      rgba_vec <- rgb(rgb_base[1], rgb_base[2], rgb_base[3], alpha = scaled_vals * max.alpha)
+      color_mat <- matrix(rgba_vec, nrow = nrow(density_mat), ncol = ncol(density_mat))
       rasterImage(as.raster(color_mat),
                   xleft = min(common_x), xright = max(common_x),
                   ybottom = min(common_y), ytop = max(common_y))
     }
     
-    # OPTIONAL: Plot background environmental extent (Z)
-    if (drawBGextent) {
-      Z1_mat <- matrix(Z1_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
-      Z2_mat <- matrix(Z2_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
-      
-      plot_Z_layer <- function(Z_mat, col_base = "grey70", alpha_global = 15) {
-        scaled_Z <- (Z_mat - min(Z_mat, na.rm = TRUE)) / (max(Z_mat, na.rm = TRUE))
-        scaled_Z[is.na(scaled_Z)] <- 0
-        
-        alpha_vec <- as.vector(scaled_Z * (alpha_global / 100))
-        base_col <- rep(col_base, length(alpha_vec))
-        rgba_vec <- mapply(adjustcolor, base_col, alpha.f = alpha_vec, SIMPLIFY = TRUE)
-        color_mat <- matrix(rgba_vec, nrow = nrow(scaled_Z), ncol = ncol(scaled_Z))
-        
-        rasterImage(as.raster(color_mat),
-                    xleft = min(common_x), xright = max(common_x),
-                    ybottom = min(common_y), ytop = max(common_y))
-      }
-      
-      plot_Z_layer(Z1_mat, col_base = col.bg_i, alpha_global = 15)
-      plot_Z_layer(Z2_mat, col_base = col.bg_j, alpha_global = 15)
-    }
-    
-    # Base layer (low opacity, unmasked)
-    plot_density_layer(z1_mat, mask_mat = NULL, col_base = col.unique_i, alpha_global = 30)
-    plot_density_layer(z2_mat, mask_mat = NULL, col_base = col.unique_j, alpha_global = 30)
-    
-    # Masked high-opacity layers
-    mask_i <- occ_cat == 1
-    mask_j <- occ_cat == 2
-    mask_shared <- occ_cat == 3
-    
-    plot_density_layer(z1_mat, mask_i, col.unique_i, transparency)
-    plot_density_layer(z2_mat, mask_j, col.unique_j, transparency)
-    plot_density_layer(z1_mat, mask_shared, col.unique_i, transparency)
-    plot_density_layer(z2_mat, mask_shared, col.unique_j, transparency)
+    plot_density_layer(z1_mat, col.unique_i)
+    plot_density_layer(z2_mat, col.unique_j)
   }
   
-  # Background outlines
-  Z1_mat <- matrix(Z1_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
-  Z2_mat <- matrix(Z2_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
-  Z1_thresh <- quantile(Z1_vals, probs = quant, na.rm = TRUE)
-  Z2_thresh <- quantile(Z2_vals, probs = quant, na.rm = TRUE)
-  Z1_mask <- ifelse(Z1_mat > Z1_thresh, 1, NA)
-  Z2_mask <- ifelse(Z2_mat > Z2_thresh, 1, NA)
+  # Background extent outlines (Z)
+  if (drawBGextent) {
+    Z1_mat <- matrix(Z1_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
+    Z2_mat <- matrix(Z2_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
+    Z1_thresh <- quantile(Z1_vals, probs = quant_bg, na.rm = TRUE)
+    Z2_thresh <- quantile(Z2_vals, probs = quant_bg, na.rm = TRUE)
+    Z1_mask <- ifelse(Z1_mat > Z1_thresh, 1, NA)
+    Z2_mask <- ifelse(Z2_mat > Z2_thresh, 1, NA)
+    
+    rZ1_outline <- terra::as.polygons(terra::rast(Z1_mask, extent = ext_obj), dissolve = TRUE)
+    rZ2_outline <- terra::as.polygons(terra::rast(Z2_mask, extent = ext_obj), dissolve = TRUE)
+    
+    terra::plot(rZ1_outline, add = TRUE, border = col.bg_i, lty = 3, lwd = 5)
+    terra::plot(rZ2_outline, add = TRUE, border = col.bg_j, lty = 3, lwd = 5)
+  }
   
-  rZ1_outline <- terra::as.polygons(terra::rast(Z1_mask, extent = ext_obj), dissolve = TRUE)
-  rZ2_outline <- terra::as.polygons(terra::rast(Z2_mask, extent = ext_obj), dissolve = TRUE)
+  # Occurrence extent outlines (z)
+  if (drawOccOutline) {
+    z1_mat <- matrix(z1_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
+    z2_mat <- matrix(z2_vals, nrow = length(common_y), ncol = length(common_x), byrow = TRUE)
+
+    occ_thresh1 <- quantile(z1_vals, probs = quant_occ, na.rm = TRUE)
+    occ_thresh2 <- quantile(z2_vals, probs = quant_occ, na.rm = TRUE)
+    
+    occ_extent1 <- ifelse(z1_mat > occ_thresh1, 1, NA)
+    occ_extent2 <- ifelse(z2_mat > occ_thresh2, 1, NA)
+    
+    rZ1_occ_outline <- terra::as.polygons(terra::rast(occ_extent1, extent = ext_obj), dissolve = TRUE)
+    rZ2_occ_outline <- terra::as.polygons(terra::rast(occ_extent2, extent = ext_obj), dissolve = TRUE)
+    
+    terra::plot(rZ1_occ_outline, add = TRUE, border = col.bg_i, lty = 1, lwd = 1)
+    terra::plot(rZ2_occ_outline, add = TRUE, border = col.bg_j, lty = 1, lwd = 1)
+  }
   
-  terra::plot(rZ1_outline, add = TRUE, border = col.bg_i, lty = 2, lwd = 1.5)
-  terra::plot(rZ2_outline, add = TRUE, border = col.bg_j, lty = 2, lwd = 1.5)
-  
-  # Legend (only if binary occupancy shown)
   if (show.legendOcc && drawOccLayer) {
     legend(legend.pos,
            legend = c("Unique (i)", "Unique (j)", "Shared"),
@@ -491,7 +457,6 @@ ecospat.plot.niche.pair <- function(z1, z2,
 
 
 
-
 # PCA Overlap Plot w/ Custom Func. ----------------------------------------
 # Assuming 'grids' is a list of grid objects generated via ecospat.grid.clim.dyn.
 # NOTE: Change variables, save file name and legend colours each time before plotting
@@ -499,44 +464,48 @@ ecospat.plot.niche.pair <- function(z1, z2,
 # There is a bug when plotting the Chloromeles where it takes the aestic of layer i instead of j
 
 #Legend colour
-# Coronaria = magenta
+# Coronaria = #F763C2
 # Ioensis = #E88E00
 # Angustifolia = #007CBE
 # Shared niche = #009E73
 
-
 # Open a new high-resolution graphics device
-jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/cor_ion_pair.jpeg',
+jpeg(file = 'C:/Users/terre/Documents/Acadia/Malus Project/pca_plots/ion_ang_pair.jpeg',
      width = 3333, height = 3333, res = 300)
 
 par(mar = c(7, 8, 4, 2), mgp = c(5, 2, 0))
 
 ecospat.plot.niche.pair(
-  z1 = grids[["cor"]], 
-  z2 = grids[["ion"]],
-  use.zcor = TRUE,        # Toggle between using z.cor (TRUE) and z.uncor (FALSE)
-  quant = 0.1,           # Quantile threshold for determining occupied cells
-  drawKD = T,          # Draw kernel density shading
-  transparency = 50,      # Transparency setting for the density color ramp
-  col.shared = "#009E73",  # Color for shared niche region
-  col.unique_i = "magenta",  # Color for niche unique to species i (z1)
-  col.unique_j = "#E88E00",# Color for niche unique to species j (z2)
-  col.bg_i = "magenta",      # Color for background outline from z1's Z component
-  col.bg_j = "#E88E00",    # Color for background outline from z2's Z component
+  z1 = grids[["ion"]], 
+  z2 = grids[["ang"]],
+  use.zcor = F,        # Toggle between using z.cor (TRUE) and z.uncor (FALSE). Z.cor = z/Z = niche preference, z.uncor = z = realized niche
+  quant = 0.1,         # occupancy threshold
+  quant_occ = 0.5,     # niche (z.cor) outline threshold
+  quant_bg = 0.01,     # background (Z) extent threshold
+  drawKD = F,          # Draw kernel density shading
+  drawOccOutline = F,
+  drawBGextent = T,
+  col.unique_i = "#E88E00",  # Color for niche unique to species i (z1)
+  col.unique_j = "#007CBE",# Color for niche unique to species j (z2)
+  col.bg_i = "#E88E00",      # Color for background outline from z1's Z component
+  col.bg_j = "#007CBE",    # Color for background outline from z2's Z component
   name.axis1 = "PC 1",    # X-axis label
   name.axis2 = "PC 2",    # Y-axis label
   title = NULL,  # Plot title
-  show.legendOcc = F
+  show.legendOcc = F,
+  max.alpha = 0.6,
+  cex.lab = 3.5,
+  cex.axis = 3.5,
 )
 
 
-####
+  ####
 # Compute overlap metrics for displaying
 ### 
-metrics <- ecospat.niche.overlap(grids[["cor"]], grids[["ion"]], cor = TRUE)
-legend("topright", legend = paste0("D = ", round(metrics["D"], 3),
-                                   "\nI = ", round(metrics["I"], 3)),
-       bty = "n", cex = 1.2)
+metrics <- ecospat.niche.overlap(grids[["ion"]], grids[["ang"]], cor = F)
+legend("topright", legend = paste0("D = ", round(metrics$D, 2), "***",
+                                   "\nI = ", round(metrics$I, 2), "***"),
+       bty = "n", cex = 3.5, inset = -0.01)
 
 
 ### SAVE
@@ -553,7 +522,7 @@ par(mar = c(0,0,0,0))
 # Plot a legend that can be saved on its own
 plot(NULL ,xaxt='n',yaxt='n',bty='n',ylab='',xlab='', xlim=0:1, ylim=0:1)
 #legend('center', xpd = NA, title = c(as.expression(bquote(bold('Habitat Suitability')))), legend = legend_labs, fill = fill_cols, cex = 3)
-legend('center', xpd = NA, box.lwd = 2, legend = legend_labs, fill = fill_cols, cex = 5, horiz = F, bty = "o", title = "Sect. Chloromeles")
+legend('center', xpd = NA, box.lwd = 2, legend = legend_labs, fill = fill_cols, cex = 5, horiz = F, bty = "o", title = expression(underline("Realized Niche")))
 dev.off()
 
 # Biplot with each species ------------------------------------------------
