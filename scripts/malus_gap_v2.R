@@ -1,4 +1,4 @@
-# Malus Gap Analysis — Future Projections Masked by Historical Suitability
+# Malus Gap Analysis — Restricted by Ecoregions Containing Occurrences
 
 library(terra)
 library(tidyverse)
@@ -7,15 +7,14 @@ library(geodata)
 # Species list
 species_list <- c("cor", "fus", "ion", "ang", "chl")
 species_names <- c("Malus coronaria", "Malus fusca", "Malus ioensis", "Malus angustifolia", "Sect. Chloromeles")
-
-# Local selector
 index <- 1
 sp_code <- species_list[index]
 sp_name <- species_names[index]
+
 Start <- Sys.time()
 
 # Threads and paths
-terraOptions(threads = 15)
+terra::terraOptions(threads = 15)
 base_path   <- file.path("./sdm_output", sp_code)
 pred_path   <- file.path(base_path, "subs")
 thresh_path <- file.path(pred_path, "threshold")
@@ -65,41 +64,37 @@ template <- preds[[1]]
 pa_mask <- pa_raster == 1
 pa_mask_resampled <- terra::resample(pa_mask, template, method = "near")
 
-# Historical binary mask (used for masking future projections)
-r_hist_masked <- preds[["hist"]] > thresholds[["low"]]
-
 # ---- Metric Functions ----
-calculate_srsin <- function(pred, occ, threshold) {
+calculate_srsin <- function(pred, pa, occ, threshold) {
   r_masked <- pred > threshold
   names(r_masked) <- "binary"
   r_pa <- terra::mask(pred, pa_mask_resampled) > threshold
   names(r_pa) <- "binary"
   
-  occ_pred <- terra::extract(r_masked, occ) %>% as.data.frame() %>% filter(binary == 1)
-  occ_pa   <- terra::extract(r_pa, occ)     %>% as.data.frame() %>% filter(binary == 1)
+  occ_pred <- terra::extract(r_masked, occ) %>% as.data.frame() %>% dplyr::filter(binary == 1)
+  occ_pa   <- terra::extract(r_pa, occ)     %>% as.data.frame() %>% dplyr::filter(binary == 1)
   
   if (nrow(occ_pred) == 0) return(0)
   return(nrow(occ_pa) / nrow(occ_pred) * 100)
 }
 
-calculate_grsin <- function(pred, threshold) {
-  r_masked <- pred > threshold
-  r_masked <- terra::mask(r_masked, r_hist_masked)
-  area_all <- terra::expanse(r_masked, byValue = TRUE, unit = "km") %>% as.data.frame() %>% filter(value == 1) %>% pull(area)
+calculate_grsin <- function(pred, threshold, hist_masked) {
+  r_masked <- (pred > threshold) & (hist_masked == 1)
+  area_all <- terra::expanse(r_masked, byValue = TRUE, unit = "km") %>% 
+    as.data.frame() %>% dplyr::filter(value == 1) %>% dplyr::pull(area)
   
   r_pa <- terra::mask(pred, pa_mask_resampled) > threshold
-  r_pa <- terra::mask(r_pa, r_hist_masked)
-  area_pa <- terra::expanse(r_pa, byValue = TRUE, unit = "km") %>% as.data.frame() %>% filter(value == 1) %>% pull(area)
+  r_pa_masked <- r_pa & (hist_masked == 1)
+  area_pa <- terra::expanse(r_pa_masked, byValue = TRUE, unit = "km") %>% 
+    as.data.frame() %>% dplyr::filter(value == 1) %>% dplyr::pull(area)
   
   if (length(area_all) == 0 || sum(area_all) == 0) return(0)
   return(sum(area_pa, na.rm = TRUE) / sum(area_all, na.rm = TRUE) * 100)
 }
 
-calculate_ersin <- function(pred, threshold, eco_vec) {
-  r_masked <- pred > threshold
-  r_masked <- terra::mask(r_masked, r_hist_masked)
-  r_pa     <- terra::mask(pred, pa_mask_resampled) > threshold
-  r_pa     <- terra::mask(r_pa, r_hist_masked)
+calculate_ersin <- function(pred, threshold, eco_vec, hist_masked) {
+  r_masked <- (pred > threshold) & (hist_masked == 1)
+  r_pa     <- (terra::mask(pred, pa_mask_resampled) > threshold) & (hist_masked == 1)
   
   eco_raster <- terra::rasterize(eco_vec, pred, field = "NA_L2CODE")
   eco_raster <- as.factor(eco_raster)
@@ -107,8 +102,8 @@ calculate_ersin <- function(pred, threshold, eco_vec) {
   eco_suit <- terra::mask(eco_raster, r_masked)
   eco_pa   <- terra::mask(eco_raster, r_pa)
   
-  suit_ecos <- unique(terra::values(eco_suit)) %>% na.omit()
-  pa_ecos   <- unique(terra::values(eco_pa))   %>% na.omit()
+  suit_ecos <- unique(na.omit(terra::values(eco_suit)))
+  pa_ecos   <- unique(na.omit(terra::values(eco_pa)))
   
   if (length(suit_ecos) == 0) return(0)
   return(length(intersect(suit_ecos, pa_ecos)) / length(suit_ecos) * 100)
@@ -116,6 +111,7 @@ calculate_ersin <- function(pred, threshold, eco_vec) {
 
 # ---- Run Gap Analysis ----
 out <- list()
+hist_masked <- preds[["hist"]] > thresholds[["high"]]
 
 for (pname in names(preds)) {
   for (thresh_name in names(thresholds)) {
@@ -124,9 +120,9 @@ for (pname in names(preds)) {
     
     cat("[INFO] Processing:", sp_code, pname, thresh_name, "\n")
     
-    SRSin <- calculate_srsin(pr, occ, th)
-    GRSin <- calculate_grsin(pr, th)
-    ERSin <- calculate_ersin(pr, th, eco_vec)
+    SRSin <- calculate_srsin(pr, pa_raster, occ, th)
+    GRSin <- calculate_grsin(pr, th, hist_masked)
+    ERSin <- calculate_ersin(pr, th, eco_vec, hist_masked)
     FCSin <- mean(c(SRSin, GRSin, ERSin))
     
     out[[paste(pname, thresh_name, sep = "_")]] <- tibble(
