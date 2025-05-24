@@ -1,4 +1,4 @@
-# Malus Gap Analysis — Restricted by Ecoregions Containing Occurrences
+# Malus Gap Analysis — Restricted by Ecoregions Containing Occurrences Masked by Historical Suitability
 
 library(terra)
 library(tidyverse)
