@@ -17,13 +17,19 @@ library(ggpubr) # arrange ggplot figures
 # IN SITU ANALYSIS --------------------------------------------------------
 
 # Protected areas ---------------------------------------------------------
+# CANADA
 # Protected Area and OECM data from https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html
+# USA
+# Protected Area data https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-download
 # Download .kmz file and vector using terra
 
-pro_area <- terra::vect("C:/Users/terre/Documents/Acadia/Malus Project/maps/canada_pa/ProtectedConservedArea_2023/ProtectedConservedArea_2023/ProtectedConservedArea_2023.gdb")
-pro_area <- pro_area[pro_area$BIOME == 'T'] # filter only the terrestrial protected areas and OECMs
-pro_area <- pro_area[pro_area$PA_OECM_DF == '1'] # filter only protected areas (remove OECMs)
-pro_area <- project(pro_area, 'WGS84') # project the PAs to be the same CRS as the SDM layers
+ca_pro_area <- terra::vect("C:/Users/terre/Documents/Acadia/Malus Project/maps/canada_pa/ProtectedConservedArea_2023/ProtectedConservedArea_2023/ProtectedConservedArea_2023.gdb")
+ca_pro_area <- pro_area[pro_area$BIOME == 'T'] # filter only the terrestrial protected areas and OECMs
+ca_pro_area <- pro_area[pro_area$PA_OECM_DF == '1'] # filter only protected areas (remove OECMs)
+ca_pro_area <- project(pro_area, 'WGS84') # project the PAs to be the same CRS as the SDM layers
+
+us_pro_area <- terra::vect("C:/Users/terre/Documents/Acadia/Malus Project/maps/us_pa/PADUS4_1VectorAnalysis_PADUS_Only/PADUS4_1VectorAnalysis_PADUS_Only.gdb")
+us_pro_area <- project(us_pro_area, 'WGS84')
 
 # Take a peak
 dev.new()
@@ -67,8 +73,8 @@ fusPred_threshold_10 <- readRDS(file = './sdm_output/thresholds/fusPred_threshol
 fusPred_threshold_50 <- readRDS(file = './sdm_output/thresholds/fusPred_threshold_50.Rdata')
 
 # Load occurrence points
-occThin_cor <- readRDS(file = './occ_data/occThin_cor.Rdata') # M. coronaria
-occThin_fus <- readRDS(file = './occ_data/occThin_fus.Rdata') # M. fusca
+occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
 
 
 # Crop suitable habitat data to Canada ONLY -------------------------------
