@@ -70,7 +70,7 @@ great_lakes.lcc <- project(great_lakes, projLam)
 # Plot thinned occurrence points ------------------------------------------
 
 #Start plotting
-jpeg(filename = "C:/Users/terre/Documents/Acadia/Malus Project/sdm_plot/occ_plot/malus_occurrence_data_sources.jpeg", width = 10000, height = 6666, res = 300)
+jpeg(filename = "C:/Users/terre/Documents/Acadia/Malus Project/sdm_plot/occ_plot/malus_occurrence_data_sources_NEW.jpeg", width = 10000, height = 6666, res = 300)
 
 # Plot M. fusca and M. coronaria, M. ionesis and M. angustifolia 
 na.xlim <- c(-3.5*10^6, 3.1*10^6) #plot lims dependent on CSR
@@ -91,7 +91,7 @@ terra::plot(gl_map_0.lcc, col = '#E8E8E8', add = T, border = 'transparent')
 terra::plot(car_map_0.lcc, col = 'white', add = T, border = 'transparent')
 terra::plot(great_lakes.lcc, box = F, add = T, col = 'lightblue', border = 'grey')
 terra::plot(can_us_mex_border.lcc, box = F,  add = T, col = 'grey')
-terra::points(occThin_cor_gbif.lcc, pch = 16, col = alpha("magenta", 1), cex = 1.3) # COR GBIF
+terra::points(occThin_cor_gbif.lcc, pch = 16, col = alpha("#CC79A7", 1), cex = 1.3) # COR GBIF
 terra::points(occThin_fus_gbif.lcc, pch = 16, col = alpha("#228B22", 1), cex = 1.3) # FUS GBIF
 terra::points(occThin_cor_hus.lcc, pch = 16, col = alpha("#C90076", 1), cex = 1.3) # COR HUSBAND
 terra::points(occThin_fus_arm.lcc, pch = 16, col = alpha("#333f07", 1), cex = 1.3) # FUS ARMSTRONG
@@ -101,30 +101,30 @@ terra::points(occThin_ion.lcc, pch = 16, col = alpha("#E88E00", 1), cex = 1.3) #
 terra::points(occThin_ang.lcc, pch = 16, col = alpha("#007CBE", 1), cex = 1.3) # ANG GBIF
 terra::add_box(col = 'grey')
 legend( # legend for data
-  x = 1.7e6,
-  y = 2.3e6,
+  x = 1e6,
+  y = 2.5e6,
   title = c(expression(underline('Thinned Occurrence Data'))),
   legend = c(expression(italic("Malus fusca")*"—GBIF"),
-             expression(italic("Malus fusca")* "—Other Data"),
+             expression(italic("Malus fusca")* "—Suppl. Data"),
              expression(italic("Malus coronaria")*"—GBIF"), 
-             expression(italic("Malus coronaria")* "—Other Data"),
+             expression(italic("Malus coronaria")* "—Suppl. Data"),
              expression(italic("Malus ioensis")*"—GBIF"),
              expression(italic("Malus angustifolium")*"—GBIF")),
-  fill = c("#228B22", "#333f07", "magenta", "#C90076", "#E88E00", "#007CBE"),
+  fill = c("#228B22", "#333f07", "#CC79A7", "#C90076", "#E88E00", "#007CBE"),
   col = "black",
   box.col = "black",  # No border around legend
   bg = "white",
   text.col = 'black',
-  cex = 2,
+  cex = 3.25,
   xjust = 0,              
   yjust = 1,
   title.adj = 0.25
 )
-terra::text(533792.2, 1206373.8, labels = "Hudson\nBay", cex = 1.2, col = "steelblue")  
-terra::text(2525623.3, -617100.0, labels = "Atlantic\nOcean", cex = 1.5, col = "steelblue")  
-terra::text(-2838692.4, 684470.5, labels = "Pacific\nOcean", cex = 1.5, col = "steelblue")  
-terra::text(-585874.4, 1236224, labels = 'Canada', cex = 2, col = "black")
-terra::text(-585874.4, -1032531, labels = 'U.S.A.', cex = 2, col = "black")
+terra::text(533792.2, 1206373.8, labels = "Hudson\nBay", cex = 2.5, col = "steelblue")  
+terra::text(2525623.3, -617100.0, labels = "Atlantic\nOcean", cex = 2.75, col = "steelblue")  
+terra::text(-2838692.4, 684470.5, labels = "Pacific\nOcean", cex = 2.75, col = "steelblue")  
+terra::text(-585874.4, 1236224, labels = 'Canada', cex = 3.5, col = "black")
+terra::text(-585874.4, -1032531, labels = 'U.S.A.', cex = 3.5, col = "black")
 
 dev.off()
 
