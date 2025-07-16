@@ -140,8 +140,9 @@ species_exprs <- c(
   "Malus coronaria"     = "italic(Malus~coronaria)",
   "Malus ioensis"       = "italic(Malus~ioensis)",
   "Malus angustifolia"  = "italic(Malus~angustifolia)",
-  "Sect. Chloromeles"   = "\"Sect. Chloromeles\""       # plain text
+  "Sect. Chloromeles"   = "\"Sect.\"~italic(Chloromeles)"
 )
+
 
 # Prepare data
 importance_ranked <- importance_ranked %>%
@@ -183,7 +184,7 @@ p_sp <- ggplot(plot_data_by_sp, aes(x = Importance, y = Variable_reordered, colo
   theme_minimal(base_size = 14, base_family = "Arial") +
   labs(
     x = "Variable's Permutational Importance (%)",
-    y = "Bioclimatic Variable",
+    y = "Ranked Bioclimatic Variables\nby Species",
     color = NULL
   ) +
   theme(
