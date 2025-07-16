@@ -93,7 +93,7 @@ terra::plot(great_lakes.lcc, box = F, add = T, col = 'lightblue', border = 'grey
 terra::plot(can_us_mex_border.lcc, box = F,  add = T, col = 'grey')
 terra::points(occThin_cor_gbif.lcc, pch = 16, col = alpha("#CC79A7", 1), cex = 1.3) # COR GBIF
 terra::points(occThin_fus_gbif.lcc, pch = 16, col = alpha("#228B22", 1), cex = 1.3) # FUS GBIF
-terra::points(occThin_cor_hus.lcc, pch = 16, col = alpha("#C90076", 1), cex = 1.3) # COR HUSBAND
+terra::points(occThin_cor_hus.lcc, pch = 16, col = alpha("magenta", 1), cex = 1.3) # COR HUSBAND
 terra::points(occThin_fus_arm.lcc, pch = 16, col = alpha("#333f07", 1), cex = 1.3) # FUS ARMSTRONG
 terra::points(occThin_fus_wick.lcc, pch = 16, col = alpha("#333f07", 1), cex = 1.3) # FUS WICKHAM
 terra::points(occThin_fus_obr_fit.lcc, pch = 16, col = alpha("#333f07", 1), cex = 1.3) # FUS OBRITS ET AL. AND FITZPATRICK ET AL.
@@ -110,7 +110,7 @@ legend( # legend for data
              expression(italic("Malus coronaria")* "—Suppl. Data"),
              expression(italic("Malus ioensis")*"—GBIF"),
              expression(italic("Malus angustifolium")*"—GBIF")),
-  fill = c("#228B22", "#333f07", "#CC79A7", "#C90076", "#E88E00", "#007CBE"),
+  fill = c("#228B22", "#333f07", "#CC79A7", "magenta", "#E88E00", "#007CBE"),
   col = "black",
   box.col = "black",  # No border around legend
   bg = "white",
@@ -128,8 +128,13 @@ terra::text(-585874.4, -1032531, labels = 'U.S.A.', cex = 3.5, col = "black")
 
 dev.off()
 
+"#AA4499"
 
+"#CC79A7"
 
+"#117733"
+
+#882255
 # Plot ONLY sect. Chloromeles
 
 #Start plotting
