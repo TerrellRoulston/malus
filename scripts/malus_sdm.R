@@ -3,31 +3,109 @@
 # Terrell Roulston
 # Started Feb 29, 2024
 START <- date()
-source("scripts/malus_bg.R") 
+#source("scripts/malus_bg.R") 
 END <- date()
 
 source("scripts/functions.R") ## for twsBoyce
 
 message("Loaded & prepped all data, starting at:\n     ", START,
         "\n and ending at: \n     ", END) 
+
+library(tidyverse) # Grammar and data management
+library(terra) # Spatial Data package
+library(predicts) # SDM package
+library(geodata) # basemaps
+library(rJava) # MaxEnt models are dependant on JDK
+library(ENMeval) # Another modeling package, useful for data partitioning (Checkerboarding)
+library(raster) # RasterStack dependancy (a now deprecated function)
+library(ecospat) # Useful spatial ecology tools
+library(parallel) # speed up computation by running in parallel
+library(doParallel) # added functionality to parallel
+
+
+
 # Load occurrence data and basemaps -------------------------------------------------------
 
 ## # Background points in SpatVectors
-## cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
-## fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
-## ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
-## ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
-## chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
+cor_bg_vec <- readRDS(file = './occ_data/cor/cor_bg_vec.Rdata')
+fus_bg_vec <- readRDS(file = './occ_data/fus/fus_bg_vec.Rdata')
+ion_bg_vec <- readRDS(file = './occ_data/ion/ion_bg_vec.Rdata')
+ang_bg_vec <- readRDS(file = './occ_data/ang/ang_bg_vec.Rdata')
+chl_bg_vec <- readRDS(file = './occ_data/chl/chl_bg_vec.Rdata')
 
 ## # Occurrence Points in SpatVectors
-## occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
-## occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
-## occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
-## occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
-## occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
+occThin_cor <- readRDS(file = './occ_data/cor/occThin_cor.Rdata') # M. coronaria
+occThin_fus <- readRDS(file = './occ_data/fus/occThin_fus.Rdata') # M. fusca
+occThin_ion <- readRDS(file = './occ_data/ion/occThin_ion.Rdata') # M. fusca
+occThin_ang <- readRDS(file = './occ_data/ang/occThin_ang.Rdata') # M. fusca
+occThin_chl <- readRDS(file = './occ_data/chl/occThin_chl.Rdata') # M. fusca
 
 ## # Great Lakes shapefiles for making pretty maps and cropping
 ## great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+
+
+# Climate Data
+great_lakes <- vect('C:/Users/terre/Documents/Acadia/Malus Project/maps/great lakes/combined great lakes/')
+
+NA_ext <- ext(-180, -30, 18, 85) # Set spatial extent of analyis to NA in Western Hemisphere
+
+# SSP (Shared social-economic pathway) 2.45 
+# middle of the road projection, high climate adaptation, low climate mitigation
+ssp245_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp245_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp245_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "245",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+# SPP 5.85 
+# low regard for enviromental sustainability, increased fossil fuel reliance, this is the current tracking projection
+ssp585_2030 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2021-2040",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp585_2050 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2041-2060",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/") %>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
+
+ssp585_2070 <- cmip6_world(model = "CanESM5",
+                           ssp = "585",
+                           time = "2061-2080",
+                           var = "bioc",
+                           res = 2.5,
+                           path = "./wclim_data/")%>% 
+  crop(NA_ext) %>% #crop raster to NA 
+  mask(great_lakes, inverse = T) # cut out the great lakes
 
 
 # Load cropped climate Rasters --------------------------------------------
@@ -35,11 +113,50 @@ message("Loaded & prepped all data, starting at:\n     ", START,
 # and making habitat suitability predictions (Historical and under future SSPs climate scenarios)
 #wclim_cor_stack <- raster::stack(wclim_cor) # covert SpatRaster to RasterStack for dependency in ENMeval checkboarding
 
-## wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata') 
-## wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
-## wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
-## wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
-## wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
+
+wclim_cor <- readRDS(file = './wclim_data/wclim_cor.Rdata')
+wclim_fus <- readRDS(file = './wclim_data/wclim_fus.Rdata')
+wclim_ion <- readRDS(file = './wclim_data/wclim_ion.Rdata')
+wclim_ang <- readRDS(file = './wclim_data/wclim_ang.Rdata')
+wclim_chl <- readRDS(file = './wclim_data/wclim_chl.Rdata')
+
+wclim <- geodata::worldclim_global(var = 'bio',
+                                   res = 2.5, 
+                                   version = '2.1', 
+                                   path = "./wclim_data/") %>% 
+  terra::crop(NA_ext)  %>% #crop raster to NA 
+  terra::mask(great_lakes, inverse = T) # cut out the great lakes
+
+# SSP (Shared social-economic pathway) 2.45 
+# middle of the road projection, high climate adaptation, low climate mitigation
+climate_predictors <- names(wclim_cor) # extract climate predictor names, to ren
+# Future SSPs
+# Do not need to create RasterStacks
+# SSP 245
+names(wclim) <- climate_predictors
+names(ssp245_2030) <- climate_predictors #rename raster layers for downsteam analysis
+names(ssp245_2050) <- climate_predictors 
+names(ssp245_2070) <- climate_predictors 
+names(ssp585_2030) <- climate_predictors
+names(ssp585_2050) <- climate_predictors
+names(ssp585_2070) <- climate_predictors 
+
+
+# Subset climate variables for SDM analysis -------------------------------
+wclim_subs <- wclim %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp245_2030_subs <- ssp245_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp245_2050_subs <- ssp245_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp245_2070_subs <- ssp245_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+
+ssp585_2030_subs <- ssp585_2030 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp585_2050_subs <- ssp585_2050 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+ssp585_2070_subs <- ssp585_2070 %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+
+wclim_cor_subs <- wclim_cor %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_fus_subs <- wclim_fus %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_ion_subs <- wclim_ion %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_ang_subs <- wclim_ang %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
+wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_bio_4', 'wc2.1_2.5m_bio_10', 'wc2.1_2.5m_bio_11', 'wc2.1_2.5m_bio_15', 'wc2.1_2.5m_bio_16'))
 
 # M. coronaria - MaxEnt Model ---------------------------------------------
 
@@ -66,13 +183,13 @@ date()
 cor_maxent <- ENMevaluate(occ_cor_coords, # occurrence records
                           envs = wclim_cor_subs, # NOTE CHANGE THE ENVS
                                         # inputed, environment from background training area
-                          n.bg = 10000, # 10000 bg points should be plenty!
+                          n.bg = 20000, # 
                           tune.args =
                             list(rm = seq(0.5, 4, 0.5), # Regularization 0.5-4
                                  fc = c("L", "LQ", "H",
                                         "LQH", "LQHP")),
                           partition.settings =
-                            list(aggregation.factor = c(9, 9), gridSampleN = 10000), # 9,9 agg
+                            list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
                             partitions = 'checkerboard',
                             parallel = TRUE,
                             numCores = cn - 1, # leave one core available for other apps
@@ -82,8 +199,8 @@ date()
 # Save the MaxEnt model so you do not have to waste time re-running the model
 ##saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # save
 # Load Maxent model
-saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
-cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_max_2025-04-30.Rdata')
+saveRDS(cor_maxent, file = './sdm_output/cor/subs/cor_maxent_subs.Rdata')
+cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_maxent_subs.Rdata')
 
 ##cor_maxent <- readRDS(file = './sdm_output/cor/subs/cor_maxent_subs.Rdata') # load #subsetted model
 
@@ -439,7 +556,7 @@ terra::writeRaster(cor_pred_low_ssp585_70_crop, "./sdm_output/cor/subs/cropped/s
 # M. fusca - MaxEnt Model -------------------------------------------------
 
 occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
-bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+#bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -451,12 +568,11 @@ fus_maxent <- ENMevaluate(occ_fus_coords, # occurrence records
                             list(rm = seq(0.5, 4, 0.5),
                                  fc = c("L", "LQ", "H",
                                         "LQH", "LQHP")),
-                          partition.settings =
-                            list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                          partitions = 'checkerboard2',
+                          partition.settings =    
+                          list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
+                          partitions = 'checkerboard',
                           parallel = TRUE,
                           numCores = cn - 1, # leave one core available for other apps
-                          parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
                           algorithm = 'maxent.jar')
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
@@ -758,7 +874,7 @@ terra::writeRaster(fus_pred_low_ssp585_70_crop, "./sdm_output/fus/subs/cropped/s
 # M. ioensis - Maxent Model -----------------------------------------------
 
 occ_ion_coords <- as.data.frame(geom(occThin_ion)[,3:4]) # extract longitude, lattitude from occurence points
-bg_ion_coords <- as.data.frame(geom(ion_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+#bg_ion_coords <- as.data.frame(geom(ion_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 set.seed(1337)
 
@@ -771,10 +887,9 @@ ion_maxent <- ENMevaluate(occ_ion_coords, # occurrence records
                                         "LQH", "LQHP")),
                           partition.settings =
                             list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                          partitions = 'checkerboard2',
+                          partitions = 'checkerboard',
                           parallel = TRUE,
                           numCores = cn - 1, # leave one core available for other apps
-                          parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
                           algorithm = 'maxent.jar')
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
@@ -1081,7 +1196,7 @@ terra::writeRaster(ion_pred_low_ssp585_70_crop, "./sdm_output/ion/subs/cropped/s
 # M. angustifolia - Maxent Model ------------------------------------------
 
 occ_ang_coords <- as.data.frame(geom(occThin_ang)[,3:4]) # extract longitude, lattitude from occurence points
-bg_ang_coords <- as.data.frame(geom(ang_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+#bg_ang_coords <- as.data.frame(geom(ang_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -1095,10 +1210,9 @@ ang_maxent <- ENMevaluate(occ_ang_coords, # occurrence records
                                         "LQH", "LQHP")),
                           partition.settings =
                             list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                          partitions = 'checkerboard2',
+                          partitions = 'checkerboard',
                           parallel = TRUE,
                           numCores = cn - 1, # leave one core available for other apps
-                          parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
                           algorithm = 'maxent.jar')
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
@@ -1386,7 +1500,7 @@ terra::writeRaster(ang_pred_low_ssp585_70_crop, "./sdm_output/ang/subs/cropped/s
 
 # Chloromeles - Maxent Model ----------------------------------------------
 occ_chl_coords <- as.data.frame(geom(occThin_chl)[,3:4]) # extract longitude, lattitude from occurence points
-bg_chl_coords <- as.data.frame(geom(chl_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+#bg_chl_coords <- as.data.frame(geom(chl_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -1400,10 +1514,9 @@ chl_maxent <- ENMevaluate(occ_chl_coords, # occurrence records
                                         "LQH", "LQHP")),
                           partition.settings =
                             list(aggregation.factor = c(9, 9), gridSampleN = 20000), # 9,9 agg
-                          partitions = 'checkerboard2',
+                          partitions = 'checkerboard',
                           parallel = TRUE,
                           numCores = cn - 1, # leave one core available for other apps
-                          parallelType = "doParallel", # use doParrallel on Windows - socket cluster  
                           algorithm = 'maxent.jar')
 
 # Save the MaxEnt model so you do not have to waste time re-running the model
@@ -1443,7 +1556,7 @@ chlPred_val_na <- terra::extract(chl_pred_hist, occ_chl_coords)$lyr1 %>%
 
 # Sect. Chloromeles Boyce Index ---------------------------------------------
 
-# Evaluate predictchls using Boyce Index
+# Evaluate predictchls using Boyce Indextea
 png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_sect_chloromeles.png', width = 1600, height = 1200, res = 300)
 ecospat.boyce(fit = chlPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = chlPred_val_na, # vector of 
