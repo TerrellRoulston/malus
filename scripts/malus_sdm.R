@@ -23,6 +23,12 @@ library(parallel) # speed up computation by running in parallel
 library(doParallel) # added functionality to parallel
 
 
+# Install Tyler's hotfix for Ecospat Boyce Index --------------------------
+
+library(devtools)
+install_github("plantarum/ecospat", ref = "boyce", subdir = "ecospat")
+
+library(ecospat)
 
 # Load occurrence data and basemaps -------------------------------------------------------
 
@@ -162,12 +168,7 @@ wclim_chl_subs <- wclim_chl %>% terra::subset(c('wc2.1_2.5m_bio_1', 'wc2.1_2.5m_
 
 # Spatial partitioning preparation
 occ_cor_coords <- as.data.frame(geom(occThin_cor)[,3:4]) # extract longitude, lattitude from occurence points
-
-
-################################################
-## TWS: note that this object is never used!! ##
-################################################
-## bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+bg_cor_coords <- as.data.frame(geom(cor_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 # Build Species Distribution Model using MaxEnt from the <ENMeval> package
 
@@ -225,22 +226,51 @@ partialResponse(model = mod.best_cor_maxent, var = "wc2.1_2.5m_bio_10",
 # M. coronaria historical prediction --------------------------------------
 # Now use the <terra> package to plot the SDM prediction.
 # Wclim is the historical climatic conditions (1970-2000)
+set.seed(1337)
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
+cor_pred_hist <- terra::predict(wclim_subs, mod.best_cor_maxent, cores = cn - 1, na.rm = T)
+
+plot(cor_pred_hist)
+points(occThin_cor, cex = 0.05)
+
+# Evaluate predictions using Boyce Index
+# the number of true presences should decline with suitability groups 100-91, 90-81, etc. 
+# First extract suitability values for the background and presence points, make sure to omit NA values
+corPred_bg_val <- terra::extract(cor_pred_hist, bg_cor_coords)$lyr1 %>% 
+  na.omit()
+
+corPred_val_na <- terra::extract(cor_pred_hist, occ_cor_coords)$lyr1 %>% 
+  na.omit()
+
+
+# M. coronaria Boyce Index ----------------------------------------------------
+# Evaluate predictions using Boyce Index
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_coronaria.png', width = 1600, height = 1200, res = 300)
+corBoyce <- ecospat.boyce(fit = corPred_bg_val, # vector of predicted habitat suitability of bg points
+              obs = corPred_val_na, # vector of 
+              nclass = 0, 
+              PEplot = TRUE,
+              method = 'spearman')
+
+title(main = bquote0(italic("Malus coronaria") ~ ", Boyce Cor." ==
+                      .(corBoyce$cor))) 
+dev.off()
 
 ## I thought limiting the prediction to eastern NA might speed it up. If it
 ## does, it's not by a lot?
 
-corPredExt <- ext(c(-100, -50, 30, 60))
-corPredWclim <- crop(wclim_subs, corPredExt)
+# corPredExt <- ext(c(-100, -50, 30, 60))
+# corPredWclim <- crop(wclim_subs, corPredExt)
+# 
+# cor_pred_hist <- terra::predict(corPredWclim, mod.best_cor_maxent,
+#                                 cores = cn - 1, na.rm = T)
+# 
+# saveRDS(cor_pred_hist, file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
+# cor_pred_hist <- readRDS(file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
+# 
+# plot(cor_pred_hist)
+# points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 
-cor_pred_hist <- terra::predict(corPredWclim, mod.best_cor_maxent,
-                                cores = cn - 1, na.rm = T)
-
-saveRDS(cor_pred_hist, file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
-cor_pred_hist <- readRDS(file = './sdm_output/cor/subs/cor_pred_hist_2025-04-30.Rdata')
-
-plot(cor_pred_hist)
-points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 
 
 # M. coronaria Boyce Index ------------------------------------------------
@@ -253,15 +283,17 @@ points(occThin_cor, cex = 0.5, col = 1, pch = 21, bg = "white" )
 
 # Evaluate predictions using Boyce Index
 ## png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_coronaria.png', width = 1600, height = 1200, res = 300)
-
-corBoyce <- twsBoyce(fit = cor_pred_hist, # suitability raster
-                     obs = occ_cor_coords, 
-                     PEplot = TRUE, method = 'spearman')
-
-title(main = bquote(italic("Malus coronaria") ~ ", Boyce Cor." ==
-                      .(corBoyce$cor))) 
-
-## dev.off()
+# 
+# corBoyce <- twsBoyce(fit = cor_pred_hist, # suitability raster
+#                      obs = occ_cor_coords, 
+#                      PEplot = TRUE, method = 'spearman')
+# 
+# title(main = bquote(italic("Malus coronaria") ~ ",Boyce Cor." ==
+#                       .(corBoyce$cor))) 
+# 
+# 
+# 
+# ## dev.off()
 
 
 
@@ -556,7 +588,7 @@ terra::writeRaster(cor_pred_low_ssp585_70_crop, "./sdm_output/cor/subs/cropped/s
 # M. fusca - MaxEnt Model -------------------------------------------------
 
 occ_fus_coords <- as.data.frame(geom(occThin_fus)[,3:4]) # extract longitude, lattitude from occurence points
-#bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+bg_fus_coords <- as.data.frame(geom(fus_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -613,13 +645,14 @@ fusPred_val_na <- terra::extract(fus_pred_hist, occ_fus_coords)$lyr1 %>%
 # M. fusca Boyce Index ----------------------------------------------------
 # Evaluate predictions using Boyce Index
 png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_fusca.png', width = 1600, height = 1200, res = 300)
-ecospat.boyce(fit = fusPred_bg_val, # vector of predicted habitat suitability of bg points
+fusBoyce <- ecospat.boyce(fit = fusPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = fusPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
 
-title(main = expression(italic("Malus fusca")))
+title(main = bquote(italic("Malus fusca") ~ ", Boyce Cor." ==
+                       .(fusBoyce$cor))) 
 dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
@@ -874,7 +907,7 @@ terra::writeRaster(fus_pred_low_ssp585_70_crop, "./sdm_output/fus/subs/cropped/s
 # M. ioensis - Maxent Model -----------------------------------------------
 
 occ_ion_coords <- as.data.frame(geom(occThin_ion)[,3:4]) # extract longitude, lattitude from occurence points
-#bg_ion_coords <- as.data.frame(geom(ion_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+bg_ion_coords <- as.data.frame(geom(ion_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 set.seed(1337)
 
@@ -932,13 +965,15 @@ ionPred_val_na <- terra::extract(ion_pred_hist, occ_ion_coords)$lyr1 %>%
 # M. ioensis Boyce Index --------------------------------------------------
 # Evaluate predictions using Boyce Index
 png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_ioensis.png', width = 1600, height = 1200, res = 300)
-ecospat.boyce(fit = ionPred_bg_val, # vector of predicted habitat suitability of bg points
+ionBoyce <- ecospat.boyce(fit = ionPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = ionPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
 
-title(main = expression(italic("Malus ioensis")))
+title(main = bquote(italic("Malus ioensis") ~ ", Boyce Cor." ==
+                      .(ionBoyce$cor))) 
+
 dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
@@ -1196,7 +1231,7 @@ terra::writeRaster(ion_pred_low_ssp585_70_crop, "./sdm_output/ion/subs/cropped/s
 # M. angustifolia - Maxent Model ------------------------------------------
 
 occ_ang_coords <- as.data.frame(geom(occThin_ang)[,3:4]) # extract longitude, lattitude from occurence points
-#bg_ang_coords <- as.data.frame(geom(ang_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+bg_ang_coords <- as.data.frame(geom(ang_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -1255,14 +1290,15 @@ angPred_val_na <- terra::extract(ang_pred_hist, occ_ang_coords)$lyr1 %>%
 # M. angustifolia Boyce Index ---------------------------------------------
 
 # Evaluate predictangs using Boyce Index
-png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/boyce_plot_malus_angustifolia.png', width = 1600, height = 1200, res = 300)
-ecospat.boyce(fit = angPred_bg_val, # vector of predicted habitat suitability of bg points
+png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_malus_angustifolia.png', width = 1600, height = 1200, res = 300)
+angBoyce <- ecospat.boyce(fit = angPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = angPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
 
-title(main = expression(italic("Malus angustifolia")))
+title(main = bquote(italic("Malus angustifolia") ~ ", Boyce Cor." ==
+                      .(angBoyce$cor))) 
 dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
@@ -1500,7 +1536,7 @@ terra::writeRaster(ang_pred_low_ssp585_70_crop, "./sdm_output/ang/subs/cropped/s
 
 # Chloromeles - Maxent Model ----------------------------------------------
 occ_chl_coords <- as.data.frame(geom(occThin_chl)[,3:4]) # extract longitude, lattitude from occurence points
-#bg_chl_coords <- as.data.frame(geom(chl_bg_vec)[,3:4]) # extract longitude, lattitude from background points
+bg_chl_coords <- as.data.frame(geom(chl_bg_vec)[,3:4]) # extract longitude, lattitude from background points
 
 cn <- detectCores(logical = F) # logical = F, is number of physical RAM cores in your computer
 set.seed(1337)
@@ -1558,13 +1594,14 @@ chlPred_val_na <- terra::extract(chl_pred_hist, occ_chl_coords)$lyr1 %>%
 
 # Evaluate predictchls using Boyce Indextea
 png('C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/boyce_index/corboyce_plot_sect_chloromeles.png', width = 1600, height = 1200, res = 300)
-ecospat.boyce(fit = chlPred_bg_val, # vector of predicted habitat suitability of bg points
+chlBoyce <- ecospat.boyce(fit = chlPred_bg_val, # vector of predicted habitat suitability of bg points
               obs = chlPred_val_na, # vector of 
               nclass = 0, 
               PEplot = TRUE,
               method = 'spearman')
 
-title(main = 'Sect. Chloromeles')
+title(main = bquote("Sect." ~ italic("Chloromeles") ~ ", Boyce Cor." ==
+                      .(chlBoyce$cor)))
 dev.off()
 
 # Gradients can be hard to understand at a glance, so lets create categorical bins of high suitability, moderate suitability, low suitability using thresholds
