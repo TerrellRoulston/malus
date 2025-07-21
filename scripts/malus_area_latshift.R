@@ -158,12 +158,12 @@ summarize_long_format <- function(taxon_code, hist, ssp30, ssp50, ssp70, thresho
   # Step 1: t0 baseline row with total area and latitude summary
   t0_vals <- compare_suitability(hist, hist, threshold) # dummy comparison
   t0_total_area <- t0_vals$total_area_summary %>%
-    filter(time == "t0") %>%
-    select(total_area_km2)
+    dplyr::filter(time == "t0") %>%
+    dplyr::select(total_area_km2)
   
   t0_lat <- t0_vals$lat_summary %>%
-    filter(time == "t0") %>%
-    select(median_latitude, mean_latitude, sd_latitude)
+    dplyr::filter(time == "t0") %>%
+    dplyr::select(median_latitude, mean_latitude, sd_latitude)
   
   baseline_row <- tibble(
     taxon = taxon_code,
@@ -185,12 +185,12 @@ summarize_long_format <- function(taxon_code, hist, ssp30, ssp50, ssp70, thresho
     
     res$area_by_change %>%
       filter(change %in% c("contraction", "expansion", "stable")) %>%
-      mutate(taxon = taxon_code,
+      dplyr::mutate(taxon = taxon_code,
              timeseries = label,
              median_latitude = lat$median_latitude,
              mean_latitude = lat$mean_latitude,
              sd_latitude = lat$sd_latitude) %>%
-      select(taxon, timeseries, change, area_km2, median_latitude, mean_latitude, sd_latitude)
+      dplyr::select(taxon, timeseries, change, area_km2, median_latitude, mean_latitude, sd_latitude)
   })
   
   bind_rows(baseline_row, future_rows)
@@ -218,9 +218,9 @@ head(summary_long_df)
 
 # Step 1: Extract t0 summaries (where change == "total")
 df_t0 <- summary_long_df %>%
-  filter(timeseries == "t0", change == "total") %>%
-  select(taxon, area_km2, median_latitude, mean_latitude, sd_latitude) %>%
-  rename(
+  dplyr::filter(timeseries == "t0", change == "total") %>%
+  dplyr::select(taxon, area_km2, median_latitude, mean_latitude, sd_latitude) %>%
+  dplyr::rename(
     total_area_t0 = area_km2,
     median_latitude_t0 = median_latitude,
     mean_latitude_t0 = mean_latitude,
@@ -229,8 +229,8 @@ df_t0 <- summary_long_df %>%
 
 # Step 2: Extract change values for t1–t3
 df_changes <- summary_long_df %>%
-  filter(timeseries != "t0") %>%
-  select(taxon, timeseries, change, area_km2) %>%
+  dplyr::filter(timeseries != "t0") %>%
+  dplyr::select(taxon, timeseries, change, area_km2) %>%
   pivot_wider(
     names_from = c(timeseries, change),
     values_from = area_km2,
@@ -239,18 +239,18 @@ df_changes <- summary_long_df %>%
 
 # Step 3: Extract lat summaries for t1–t3 (from any row per group since values are the same per group)
 df_latitudes <- summary_long_df %>%
-  filter(timeseries != "t0") %>%
-  group_by(taxon, timeseries) %>%
-  slice(1) %>%  # each row per taxon/time has same lat summary, just grab the first
-  ungroup() %>%
-  select(taxon, timeseries, median_latitude, mean_latitude, sd_latitude) %>%
+  dplyr::filter(timeseries != "t0") %>%
+  dplyr::group_by(taxon, timeseries) %>%
+  dplyr::slice(1) %>%  # each row per taxon/time has same lat summary, just grab the first
+  dplyr::ungroup() %>%
+  dplyr::select(taxon, timeseries, median_latitude, mean_latitude, sd_latitude) %>%
   pivot_wider(
     names_from = timeseries,
     values_from = c(median_latitude, mean_latitude, sd_latitude)
   ) %>%
-  rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("median_latitude")) %>%
-  rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("mean_latitude")) %>%
-  rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("sd_latitude"))
+  dplyr::rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("median_latitude")) %>%
+  dplyr::rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("mean_latitude")) %>%
+  dplyr::rename_with(~ paste0(.x, "_t", gsub(".*_", "", .x)), starts_with("sd_latitude"))
 
 # Step 4: Join all together
 summary_wide_df <- df_t0 %>%
@@ -264,7 +264,7 @@ print(summary_wide_df)
 # Save for publication ----------------------------------------------------
 # Save as CSV
 
-write.csv(summary_wide_df, file = './sdm_output/summ_area/summary_wide_df_v2.csv')
+write.csv(summary_wide_df, file = './sdm_output/summ_area/summary_wide_df_v3.csv')
 
 
 # Exploratory maps to make sure I am not going crazy ----------------------
