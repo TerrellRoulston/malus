@@ -11,7 +11,7 @@ library(cowplot)
 library(ggh4x)
 
 # Import data -------------------------------------------------------------
-importance_df <- read_xlsx("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/sdm_vars_R_import.xlsx")
+importance_df <- read_xlsx("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/sdm_vars_R_importV2.xlsx")
 
 # Pivoting from wide to long format
 importance_long <- importance_df %>%
@@ -233,4 +233,63 @@ print(p_sp_ranked)
 
 # Close the device
 dev.off()
+
+
+# Making the plot in baes R -----------------------------------------------
+# Open PNG device — expanded height for legend and layout space
+png("C:/Users/terre/Documents/Acadia/Malus Project/statistical analysis/variable importance/var_importance_by_species_baseR.png", width = 5000, height = 4200, res = 300)
+
+# Layout: 6 rows (5 for species, 1 for legend), more space for legend
+layout(matrix(c(1, 2, 3, 4, 5, 6), nrow = 6), heights = c(1, 1, 1, 1, 1, 0.5))
+
+# Margins: more outer margin on bottom for x-axis title
+par(mar = c(3, 10, 3, 3), oma = c(3, 3.5, 1, 1))  # bottom, left, top, right
+
+# Colorblind-friendly palette
+var_levels <- unique(importance_ranked$Variable)
+var_colors <- setNames(cbPalette[1:length(var_levels)], var_levels)
+x_ticks <- seq(0, 60, by = 10)
+
+# Loop through species
+for (i in seq_along(levels(importance_ranked$Species))) {
+  sp <- levels(importance_ranked$Species)[i]
+  dat <- subset(importance_ranked, Species == sp)
+  dat <- dat[order(dat$Importance), ]
+  n <- nrow(dat)
+  
+  plot(NA, xlim = c(0, 60), ylim = c(0.5, n + 0.5),
+       xaxt = "n", yaxt = "n", xlab = "", ylab = "", bty = "n")
+  
+  abline(h = 1:n, col = "lightgray", lty = "solid", lwd = 0.5)
+  abline(v = x_ticks, col = "lightgray", lty = "solid", lwd = 0.5)
+  
+  axis(1, at = x_ticks, cex.axis = 2.25)
+  axis(2, at = 1:n, labels = dat$Variable, las = 2, cex.axis = 2.25)
+  
+  segments(x0 = 0, x1 = dat$Importance, y0 = 1:n, y1 = 1:n,
+           lty = "dashed", lwd = 2.5, col = var_colors[dat$Variable])
+  points(dat$Importance, 1:n, pch = 19, cex = 3, col = var_colors[dat$Variable])
+  
+  mtext(parse(text = species_exprs[sp]), side = 3, line = 0.5, cex = 2)
+  
+  # X-axis title: add once on final panel
+  if (i == 5) {
+    mtext("Variable's Permutational Importance (%)", side = 1, line = 4.5, cex = 2)
+  }
+}
+
+# Y-axis title in left outer margin
+mtext("Bioclimatic Variables", side = 2, outer = TRUE, line = 0, cex = 2)
+
+# Legend row
+par(mar = c(0, 0, 0, 0))
+plot.new()
+legend("bottom", legend = var_levels, col = var_colors, pch = 19,
+       horiz = TRUE, cex = 2.8, bty = "n")  # no title
+
+# Close PNG device
+dev.off()
+
+
+
 
