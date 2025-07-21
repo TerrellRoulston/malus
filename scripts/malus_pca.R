@@ -501,10 +501,12 @@ ecospat.plot.niche.pair(
 
   ####
 # Compute overlap metrics for displaying
+# Note excluded D metric, only reporting Warren's I in the MS
 ### 
 metrics <- ecospat.niche.overlap(grids[["ion"]], grids[["ang"]], cor = F)
-legend("topright", legend = paste0("D = ", round(metrics$D, 2), "***",
-                                   "\nI = ", round(metrics$I, 2), "***"),
+legend("topright", legend = paste0(
+                                    #"D = ", round(metrics$D, 2), "***",
+                                   "I = ", round(metrics$I, 2), "***"),
        bty = "n", cex = 3.5, inset = -0.01)
 
 
