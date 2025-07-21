@@ -176,4 +176,4 @@ for (index in seq_along(species_list)) {
 
 
 all_species_results <- bind_rows(full_result)
-readr::write_csv(all_species_results, "./gap_analysis/malus_gap_analysis_all_species.csv")
+readr::write_csv(all_species_results, "./gap_analysis/malus_gap_analysis_all_species_jul.csv")
