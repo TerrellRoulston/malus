@@ -86,22 +86,30 @@ compare_suitability <- function(t0_rast, t1_rast, threshold) {
   # 2. Calculate true cell areas (km²) per pixel
   area_rast <- terra::cellSize(t0_rast, unit = "km")
   
-  # 3. Identify valid (non-NA) cells in both layers
-  valid_mask <- !is.na(t0_bin) & !is.na(t1_bin)
-  valid_cells <- which(values(valid_mask) == 1)
+  # 1) Use the UNION of valid cells
+  valid_mask <- !is.na(t0_bin) | !is.na(t1_bin)
+  idx <- which(terra::values(valid_mask))
   
-  # 4. Extract values for valid cells
-  t0_vals <- values(t0_bin)[valid_cells]
-  t1_vals <- values(t1_bin)[valid_cells]
-  area_vals <- values(area_rast)[valid_cells]
+  # 2) Treat NA as FALSE (not suitable)
+  t0v <- as.logical(terra::values(t0_bin)[idx]); t0v[is.na(t0v)] <- FALSE
+  t1v <- as.logical(terra::values(t1_bin)[idx]); t1v[is.na(t1v)] <- FALSE
   
-  # 5. Classify change status
+  # 3) Per-cell area over the union
+  area0 <- terra::cellSize(t0_rast, unit = "km")
+  area1 <- terra::cellSize(t1_rast, unit = "km")
+  area  <- terra::values(terra::ifel(!is.na(area0), area0, area1))[idx]
+  
+  # 4) “New areas” (expansion) = suitable in t1 AND NOT suitable in t0
+  expansion_only_km2 <- sum(area[t1v & !t0v], na.rm = TRUE)
+  
+  # If you still want the full change breakdown (stable/contract/expand), keep:
   status <- dplyr::case_when(
-    t0_vals == 1 & t1_vals == 1 ~ "stable",
-    t0_vals == 1 & t1_vals == 0 ~ "contraction",
-    t0_vals == 0 & t1_vals == 1 ~ "expansion",
-    TRUE ~ "unsuitable"
+    t0v &  t1v ~ "stable",
+    t0v & !t1v ~ "contraction",
+    !t0v & t1v ~ "expansion",
+    TRUE       ~ "unsuitable"
   )
+  
   
   # 6. Area per status
   area_by_change <- tibble(change = status, area_km2 = area_vals) |>
@@ -137,7 +145,7 @@ compare_suitability <- function(t0_rast, t1_rast, threshold) {
 }
 
 
-compare_suitability(cor_pred_hist, cor_pred_ssp585_30, fusPred_threshold_50)
+compare_suitability(fus_pred_hist, fus_pred_ssp585_70, fusPred_threshold_50)
 
 # COMPLETE SUMMARY
 # List of all inputs ------------------------------------------------------
@@ -264,7 +272,7 @@ print(summary_wide_df)
 # Save for publication ----------------------------------------------------
 # Save as CSV
 
-write.csv(summary_wide_df, file = './sdm_output/summ_area/summary_wide_df_v3.csv')
+write.csv(summary_wide_df, file = './sdm_output/summ_area/summary_wide_df_v4.csv')
 
 
 # Exploratory maps to make sure I am not going crazy ----------------------
