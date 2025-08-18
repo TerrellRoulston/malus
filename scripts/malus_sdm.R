@@ -1834,32 +1834,3 @@ terra::writeRaster(chl_pred_low_ssp585_50_crop, "./sdm_output/chl/subs/cropped/s
 terra::writeRaster(chl_pred_high_ssp585_70_crop, "./sdm_output/chl/subs/cropped/ssp585/chl_pred_high_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 terra::writeRaster(chl_pred_mod_ssp585_70_crop, "./sdm_output/chl/subs/cropped/ssp585/chl_pred_mod_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
 terra::writeRaster(chl_pred_low_ssp585_70_crop, "./sdm_output/chl/subs/cropped/ssp585/chl_pred_low_ssp585_70_crop.tif", filetype = "GTiff", overwrite = TRUE)
-
-
-# Binary Thresholds for Gap Analysis --------------------------------------
-# For the purposed of the Gap Analysis it is best to use a binary threshold of habitat suitability.
-# You could use the moderate, or high suitability thresholds from above, but that is not very well accepted in the literature.
-# In this case there are several binary thresholds that exist, including several in the <predicts> package
-# See ?predicts::threshold
-
-
-cor_pa <- predicts::pa_evaluate(p = occ_cor_coords_mat, a = bg_cor_coords_mat, model = cor_maxent, x = wclim_cor)
-cor_binary_threshold <- predicts::threshold(cor_pa)
-
-cor_hist_habitat <- cor_pred_hist > cor_threshold$max_spec_sens #the threshold at which the sum of the sensitivity (true positive rate) and specificity (true negative rate) is highest
-
-
-# Area calculations -------------------------------------------------------
-area_cor_high_hist_subs <- expanse(cor_pred_high_hist_subs, byValue = T, unit = 'km') %>% filter(value == 1) %>% pull(area)
-area_cor_high_ssp585_30_subs <- expanse(cor_pred_high_585_30_subs, byValue = T, unit = 'km') %>% filter(value == 1) %>% pull(area)
-
-((area_cor_high_ssp585_30_subs - area_cor_high_hist_subs)/(area_cor_high_hist_subs))*100
-
-
-# Occurrences in suitability ----------------------------------------------
-cor_suit_df <- as.data.frame(extract(cor_pred_low_ssp585_50, occThin_cor))
-
-cor_suit_df_f <- cor_suit_df %>% dplyr::filter(lyr1 == 'FALSE')
-cor_suit_df_t <- cor_suit_df %>% filter(lyr1 == 'TRUE')
-
-nrow(cor_suit_df_f)/nrow(cor_suit_df)*100
