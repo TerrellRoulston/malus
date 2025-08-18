@@ -83,7 +83,6 @@ occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "deci
 
 # Save M. coronaria occurrence dataframe
 #write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
-
 ##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 
@@ -121,21 +120,12 @@ occ_fus <- occ_fus %>% mutate(source = 'GBIF')
 
 occ_fus <- occ_fus %>% full_join(occ_armstrong, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
-##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
-
 #load data from Wickham and Obrits and Fitsp
 occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_titzpatrick.csv") %>% 
   dplyr::select(latitude, longitude, source, species) %>% 
   rename(decimalLatitude = latitude, decimalLongitude = longitude)
 
 occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
-
-#####################################################################
-## TERRELL: this over-writes the previous occ_fus.Rdata. I think   ##
-## that is ok, but double check that this is the actual version of ##
-## the data you want to use downstream!                            ##
-#####################################################################
 
 #write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
 ##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
@@ -158,7 +148,7 @@ occ_ion <- gbif_ion %>%
 
 occ_ion <- occ_ion %>% mutate(source = 'GBIF')
 
-write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
+##write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
 ##saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
 
 
