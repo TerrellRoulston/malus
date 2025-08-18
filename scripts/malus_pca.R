@@ -43,7 +43,6 @@ bg_mat_full <- values(wclim_chl_subs) %>% na.omit() # remove NA Values
 bg_mat_cor <- values(wclim_cor_subs) %>% na.omit()
 bg_mat_ion <- values(wclim_ion_subs) %>% na.omit()
 bg_mat_ang <- values(wclim_ang_subs) %>% na.omit()
-bg_mat_chl <- values(wclim_chl_subs) %>% na.omit()
 
 # Extract Climate Vars from Points ----------------------------------------
 # Extract the wclim raster values from occurrence points then bind them with the SpatVector points
@@ -53,12 +52,10 @@ bg_mat_chl <- values(wclim_chl_subs) %>% na.omit()
 wclim_cor_occ <- cbind(crds(occThin_cor), extract(wclim_cor_subs, occThin_cor, ID = FALSE))
 wclim_ion_occ <- cbind(crds(occThin_ion), extract(wclim_ion_subs, occThin_ion, ID = FALSE))
 wclim_ang_occ <- cbind(crds(occThin_ang), extract(wclim_ang_subs, occThin_ang, ID = FALSE))
-wclim_chl_occ <- cbind(crds(occThin_chl), extract(wclim_chl_subs, occThin_chl, ID = FALSE))
 
 wclim_cor_occ <- wclim_cor_occ[complete.cases(wclim_cor_occ), ]
 wclim_ion_occ <- wclim_ion_occ[complete.cases(wclim_ion_occ), ]
 wclim_ang_occ <- wclim_ang_occ[complete.cases(wclim_ang_occ), ]
-wclim_chl_occ <- wclim_chl_occ[complete.cases(wclim_chl_occ), ]
 
 # PCA ---------------------------------------------------------------------
 # Now create a PCA using the FULL BG EXTENT matrix
@@ -95,13 +92,11 @@ print(loadings)
 cor_occ_score <- suprow(pca_full, data.frame(wclim_cor_occ)[, colnames(bg_mat_full)])$li
 ion_occ_score <- suprow(pca_full, data.frame(wclim_ion_occ)[, colnames(bg_mat_full)])$li
 ang_occ_score <- suprow(pca_full, data.frame(wclim_ang_occ)[, colnames(bg_mat_full)])$li
-chl_occ_score <- suprow(pca_full, data.frame(wclim_chl_occ)[, colnames(bg_mat_full)])$li
 
 # BG Point PCA scores
 cor_bg_score <- suprow(pca_full, bg_mat_cor)$li
 ion_bg_score <- suprow(pca_full, bg_mat_ion)$li
 ang_bg_score <- suprow(pca_full, bg_mat_ang)$li
-chl_bg_score <- suprow(pca_full, bg_mat_chl)$li
 
 
 # Plotting Pairwise Matrix ------------------------------------------------
@@ -115,9 +110,7 @@ chl_bg_score <- suprow(pca_full, bg_mat_chl)$li
 grids <- list(
   cor = ecospat.grid.clim.dyn(glob = pca_score, glob1 = cor_bg_score, sp = cor_occ_score, R = 100),
   ion = ecospat.grid.clim.dyn(glob = pca_score, glob1 = ion_bg_score, sp = ion_occ_score, R = 100),
-  ang = ecospat.grid.clim.dyn(glob = pca_score, glob1 = ang_bg_score, sp = ang_occ_score, R = 100),
-  chl = ecospat.grid.clim.dyn(glob = pca_score, glob1 = chl_bg_score, sp = chl_occ_score, R = 100)
-)
+  ang = ecospat.grid.clim.dyn(glob = pca_score, glob1 = ang_bg_score, sp = ang_occ_score, R = 100))
 
 
 ## TYLERS FUNCTION
@@ -235,6 +228,18 @@ niche_equivalency_test <- function(sp1_scores, sp2_scores,
   ))
 }
 
+cor_ang_test <- niche_equivalency_test(
+                    sp1_scores = cor_occ_score,
+                    sp2_scores = ion_occ_score,
+                    sp1_bg_scores = cor_bg_score,
+                    sp2_bg_scores = ion_bg_score,
+                    bg_scores = pca_score,
+                    reps = 999,
+                    R = 100,
+                    parallel = TRUE,
+                    ncores = 15,
+                    verbose = TRUE
+                  )
 
 # Test Species Pairs
 # Run on HPC instead
@@ -548,7 +553,6 @@ xlab_text <- paste0("PC 1 (", signif(pca_summary$Proportion[1], 3), "%)")
 ylab_text <- paste0("PC 2 (", signif(pca_summary$Proportion[2], 3), "%)")
 
 # Set up the plotting area (adjust mfrow as needed)
-#par(mfrow = c(2, 2), mar = c(4, 4, 3, 1))
 
 # Scale factor for loadings (optional tweak to improve visibility)
 scale_factor <- 1.75
