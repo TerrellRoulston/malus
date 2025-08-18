@@ -228,19 +228,6 @@ niche_equivalency_test <- function(sp1_scores, sp2_scores,
   ))
 }
 
-cor_ang_test <- niche_equivalency_test(
-                    sp1_scores = cor_occ_score,
-                    sp2_scores = ion_occ_score,
-                    sp1_bg_scores = cor_bg_score,
-                    sp2_bg_scores = ion_bg_score,
-                    bg_scores = pca_score,
-                    reps = 999,
-                    R = 100,
-                    parallel = TRUE,
-                    ncores = 15,
-                    verbose = TRUE
-                  )
-
 # Test Species Pairs
 # Run on HPC instead
 
