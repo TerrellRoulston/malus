@@ -4,6 +4,8 @@
 # Started May 20th 2025
 # ---- Malus Gap Analysis for All Species ----
 
+# The following gap analysis is referencing Carver et al. (2021)
+# https://nsojournals.onlinelibrary.wiley.com/doi/full/10.1111/ecog.05430
 
 library(terra)        # For raster operations
 library(tidyverse)    # For dplyr, tibble, etc.
