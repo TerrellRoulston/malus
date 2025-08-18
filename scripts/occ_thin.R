@@ -64,45 +64,45 @@ occ_chl <- occ_cor %>%
   dplyr::select('species', 'source', 'decimalLongitude', 'decimalLatitude')
 
 # vectorize occurrence df to coordinates for below
-occ_cor <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
+occ_cor_vect <- vect(occ_cor, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 
-occ_fus <- vect(occ_fus, geom = c('decimalLongitude', 'decimalLatitude'),
+occ_fus_vect <- vect(occ_fus, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 
-occ_ion <- vect(occ_ion, geom = c('decimalLongitude', 'decimalLatitude'),
+occ_ion_vect <- vect(occ_ion, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 
-occ_ang <- vect(occ_ang, geom = c('decimalLongitude', 'decimalLatitude'),
+occ_ang_vect <- vect(occ_ang, geom = c('decimalLongitude', 'decimalLatitude'),
                 crs = "+proj=longlat +datum=WGS84")
 
-occ_chl <- vect(occ_chl, geom = c('decimalLongitude', 'decimalLatitude'),
+occ_chl_vect <- vect(occ_chl, geom = c('decimalLongitude', 'decimalLatitude'),
                            crs = "+proj=longlat +datum=WGS84")
 
 # Thin data using sampler -------------------------------------------------
 
 set.seed(1337) # set random generator seed to get reproducible results
 # M. coronaria thinning
-occThin_cor <- spatSample(occ_cor, size = 1, 
-                      strata = wclim_subs, #sample one occurrence from each climatic cell
+occThin_cor <- spatSample(occ_cor_vect, size = 1, 
+                      strata = wclim_subs,  #sample one occurrence from each climatic cell
                       method = "random") 
 
 # M. fusca thinning
-occThin_fus <- spatSample(occ_fus, size = 1,
+occThin_fus <- spatSample(occ_fus_vect, size = 1,
                       strata = wclim_subs,
                       method = "random")
 
 #M. ionesis thinning
-occThin_ion <- spatSample(occ_ion, size = 1,
+occThin_ion <- spatSample(occ_ion_vect, size = 1,
                           strata = wclim_subs,
                           method = "random")
 
 #M. angustifolia thinning
-occThin_ang <- spatSample(occ_ang, size = 1,
+occThin_ang <- spatSample(occ_ang_vect, size = 1,
                           strata = wclim_subs,
                           method = "random")
 #Sect. Chloromeles thinning
-occThin_chl <- spatSample(occ_chl, size = 1,
+occThin_chl <- spatSample(occ_chl_vect, size = 1,
                           strata = wclim_subs,
                           method = "random")
 # Save thinned occurrence points for further analysis ----------------------
