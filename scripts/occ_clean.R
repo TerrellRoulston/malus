@@ -3,7 +3,8 @@
 # Terrell Roulston
 # Started Feb 16, 2024
 
-source("scripts/load_maps.R")
+source("./scripts/libraries.R")
+source("./scripts/load_maps.R")
 message("** Loading & Cleaning Occurrence Data ", date())
 
 # load occurrence csv files ------------------------------------------------
@@ -28,7 +29,7 @@ occ_cor <- gbif_cor %>%
   filter(!(decimalLongitude < -98)) %>% # remove iNat record from Kansas, northern Kansas record verified by taxonomist
   filter(!(catalogNumber == 174554608)) %>% # remove inaccurate record 	https://www.inaturalist.org/observations/174554608
   filter(!(catalogNumber == 181065977)) %>% # remove inaccurate record 	https://www.inaturalist.org/observations/181065977
-  dplyr::select(species, countryCode, decimalLatitude, 
+  dplyr::select(species, gbifID, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
          )
 
@@ -82,8 +83,8 @@ occ_cor <- occ_cor %>%  mutate(source = 'GBIF') # add source for tracking and ma
 occ_cor <- occ_cor %>% full_join(husband_coords, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
 # Save M. coronaria occurrence dataframe
-#write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
-##saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+write.table(occ_cor, file = "./occ_data/cor/occ_cor.csv") # Note this copy of occurrence data 
+saveRDS(occ_cor, file = "./occ_data/cor/occ_cor.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 
 # Clean Fusca -------------------------------------------------------------
@@ -102,7 +103,7 @@ occ_fus <- gbif_fus %>%
   filter(!(gbifID == '4908101518')) %>% # questionble outliying Inaturalist observation.
   filter(!(decimalLatitude == 37.27013)) %>% # remove bad record in mountains inland California
   filter(!(decimalLatitude < 37)) %>% # remove unlikely records south of San Jose
-  dplyr::select(species, countryCode, decimalLatitude, 
+  dplyr::select(species, gbifID, countryCode, decimalLatitude, 
          decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
@@ -127,8 +128,8 @@ occ_wick_orb_fit <- read.csv(file = "./occ_data/fus/malus_fusca_wickham_orbits_t
 
 occ_fus <- occ_fus %>% full_join(occ_wick_orb_fit, by = c("decimalLatitude", "decimalLongitude", "source", "species"))
 
-#write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
-##saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
+write.table(occ_fus, file = "./occ_data/fus/occ_fus.csv") 
+saveRDS(occ_fus, file = "./occ_data/fus/occ_fus.Rdata") # Note this copy of occurrence data will be used in downstream SDM work
 
 # Clean Ioensis -----------------------------------------------------------
 occ_ion <- gbif_ion %>% 
@@ -142,14 +143,14 @@ occ_ion <- gbif_ion %>%
   filter(!(decimalLongitude < -99)) %>%  # remove records from west of Kansas/Texas occ
   filter(!(gbifID %in% c('1899381516', '5067955163'))) %>% #remove questionable GBIF records
   filter(!(decimalLongitude > -84)) %>%  # remove sporadic east coast records. likely not ioensis based on classical distribtion
-  dplyr::select(species, countryCode, decimalLatitude, 
+  dplyr::select(species, gbifID, countryCode, decimalLatitude, 
                 decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 
 occ_ion <- occ_ion %>% mutate(source = 'GBIF')
 
-##write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
-##saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
+write.table(occ_ion, file = "./occ_data/ion/occ_ion.csv")
+saveRDS(occ_ion, file = "./occ_data/ion/occ_ion.Rdata")
 
 
 # Clean Angustifolia ------------------------------------------------------
@@ -163,12 +164,12 @@ occ_ang <- gbif_ang %>%
   distinct(decimalLatitude, decimalLongitude, speciesKey, datasetKey, .keep_all = T) %>% 
   filter(decimalLatitude <= 41.99575 | decimalLongitude <= -72.60754) %>% #filter occ northeast of Connecticut
   filter(!(gbifID %in% c('3865090173', '4919535276', '1302641832', '3091187987', '4855490969', '4854957347'))) %>%  #remove a record from greenland (???) and bad inat obs
-  dplyr::select(species, countryCode, decimalLatitude, 
+  dplyr::select(species, gbifID, countryCode, decimalLatitude, 
                 decimalLongitude, coordinateUncertaintyInMeters, year, basisOfRecord
   )
 occ_ang <- occ_ang %>% mutate(source = 'GBIF')
 
-##write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
-##saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
+write.table(occ_ang,  file = "./occ_data/ang/occ_ang.csv")
+saveRDS(occ_ang,  file = "./occ_data/ang/occ_ang.Rdata")
 
 message("** Data Cleaned ", date())
