@@ -8,10 +8,11 @@
 ####
 
 ### Native Malus species
-# Malus fusca
-# Malus coronaria 
-# Malus ioensis
-# Malus angustifolia
+# Malus fusca = "fus"
+# Malus coronaria = "cor"
+# Malus ioensis = "ion"
+# Malus angustifolia = "ang"
+# Sect. Chloromeles = "chl" (combination of cor, ion and ang)
 ###
 
 # The goal of this analysis is to map the recent historical and future distribution of suitable habitats for native apple (Malus) species in North America to understand how climate change is predicted to impact these species. We build species distribution models (SDMs) using Maxent.jar algorithum via the ENMeval and predicts packages.
